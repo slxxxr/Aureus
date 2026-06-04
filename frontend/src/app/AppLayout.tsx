@@ -12,13 +12,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const navigation = [
+type NavigationItem = {
+  to: string;
+  labelKey: string;
+  icon: typeof BarChart3;
+  end?: boolean;
+};
+
+const navigation: NavigationItem[] = [
   { to: "/", labelKey: "navigation.dashboard", icon: BarChart3, end: true },
   { to: "/accounts", labelKey: "navigation.accounts", icon: CreditCard },
   { to: "/transactions", labelKey: "navigation.transactions", icon: ReceiptText },
   { to: "/categories", labelKey: "navigation.categories", icon: FolderTree },
   { to: "/settings", labelKey: "navigation.settings", icon: Settings },
-] as const;
+];
 
 const pageTitleByPath: Record<string, string> = {
   "/": "pages.dashboard.title",
