@@ -8,7 +8,7 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection") ?? string.Empty;
+        var connectionString = configuration.GetConnectionString("Postgres") ?? string.Empty;
 
         services.AddDbContext<AureusDbContext>(options =>
         {
