@@ -1,0 +1,62 @@
+using Aureus.Domain.Categories;
+using Aureus.Domain.FinancialAccounts;
+using Aureus.Domain.Transactions;
+using Aureus.Domain.Users;
+using Aureus.Domain.Workspaces;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace Aureus.Infrastructure.Persistence.Configurations;
+
+public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
+{
+    private const int TypeMaxLength = 32;
+    private const int CurrencyCodeMaxLength = 3;
+    private const int NoteMaxLength = 500;
+
+    public void Configure(EntityTypeBuilder<Transaction> builder)
+    {
+        builder.ToTable("transactions");
+
+        builder.HasKey(transaction => transaction.Id);
+
+        builder.Property(transaction => transaction.Id).HasColumnName("id");
+        builder.Property(transaction => transaction.WorkspaceId).HasColumnName("workspace_id").IsRequired();
+        builder.Property(transaction => transaction.FinancialAccountId).HasColumnName("financial_account_id").IsRequired();
+        builder.Property(transaction => transaction.CategoryId).HasColumnName("category_id").IsRequired();
+        builder.Property(transaction => transaction.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
+        builder.Property(transaction => transaction.Type).HasColumnName("type").HasConversion<string>().HasMaxLength(TypeMaxLength).IsRequired();
+        builder.Property(transaction => transaction.AmountMinor).HasColumnName("amount_minor").IsRequired();
+        builder.Property(transaction => transaction.Currency).HasColumnName("currency").HasMaxLength(CurrencyCodeMaxLength).IsRequired();
+        builder.Property(transaction => transaction.OccurredAt).HasColumnName("occurred_at").IsRequired();
+        builder.Property(transaction => transaction.Note).HasColumnName("note").HasMaxLength(NoteMaxLength);
+        builder.Property(transaction => transaction.IsDeleted).HasColumnName("is_deleted").IsRequired();
+        builder.Property(transaction => transaction.DeletedAt).HasColumnName("deleted_at");
+        builder.Property(transaction => transaction.CreatedAt).HasColumnName("created_at").IsRequired();
+        builder.Property(transaction => transaction.UpdatedAt).HasColumnName("updated_at");
+
+        builder.HasIndex(transaction => new { transaction.WorkspaceId, transaction.OccurredAt });
+        builder.HasIndex(transaction => new { transaction.WorkspaceId, transaction.IsDeleted });
+        builder.HasIndex(transaction => transaction.CreatedByUserId);
+
+        builder.HasOne<Workspace>()
+            .WithMany()
+            .HasForeignKey(transaction => transaction.WorkspaceId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<FinancialAccount>()
+            .WithMany()
+            .HasForeignKey(transaction => transaction.FinancialAccountId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Category>()
+            .WithMany()
+            .HasForeignKey(transaction => transaction.CategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<User>()
+            .WithMany()
+            .HasForeignKey(transaction => transaction.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}

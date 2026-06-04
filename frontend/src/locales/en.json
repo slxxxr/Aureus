@@ -1,0 +1,52 @@
+{
+  "common": {
+    "appName": "Aureus",
+    "tagline": "Personal finance"
+  },
+  "language": {
+    "switchLabel": "Language switcher",
+    "ru": "Russian",
+    "en": "English",
+    "ruShort": "RU",
+    "enShort": "EN"
+  },
+  "navigation": {
+    "primaryLabel": "Primary navigation",
+    "mobileMenuLabel": "Open menu",
+    "dashboard": "Dashboard",
+    "accounts": "Accounts",
+    "transactions": "Transactions",
+    "categories": "Categories",
+    "settings": "Settings"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Dashboard",
+      "description": "A compact financial overview will appear here in later iterations."
+    },
+    "accounts": {
+      "title": "Accounts",
+      "description": "Cash, bank cards, and other accounts will be managed here."
+    },
+    "transactions": {
+      "title": "Transactions",
+      "description": "Manual income and expense tracking will be managed here."
+    },
+    "categories": {
+      "title": "Categories",
+      "description": "Income and expense categories will be configured here."
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Workspace, profile, and interface settings will be managed here."
+    }
+  },
+  "placeholder": {
+    "statusLabel": "Status",
+    "statusValue": "Skeleton ready for the next iteration",
+    "scopeLabel": "Scope",
+    "scopeValue": "First version without business logic",
+    "currencyLabel": "Currency",
+    "currencyValue": "RUB by default"
+  }
+}

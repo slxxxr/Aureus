@@ -1,0 +1,52 @@
+{
+  "common": {
+    "appName": "Aureus",
+    "tagline": "Личные финансы"
+  },
+  "language": {
+    "switchLabel": "Переключение языка",
+    "ru": "Русский",
+    "en": "Английский",
+    "ruShort": "RU",
+    "enShort": "EN"
+  },
+  "navigation": {
+    "primaryLabel": "Основная навигация",
+    "mobileMenuLabel": "Открыть меню",
+    "dashboard": "Дашборд",
+    "accounts": "Счета",
+    "transactions": "Транзакции",
+    "categories": "Категории",
+    "settings": "Настройки"
+  },
+  "pages": {
+    "dashboard": {
+      "title": "Дашборд",
+      "description": "Краткий обзор финансового состояния появится здесь в следующих итерациях."
+    },
+    "accounts": {
+      "title": "Счета",
+      "description": "Здесь будет управление наличными, банковскими картами и другими счетами."
+    },
+    "transactions": {
+      "title": "Транзакции",
+      "description": "Здесь будет ручной учет доходов и расходов."
+    },
+    "categories": {
+      "title": "Категории",
+      "description": "Здесь будет настройка категорий для доходов и расходов."
+    },
+    "settings": {
+      "title": "Настройки",
+      "description": "Здесь будут параметры рабочего пространства, профиля и интерфейса."
+    }
+  },
+  "placeholder": {
+    "statusLabel": "Статус",
+    "statusValue": "Каркас готов к следующей итерации",
+    "scopeLabel": "Область",
+    "scopeValue": "Первая версия без бизнес-логики",
+    "currencyLabel": "Валюта",
+    "currencyValue": "RUB по умолчанию"
+  }
+}
