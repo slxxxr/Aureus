@@ -1,3 +1,4 @@
+using Aureus.UseCases.Auth.Register;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Aureus.Api.Middleware;
@@ -9,6 +10,10 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         try
         {
             await next(context);
+        }
+        catch (RegistrationException exception)
+        {
+            await HandleRegistrationExceptionAsync(context, exception);
         }
         catch (Exception exception)
         {
@@ -32,5 +37,30 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
 
             await context.Response.WriteAsJsonAsync(problem, context.RequestAborted);
         }
+    }
+
+    private static async Task HandleRegistrationExceptionAsync(HttpContext context, RegistrationException exception)
+    {
+        if (context.Response.HasStarted)
+        {
+            throw exception;
+        }
+
+        var statusCode = exception.Code == RegistrationErrorCode.EmailAlreadyExists
+            ? StatusCodes.Status409Conflict
+            : StatusCodes.Status400BadRequest;
+
+        context.Response.StatusCode = statusCode;
+        context.Response.ContentType = "application/problem+json";
+
+        var problem = new ProblemDetails
+        {
+            Status = statusCode,
+            Title = exception.Code.ToString(),
+            Detail = exception.Message,
+            Instance = context.Request.Path
+        };
+
+        await context.Response.WriteAsJsonAsync(problem, context.RequestAborted);
     }
 }
