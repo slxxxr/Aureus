@@ -1,15 +1,15 @@
-using Aureus.Domain.Users;
+using Aureus.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Aureus.Infrastructure.Persistence.Configurations;
 
-public sealed class UserConfiguration : IEntityTypeConfiguration<User>
+public sealed class UserConfiguration : IEntityTypeConfiguration<UserDb>
 {
     private const int EmailMaxLength = 254;
     private const int PasswordHashMaxLength = 512;
 
-    public void Configure(EntityTypeBuilder<User> builder)
+    public void Configure(EntityTypeBuilder<UserDb> builder)
     {
         builder.ToTable("users");
 

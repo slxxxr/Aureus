@@ -1,25 +1,21 @@
-using Aureus.Domain.Categories;
-using Aureus.Domain.FinancialAccounts;
-using Aureus.Domain.Transactions;
-using Aureus.Domain.Users;
-using Aureus.Domain.Workspaces;
+using Aureus.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aureus.Infrastructure;
 
 public sealed class AureusDbContext(DbContextOptions<AureusDbContext> options) : DbContext(options)
 {
-    public DbSet<User> Users => Set<User>();
+    public DbSet<UserDb> Users => Set<UserDb>();
 
-    public DbSet<Workspace> Workspaces => Set<Workspace>();
+    public DbSet<WorkspaceDb> Workspaces => Set<WorkspaceDb>();
 
-    public DbSet<WorkspaceMember> WorkspaceMembers => Set<WorkspaceMember>();
+    public DbSet<WorkspaceMemberDb> WorkspaceMembers => Set<WorkspaceMemberDb>();
 
-    public DbSet<FinancialAccount> FinancialAccounts => Set<FinancialAccount>();
+    public DbSet<FinancialAccountDb> FinancialAccounts => Set<FinancialAccountDb>();
 
-    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<CategoryDb> Categories => Set<CategoryDb>();
 
-    public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<TransactionDb> Transactions => Set<TransactionDb>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

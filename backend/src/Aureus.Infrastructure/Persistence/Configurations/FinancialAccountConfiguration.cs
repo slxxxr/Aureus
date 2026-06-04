@@ -1,16 +1,15 @@
-using Aureus.Domain.FinancialAccounts;
-using Aureus.Domain.Workspaces;
+using Aureus.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Aureus.Infrastructure.Persistence.Configurations;
 
-public sealed class FinancialAccountConfiguration : IEntityTypeConfiguration<FinancialAccount>
+public sealed class FinancialAccountConfiguration : IEntityTypeConfiguration<FinancialAccountDb>
 {
     private const int NameMaxLength = 120;
     private const int CurrencyCodeMaxLength = 3;
 
-    public void Configure(EntityTypeBuilder<FinancialAccount> builder)
+    public void Configure(EntityTypeBuilder<FinancialAccountDb> builder)
     {
         builder.ToTable("financial_accounts");
 
@@ -27,7 +26,7 @@ public sealed class FinancialAccountConfiguration : IEntityTypeConfiguration<Fin
 
         builder.HasIndex(account => new { account.WorkspaceId, account.Name }).IsUnique();
 
-        builder.HasOne<Workspace>()
+        builder.HasOne<WorkspaceDb>()
             .WithMany()
             .HasForeignKey(account => account.WorkspaceId)
             .OnDelete(DeleteBehavior.Restrict);
