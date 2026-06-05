@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -10,20 +10,13 @@ import { login } from "@/features/auth/authApi";
 import { useAuth } from "@/features/auth/AuthContext";
 import { resolveAuthError } from "@/features/auth/resolveAuthError";
 
-type LoginLocationState = {
-  registered?: boolean;
-};
-
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation();
   const { signIn } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const justRegistered = (location.state as LoginLocationState | null)?.registered === true;
 
   const mutation = useMutation({
     mutationFn: login,
@@ -54,12 +47,6 @@ export function LoginPage() {
         </>
       }
     >
-      {justRegistered && (
-        <p className="mb-4 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
-          {t("auth.login.registeredNotice")}
-        </p>
-      )}
-
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div className="space-y-2">
           <Label htmlFor="email">{t("auth.fields.email")}</Label>

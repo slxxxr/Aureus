@@ -63,15 +63,14 @@
       "submit": "Sign in",
       "submitting": "Signing in…",
       "noAccount": "Don't have an account?",
-      "registerLink": "Sign up",
-      "registeredNotice": "Account created. Please sign in."
+      "registerLink": "Sign up"
     },
     "register": {
       "title": "Create your account",
       "subtitle": "Start managing your personal finances",
       "submit": "Create account",
       "submitting": "Creating account…",
-      "passwordHint": "At least 8 characters",
+      "passwordPlaceholder": "Create a password, at least 8 characters",
       "haveAccount": "Already have an account?",
       "loginLink": "Sign in"
     },

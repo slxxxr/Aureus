@@ -6,7 +6,8 @@ import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { register } from "@/features/auth/authApi";
+import { login, register, type RegisterRequest } from "@/features/auth/authApi";
+import { useAuth } from "@/features/auth/AuthContext";
 import { resolveAuthError } from "@/features/auth/resolveAuthError";
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -14,14 +15,19 @@ const MIN_PASSWORD_LENGTH = 8;
 export function RegisterPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { signIn } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const mutation = useMutation({
-    mutationFn: register,
-    onSuccess: () => {
-      navigate("/login", { replace: true, state: { registered: true } });
+    mutationFn: async (request: RegisterRequest) => {
+      await register(request);
+      return login(request);
+    },
+    onSuccess: (data) => {
+      signIn(data.accessToken);
+      navigate("/", { replace: true });
     },
   });
 
@@ -71,10 +77,9 @@ export function RegisterPage() {
             minLength={MIN_PASSWORD_LENGTH}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder={t("auth.fields.passwordPlaceholder")}
+            placeholder={t("auth.register.passwordPlaceholder")}
             disabled={mutation.isPending}
           />
-          <p className="text-xs text-muted-foreground">{t("auth.register.passwordHint")}</p>
         </div>
 
         {mutation.isError && (

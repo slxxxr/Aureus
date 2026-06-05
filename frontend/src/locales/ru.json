@@ -63,15 +63,14 @@
       "submit": "Войти",
       "submitting": "Вход…",
       "noAccount": "Нет аккаунта?",
-      "registerLink": "Зарегистрироваться",
-      "registeredNotice": "Аккаунт создан. Войдите в систему."
+      "registerLink": "Зарегистрироваться"
     },
     "register": {
       "title": "Создание аккаунта",
       "subtitle": "Начните управлять личными финансами",
       "submit": "Создать аккаунт",
       "submitting": "Создание…",
-      "passwordHint": "Минимум 8 символов",
+      "passwordPlaceholder": "Придумайте пароль, минимум 8 символов",
       "haveAccount": "Уже есть аккаунт?",
       "loginLink": "Войти"
     },
