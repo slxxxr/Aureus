@@ -1,3 +1,4 @@
+using Aureus.Domain.FinancialAccounts;
 using Aureus.UseCases.Common.Persistence;
 using MediatR;
 

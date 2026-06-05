@@ -1,3 +1,4 @@
+using Aureus.Domain.Users;
 using Aureus.UseCases.Common.Persistence;
 using Aureus.UseCases.Common.Security;
 using MediatR;

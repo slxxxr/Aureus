@@ -1,4 +1,4 @@
-using Aureus.UseCases.Common.Exceptions;
+using Aureus.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -8,7 +8,7 @@ public sealed class UseCaseExceptionFilter : IExceptionFilter
 {
     public void OnException(ExceptionContext context)
     {
-        if (context.Exception is not UseCaseException exception)
+        if (context.Exception is not DomainException exception)
         {
             return;
         }

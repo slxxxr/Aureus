@@ -1,3 +1,4 @@
+using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
 using Aureus.UnitTests.Mocks;
 using Aureus.UseCases.Auth.Register;

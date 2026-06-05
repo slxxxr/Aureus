@@ -1,4 +1,4 @@
-namespace Aureus.UseCases.FinancialAccounts;
+namespace Aureus.Domain.FinancialAccounts;
 
 public enum FinancialAccountErrorCode
 {

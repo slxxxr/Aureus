@@ -1,9 +1,8 @@
-using Aureus.UseCases.Common.Exceptions;
+using Aureus.Domain.Exceptions;
 
-namespace Aureus.UseCases.FinancialAccounts;
+namespace Aureus.Domain.FinancialAccounts;
 
-public sealed class FinancialAccountException(FinancialAccountErrorCode code, string message)
-    : UseCaseException(message)
+public sealed class FinancialAccountException(FinancialAccountErrorCode code, string message) : DomainException(message)
 {
     public FinancialAccountErrorCode Code { get; } = code;
 

@@ -1,8 +1,8 @@
-using Aureus.UseCases.Common.Exceptions;
+using Aureus.Domain.Exceptions;
 
-namespace Aureus.UseCases.Auth.Login;
+namespace Aureus.Domain.Users;
 
-public sealed class LoginException(LoginErrorCode code, string message) : UseCaseException(message)
+public sealed class LoginException(LoginErrorCode code, string message) : DomainException(message)
 {
     public LoginErrorCode Code { get; } = code;
 
