@@ -1,3 +1,8 @@
+using Aureus.Infrastructure.Mappers;
+using Aureus.Infrastructure.Persistence;
+using Aureus.Infrastructure.Security;
+using Aureus.UseCases.Common.Persistence;
+using Aureus.UseCases.Common.Security;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +19,13 @@ public static class DependencyInjection
         {
             options.UseNpgsql(connectionString);
         });
+
+        services.AddAutoMapper(configuration =>
+        {
+            configuration.AddProfile<DatabaseMappings>();
+        });
+        services.AddScoped<IUserRegistrationDb, UserRegistrationDb>();
+        services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
 
         return services;
     }

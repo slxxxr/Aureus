@@ -22,7 +22,7 @@ namespace Aureus.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Aureus.Domain.Categories.Category", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.CategoryDb", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -61,7 +61,7 @@ namespace Aureus.Infrastructure.Persistence.Migrations
                     b.ToTable("categories", (string)null);
                 });
 
-            modelBuilder.Entity("Aureus.Domain.FinancialAccounts.FinancialAccount", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.FinancialAccountDb", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -108,7 +108,7 @@ namespace Aureus.Infrastructure.Persistence.Migrations
                     b.ToTable("financial_accounts", (string)null);
                 });
 
-            modelBuilder.Entity("Aureus.Domain.Transactions.Transaction", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.TransactionDb", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -187,7 +187,7 @@ namespace Aureus.Infrastructure.Persistence.Migrations
                     b.ToTable("transactions", (string)null);
                 });
 
-            modelBuilder.Entity("Aureus.Domain.Users.User", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.UserDb", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -222,7 +222,7 @@ namespace Aureus.Infrastructure.Persistence.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("Aureus.Domain.Workspaces.Workspace", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.WorkspaceDb", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -254,7 +254,7 @@ namespace Aureus.Infrastructure.Persistence.Migrations
                     b.ToTable("workspaces", (string)null);
                 });
 
-            modelBuilder.Entity("Aureus.Domain.Workspaces.WorkspaceMember", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.WorkspaceMemberDb", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -289,69 +289,69 @@ namespace Aureus.Infrastructure.Persistence.Migrations
                     b.ToTable("workspace_members", (string)null);
                 });
 
-            modelBuilder.Entity("Aureus.Domain.Categories.Category", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.CategoryDb", b =>
                 {
-                    b.HasOne("Aureus.Domain.Workspaces.Workspace", null)
+                    b.HasOne("Aureus.Infrastructure.Persistence.Entities.WorkspaceDb", null)
                         .WithMany()
                         .HasForeignKey("WorkspaceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Aureus.Domain.FinancialAccounts.FinancialAccount", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.FinancialAccountDb", b =>
                 {
-                    b.HasOne("Aureus.Domain.Workspaces.Workspace", null)
+                    b.HasOne("Aureus.Infrastructure.Persistence.Entities.WorkspaceDb", null)
                         .WithMany()
                         .HasForeignKey("WorkspaceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Aureus.Domain.Transactions.Transaction", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.TransactionDb", b =>
                 {
-                    b.HasOne("Aureus.Domain.Categories.Category", null)
+                    b.HasOne("Aureus.Infrastructure.Persistence.Entities.CategoryDb", null)
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Aureus.Domain.Users.User", null)
+                    b.HasOne("Aureus.Infrastructure.Persistence.Entities.UserDb", null)
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Aureus.Domain.FinancialAccounts.FinancialAccount", null)
+                    b.HasOne("Aureus.Infrastructure.Persistence.Entities.FinancialAccountDb", null)
                         .WithMany()
                         .HasForeignKey("FinancialAccountId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Aureus.Domain.Workspaces.Workspace", null)
+                    b.HasOne("Aureus.Infrastructure.Persistence.Entities.WorkspaceDb", null)
                         .WithMany()
                         .HasForeignKey("WorkspaceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Aureus.Domain.Workspaces.Workspace", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.WorkspaceDb", b =>
                 {
-                    b.HasOne("Aureus.Domain.Users.User", null)
+                    b.HasOne("Aureus.Infrastructure.Persistence.Entities.UserDb", null)
                         .WithMany()
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Aureus.Domain.Workspaces.WorkspaceMember", b =>
+            modelBuilder.Entity("Aureus.Infrastructure.Persistence.Entities.WorkspaceMemberDb", b =>
                 {
-                    b.HasOne("Aureus.Domain.Users.User", null)
+                    b.HasOne("Aureus.Infrastructure.Persistence.Entities.UserDb", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Aureus.Domain.Workspaces.Workspace", null)
+                    b.HasOne("Aureus.Infrastructure.Persistence.Entities.WorkspaceDb", null)
                         .WithMany()
                         .HasForeignKey("WorkspaceId")
                         .OnDelete(DeleteBehavior.Restrict)

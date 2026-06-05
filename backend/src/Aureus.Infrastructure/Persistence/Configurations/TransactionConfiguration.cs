@@ -1,20 +1,16 @@
-using Aureus.Domain.Categories;
-using Aureus.Domain.FinancialAccounts;
-using Aureus.Domain.Transactions;
-using Aureus.Domain.Users;
-using Aureus.Domain.Workspaces;
+using Aureus.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Aureus.Infrastructure.Persistence.Configurations;
 
-public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transaction>
+public sealed class TransactionConfiguration : IEntityTypeConfiguration<TransactionDb>
 {
     private const int TypeMaxLength = 32;
     private const int CurrencyCodeMaxLength = 3;
     private const int NoteMaxLength = 500;
 
-    public void Configure(EntityTypeBuilder<Transaction> builder)
+    public void Configure(EntityTypeBuilder<TransactionDb> builder)
     {
         builder.ToTable("transactions");
 
@@ -25,7 +21,7 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.Property(transaction => transaction.FinancialAccountId).HasColumnName("financial_account_id").IsRequired();
         builder.Property(transaction => transaction.CategoryId).HasColumnName("category_id").IsRequired();
         builder.Property(transaction => transaction.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
-        builder.Property(transaction => transaction.Type).HasColumnName("type").HasConversion<string>().HasMaxLength(TypeMaxLength).IsRequired();
+        builder.Property(transaction => transaction.Type).HasColumnName("type").HasMaxLength(TypeMaxLength).IsRequired();
         builder.Property(transaction => transaction.AmountMinor).HasColumnName("amount_minor").IsRequired();
         builder.Property(transaction => transaction.Currency).HasColumnName("currency").HasMaxLength(CurrencyCodeMaxLength).IsRequired();
         builder.Property(transaction => transaction.OccurredAt).HasColumnName("occurred_at").IsRequired();
@@ -39,22 +35,22 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.HasIndex(transaction => new { transaction.WorkspaceId, transaction.IsDeleted });
         builder.HasIndex(transaction => transaction.CreatedByUserId);
 
-        builder.HasOne<Workspace>()
+        builder.HasOne<WorkspaceDb>()
             .WithMany()
             .HasForeignKey(transaction => transaction.WorkspaceId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<FinancialAccount>()
+        builder.HasOne<FinancialAccountDb>()
             .WithMany()
             .HasForeignKey(transaction => transaction.FinancialAccountId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<Category>()
+        builder.HasOne<CategoryDb>()
             .WithMany()
             .HasForeignKey(transaction => transaction.CategoryId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne<User>()
+        builder.HasOne<UserDb>()
             .WithMany()
             .HasForeignKey(transaction => transaction.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);

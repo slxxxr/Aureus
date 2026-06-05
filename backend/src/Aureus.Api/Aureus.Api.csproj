@@ -17,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Aureus.Application\Aureus.Application.csproj" />
     <ProjectReference Include="..\Aureus.Infrastructure\Aureus.Infrastructure.csproj" />
+    <ProjectReference Include="..\Aureus.UseCases\Aureus.UseCases.csproj" />
   </ItemGroup>
 
 </Project>

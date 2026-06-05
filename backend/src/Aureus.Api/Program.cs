@@ -1,11 +1,12 @@
 using Aureus.Api.Middleware;
-using Aureus.Application;
 using Aureus.Infrastructure;
+using Aureus.UseCases;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddApplication();
+builder.Services.AddUseCases();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -19,8 +20,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGet("/api/health", () => Results.Ok(new { status = "ok", service = "Aureus" }))
-    .WithName("GetHealth")
-    .WithOpenApi();
+app.MapControllers();
 
 app.Run();

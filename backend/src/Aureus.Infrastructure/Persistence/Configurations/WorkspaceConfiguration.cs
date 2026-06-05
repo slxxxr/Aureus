@@ -1,15 +1,14 @@
-using Aureus.Domain.Users;
-using Aureus.Domain.Workspaces;
+using Aureus.Infrastructure.Persistence.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Aureus.Infrastructure.Persistence.Configurations;
 
-public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
+public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<WorkspaceDb>
 {
     private const int NameMaxLength = 120;
 
-    public void Configure(EntityTypeBuilder<Workspace> builder)
+    public void Configure(EntityTypeBuilder<WorkspaceDb> builder)
     {
         builder.ToTable("workspaces");
 
@@ -21,7 +20,7 @@ public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<Workspace>
         builder.Property(workspace => workspace.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(workspace => workspace.UpdatedAt).HasColumnName("updated_at");
 
-        builder.HasOne<User>()
+        builder.HasOne<UserDb>()
             .WithMany()
             .HasForeignKey(workspace => workspace.OwnerUserId)
             .OnDelete(DeleteBehavior.Restrict);
