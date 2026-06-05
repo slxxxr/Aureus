@@ -48,5 +48,39 @@
     "scopeValue": "Первая версия без бизнес-логики",
     "currencyLabel": "Валюта",
     "currencyValue": "RUB по умолчанию"
+  },
+  "auth": {
+    "signOut": "Выйти",
+    "fields": {
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Пароль",
+      "passwordPlaceholder": "Введите пароль"
+    },
+    "login": {
+      "title": "Вход в Aureus",
+      "subtitle": "Введите данные, чтобы продолжить",
+      "submit": "Войти",
+      "submitting": "Вход…",
+      "noAccount": "Нет аккаунта?",
+      "registerLink": "Зарегистрироваться",
+      "registeredNotice": "Аккаунт создан. Войдите в систему."
+    },
+    "register": {
+      "title": "Создание аккаунта",
+      "subtitle": "Начните управлять личными финансами",
+      "submit": "Создать аккаунт",
+      "submitting": "Создание…",
+      "passwordHint": "Минимум 8 символов",
+      "haveAccount": "Уже есть аккаунт?",
+      "loginLink": "Войти"
+    },
+    "errors": {
+      "invalidCredentials": "Неверный email или пароль.",
+      "invalidEmail": "Введите корректный email.",
+      "invalidPassword": "Пароль должен содержать минимум 8 символов.",
+      "emailAlreadyExists": "Этот email уже зарегистрирован.",
+      "generic": "Что-то пошло не так. Попробуйте ещё раз."
+    }
   }
 }

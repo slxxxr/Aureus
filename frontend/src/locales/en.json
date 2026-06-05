@@ -48,5 +48,39 @@
     "scopeValue": "First version without business logic",
     "currencyLabel": "Currency",
     "currencyValue": "RUB by default"
+  },
+  "auth": {
+    "signOut": "Sign out",
+    "fields": {
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password"
+    },
+    "login": {
+      "title": "Sign in to Aureus",
+      "subtitle": "Enter your details to continue",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Sign up",
+      "registeredNotice": "Account created. Please sign in."
+    },
+    "register": {
+      "title": "Create your account",
+      "subtitle": "Start managing your personal finances",
+      "submit": "Create account",
+      "submitting": "Creating account…",
+      "passwordHint": "At least 8 characters",
+      "haveAccount": "Already have an account?",
+      "loginLink": "Sign in"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password.",
+      "invalidEmail": "Please enter a valid email address.",
+      "invalidPassword": "Password must be at least 8 characters long.",
+      "emailAlreadyExists": "This email is already registered.",
+      "generic": "Something went wrong. Please try again."
+    }
   }
 }
