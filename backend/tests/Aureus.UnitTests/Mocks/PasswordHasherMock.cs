@@ -17,4 +17,13 @@ public sealed class PasswordHasherMock
 
         return this;
     }
+
+    public PasswordHasherMock WithVerify(string password, string passwordHash, bool result)
+    {
+        _mock
+            .Setup(hasher => hasher.Verify(password, passwordHash))
+            .Returns(result);
+
+        return this;
+    }
 }
