@@ -1,4 +1,5 @@
 const API_BASE_URL = "/api";
+const TOKEN_STORAGE_KEY = "aureus.token";
 
 export type ProblemDetails = {
   status?: number;
@@ -24,12 +25,24 @@ export class ApiError extends Error {
 type RequestOptions = {
   method?: string;
   body?: unknown;
+  anonymous?: boolean;
 };
 
 export async function apiFetch<TResponse>(path: string, options: RequestOptions = {}): Promise<TResponse> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (!options.anonymous) {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (token !== null) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+  }
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: options.method ?? "GET",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
   });
 
@@ -39,6 +52,10 @@ export async function apiFetch<TResponse>(path: string, options: RequestOptions 
       problem = (await response.json()) as ProblemDetails;
     } catch {
       problem = undefined;
+    }
+
+    if (response.status === 401) {
+      window.dispatchEvent(new CustomEvent("aureus:unauthorized"));
     }
 
     throw new ApiError(response.status, problem);

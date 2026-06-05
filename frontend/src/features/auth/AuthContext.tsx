@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 
 const TOKEN_STORAGE_KEY = "aureus.token";
 
@@ -13,6 +13,16 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_STORAGE_KEY));
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      setToken(null);
+    };
+
+    window.addEventListener("aureus:unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("aureus:unauthorized", handleUnauthorized);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
