@@ -1,3 +1,4 @@
+using Aureus.Api.Filters;
 using Aureus.Api.Middleware;
 using Aureus.Infrastructure;
 using Aureus.Postgres;
@@ -8,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddUseCases();
 builder.Services.AddInfrastructure();
 builder.Services.AddPostgres(builder.Configuration);
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<UseCaseExceptionFilter>());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
