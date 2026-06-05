@@ -1,7 +1,9 @@
 {
   "common": {
     "appName": "Aureus",
-    "tagline": "Личные финансы"
+    "tagline": "Личные финансы",
+    "cancel": "Отмена",
+    "delete": "Удалить"
   },
   "language": {
     "switchLabel": "Переключение языка",
@@ -52,6 +54,34 @@
   "workspace": {
     "switcherLabel": "Переключить рабочее пространство",
     "listLabel": "Рабочие пространства"
+  },
+  "financialAccounts": {
+    "title": "Счета",
+    "addAccount": "Добавить счёт",
+    "emptyTitle": "Нет счетов",
+    "emptyDescription": "Создайте первый счёт, чтобы начать учёт финансов.",
+    "createModal": {
+      "title": "Новый счёт",
+      "namePlaceholder": "Например, Наличные",
+      "nameLabel": "Название",
+      "currencyLabel": "Валюта",
+      "initialBalanceLabel": "Начальный баланс",
+      "submit": "Создать",
+      "submitting": "Создание…"
+    },
+    "currentBalance": "Текущий баланс",
+    "initialBalance": "Начальный баланс",
+    "deleteConfirm": {
+      "title": "Удалить счёт?",
+      "description": "Все транзакции этого счёта тоже будут удалены. Действие необратимо.",
+      "confirm": "Удалить",
+      "cancel": "Отмена"
+    },
+    "errors": {
+      "nameTaken": "Счёт с таким названием уже существует.",
+      "notFound": "Счёт не найден.",
+      "generic": "Что-то пошло не так. Попробуйте ещё раз."
+    }
   },
   "auth": {
     "signOut": "Выйти",

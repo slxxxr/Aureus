@@ -1,7 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "@/app/AppLayout";
 import { GuestRoute, ProtectedRoute } from "@/app/routeGuards";
-import { AccountsPage } from "@/pages/AccountsPage";
+import { FinancialAccountsPage } from "@/pages/FinancialAccountsPage";
 import { CategoriesPage } from "@/pages/CategoriesPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { SettingsPage } from "@/pages/SettingsPage";
@@ -21,7 +21,7 @@ export function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<DashboardPage />} />
-            <Route path="accounts" element={<AccountsPage />} />
+            <Route path="accounts" element={<FinancialAccountsPage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="categories" element={<CategoriesPage />} />
             <Route path="settings" element={<SettingsPage />} />
