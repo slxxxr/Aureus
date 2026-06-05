@@ -1,11 +1,13 @@
 using Aureus.Api.Middleware;
 using Aureus.Infrastructure;
+using Aureus.Postgres;
 using Aureus.UseCases;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddUseCases();
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure();
+builder.Services.AddPostgres(builder.Configuration);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
