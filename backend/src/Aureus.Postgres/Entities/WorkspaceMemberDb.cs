@@ -11,4 +11,6 @@ public sealed class WorkspaceMemberDb
     public string Role { get; set; } = string.Empty;
 
     public DateTimeOffset JoinedAt { get; set; }
+
+    public WorkspaceDb Workspace { get; set; } = null!;
 }
