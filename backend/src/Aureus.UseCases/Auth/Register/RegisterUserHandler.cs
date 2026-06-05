@@ -14,7 +14,7 @@ public sealed class RegisterUserHandler(
     private const int MinimumPasswordLength = 8;
     private const string DefaultWorkspaceName = "Personal";
 
-    private static readonly Regex EmailRegex = new(
+    private static readonly Regex _emailRegex = new(
         @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
@@ -22,7 +22,7 @@ public sealed class RegisterUserHandler(
     {
         var email = NormalizeEmail(command.Email);
 
-        if (!EmailRegex.IsMatch(email))
+        if (!_emailRegex.IsMatch(email))
         {
             throw new RegistrationException(RegistrationErrorCode.InvalidEmail, "Email is invalid.");
         }
