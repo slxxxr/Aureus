@@ -16,8 +16,8 @@ public sealed class RegisterUserHandler(
     private const string DefaultWorkspaceName = "Personal";
 
     private static readonly Regex _emailRegex = new(
-        @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+        @"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public async Task<RegisterUserResult> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
     {
