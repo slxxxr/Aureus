@@ -1,4 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
+using Aureus.Api.Filters;
+using Aureus.UseCases.Common.Persistence;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Aureus.Api.Controllers;
@@ -17,4 +19,9 @@ public abstract class ApiControllerBase : ControllerBase
                 : throw new InvalidOperationException("Authenticated request is missing a valid user ID claim.");
         }
     }
+
+    protected WorkspaceMembership CurrentWorkspaceMembership =>
+        HttpContext.Items[ValidateWorkspaceMemberFilter.MembershipItemKey] as WorkspaceMembership
+        ?? throw new InvalidOperationException(
+            $"{nameof(CurrentWorkspaceMembership)} is only available on endpoints decorated with [{nameof(ValidateWorkspaceMemberAttribute)}].");
 }
