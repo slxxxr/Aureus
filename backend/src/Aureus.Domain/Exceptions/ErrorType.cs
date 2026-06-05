@@ -1,4 +1,4 @@
-namespace Aureus.UseCases.Common.Exceptions;
+namespace Aureus.Domain.Exceptions;
 
 public enum ErrorType
 {

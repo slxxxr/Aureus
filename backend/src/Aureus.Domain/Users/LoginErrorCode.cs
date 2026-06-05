@@ -1,4 +1,4 @@
-namespace Aureus.UseCases.Auth.Login;
+namespace Aureus.Domain.Users;
 
 public enum LoginErrorCode
 {

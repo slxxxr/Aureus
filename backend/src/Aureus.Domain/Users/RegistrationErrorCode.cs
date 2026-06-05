@@ -1,4 +1,4 @@
-namespace Aureus.UseCases.Auth.Register;
+namespace Aureus.Domain.Users;
 
 public enum RegistrationErrorCode
 {

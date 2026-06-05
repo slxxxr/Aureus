@@ -4,6 +4,7 @@ using Aureus.Domain.Workspaces;
 using Aureus.Postgres.Entities;
 using Aureus.UseCases.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Aureus.Postgres.Implementations.Auth;
 
@@ -33,6 +34,13 @@ public sealed class UserRepository(AureusDbContext dbContext, IMapper mapper) : 
         dbContext.Workspaces.Add(mapper.Map<WorkspaceDb>(workspace));
         dbContext.WorkspaceMembers.Add(mapper.Map<WorkspaceMemberDb>(workspaceMember));
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            throw new RegistrationException(RegistrationErrorCode.EmailAlreadyExists, "Email is already registered.");
+        }
     }
 }

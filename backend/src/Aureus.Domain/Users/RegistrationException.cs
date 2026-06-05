@@ -1,8 +1,8 @@
-using Aureus.UseCases.Common.Exceptions;
+using Aureus.Domain.Exceptions;
 
-namespace Aureus.UseCases.Auth.Register;
+namespace Aureus.Domain.Users;
 
-public sealed class RegistrationException(RegistrationErrorCode code, string message) : UseCaseException(message)
+public sealed class RegistrationException(RegistrationErrorCode code, string message) : DomainException(message)
 {
     public RegistrationErrorCode Code { get; } = code;
 

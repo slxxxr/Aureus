@@ -1,7 +1,9 @@
 {
   "common": {
     "appName": "Aureus",
-    "tagline": "Personal finance"
+    "tagline": "Personal finance",
+    "cancel": "Cancel",
+    "delete": "Delete"
   },
   "language": {
     "switchLabel": "Language switcher",
@@ -52,6 +54,38 @@
   "workspace": {
     "switcherLabel": "Switch workspace",
     "listLabel": "Workspaces"
+  },
+  "financialAccounts": {
+    "title": "Accounts",
+    "addAccount": "Add account",
+    "emptyTitle": "No accounts yet",
+    "emptyDescription": "Create your first account to start tracking your finances.",
+    "createModal": {
+      "title": "New account",
+      "namePlaceholder": "Account name",
+      "nameLabel": "Name",
+      "currencyLabel": "Currency",
+      "initialBalanceLabel": "Initial balance",
+      "submit": "Create",
+      "submitting": "Creating…"
+    },
+    "editModal": {
+      "title": "Edit account",
+      "nameLabel": "Name",
+      "initialBalanceLabel": "Initial balance",
+      "save": "Save",
+      "saving": "Saving…",
+      "deleteAccount": "Delete account"
+    },
+    "deleteConfirm": {
+      "title": "Delete account?",
+      "description": "All transactions for this account will also be deleted. This action cannot be undone."
+    },
+    "errors": {
+      "nameTaken": "An account with this name already exists.",
+      "notFound": "Account not found.",
+      "generic": "Something went wrong. Please try again."
+    }
   },
   "auth": {
     "signOut": "Sign out",
