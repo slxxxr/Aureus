@@ -39,6 +39,28 @@ public sealed class RegisterUserHandlerTests
         userRepository.VerifyRegistrationSavedOnce();
     }
 
+    [Theory]
+    [InlineData("юзер@example.com")]
+    [InlineData("user@пример.рф")]
+    [InlineData("user@example.рф")]
+    public async Task Handle_NonAsciiEmail_ThrowsRegistrationException(string email)
+    {
+        // Arrange
+        var userRepository = new UserRepositoryMock();
+        var passwordHasher = new PasswordHasherMock();
+        var handler = new RegisterUserHandler(userRepository.Object, passwordHasher.Object);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<RegistrationException>(() =>
+            handler.Handle(
+                new RegisterUserCommand(email, "password123"),
+                CancellationToken.None));
+
+        // Assert
+        Assert.Equal(RegistrationErrorCode.InvalidEmail, exception.Code);
+        userRepository.VerifyRegistrationNotSaved();
+    }
+
     [Fact]
     public async Task Handle_EmailAlreadyExists_ThrowsRegistrationException()
     {

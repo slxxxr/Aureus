@@ -5,11 +5,14 @@ import {
   CreditCard,
   FolderTree,
   Landmark,
+  LogOut,
   Menu,
   ReceiptText,
   Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useAuth } from "@/features/auth/AuthContext";
 import { cn } from "@/lib/utils";
 
 type NavigationItem = {
@@ -36,13 +39,10 @@ const pageTitleByPath: Record<string, string> = {
 };
 
 export function AppLayout() {
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
   const location = useLocation();
+  const { signOut } = useAuth();
   const currentTitleKey = pageTitleByPath[location.pathname] ?? "pages.dashboard.title";
-
-  const setLanguage = (language: "ru" | "en") => {
-    void i18n.changeLanguage(language);
-  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -89,22 +89,16 @@ export function AppLayout() {
             </div>
           </div>
 
-          <div className="flex items-center rounded-md border border-border bg-muted p-1" aria-label={t("language.switchLabel")}>
+          <div className="flex items-center gap-2">
+            <LanguageToggle />
             <Button
-              variant={i18n.language === "ru" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setLanguage("ru")}
-              aria-label={t("language.ru")}
+              variant="ghost"
+              size="icon"
+              onClick={signOut}
+              aria-label={t("auth.signOut")}
+              title={t("auth.signOut")}
             >
-              {t("language.ruShort")}
-            </Button>
-            <Button
-              variant={i18n.language === "en" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setLanguage("en")}
-              aria-label={t("language.en")}
-            >
-              {t("language.enShort")}
+              <LogOut className="h-4 w-4" aria-hidden="true" />
             </Button>
           </div>
         </header>

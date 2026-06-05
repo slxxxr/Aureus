@@ -35,6 +35,24 @@ public sealed class UserRepositoryMock
         return this;
     }
 
+    public UserRepositoryMock WithUser(string email, User user)
+    {
+        _mock
+            .Setup(db => db.FindByEmailAsync(email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        return this;
+    }
+
+    public UserRepositoryMock WithNoUser(string email)
+    {
+        _mock
+            .Setup(db => db.FindByEmailAsync(email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((User?)null);
+
+        return this;
+    }
+
     public UserRepositoryMock CapturingRegistration()
     {
         _mock

@@ -1,4 +1,6 @@
+using Aureus.Api.Contracts.Auth.Login;
 using Aureus.Api.Contracts.Auth.Register;
+using Aureus.UseCases.Auth.Login;
 using Aureus.UseCases.Auth.Register;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -24,5 +26,19 @@ public sealed class AuthController(ISender sender) : ControllerBase
         return Created(
             $"/api/users/{result.UserId}",
             new RegisterUserResponse(result.UserId, result.WorkspaceId));
+    }
+
+    [HttpPost("login")]
+    [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> LoginAsync(
+        LoginRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(
+            new LoginUserCommand(request.Email, request.Password),
+            cancellationToken);
+
+        return Ok(new LoginResponse(result.AccessToken));
     }
 }
