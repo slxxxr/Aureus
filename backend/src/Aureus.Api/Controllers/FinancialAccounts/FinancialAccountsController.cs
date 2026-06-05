@@ -46,7 +46,7 @@ public sealed class FinancialAccountsController(ISender sender) : ApiControllerB
             account.InitialBalanceMinor, account.CurrentBalanceMinor,
             account.CreatedAt, account.UpdatedAt);
 
-        return CreatedAtAction(nameof(GetAsync), new { workspaceId }, response);
+        return StatusCode(StatusCodes.Status201Created, response);
     }
 
     [HttpPatch("{accountId:guid}")]

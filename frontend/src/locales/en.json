@@ -62,20 +62,24 @@
     "emptyDescription": "Create your first account to start tracking your finances.",
     "createModal": {
       "title": "New account",
-      "namePlaceholder": "e.g. Cash",
+      "namePlaceholder": "Account name",
       "nameLabel": "Name",
       "currencyLabel": "Currency",
       "initialBalanceLabel": "Initial balance",
       "submit": "Create",
       "submitting": "Creating…"
     },
-    "currentBalance": "Current balance",
-    "initialBalance": "Initial balance",
+    "editModal": {
+      "title": "Edit account",
+      "nameLabel": "Name",
+      "initialBalanceLabel": "Initial balance",
+      "save": "Save",
+      "saving": "Saving…",
+      "deleteAccount": "Delete account"
+    },
     "deleteConfirm": {
       "title": "Delete account?",
-      "description": "All transactions for this account will also be deleted. This action cannot be undone.",
-      "confirm": "Delete",
-      "cancel": "Cancel"
+      "description": "All transactions for this account will also be deleted. This action cannot be undone."
     },
     "errors": {
       "nameTaken": "An account with this name already exists.",

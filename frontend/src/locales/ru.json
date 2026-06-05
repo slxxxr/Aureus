@@ -62,20 +62,24 @@
     "emptyDescription": "Создайте первый счёт, чтобы начать учёт финансов.",
     "createModal": {
       "title": "Новый счёт",
-      "namePlaceholder": "Например, Наличные",
+      "namePlaceholder": "Название счёта",
       "nameLabel": "Название",
       "currencyLabel": "Валюта",
       "initialBalanceLabel": "Начальный баланс",
       "submit": "Создать",
       "submitting": "Создание…"
     },
-    "currentBalance": "Текущий баланс",
-    "initialBalance": "Начальный баланс",
+    "editModal": {
+      "title": "Редактировать счёт",
+      "nameLabel": "Название",
+      "initialBalanceLabel": "Начальный баланс",
+      "save": "Сохранить",
+      "saving": "Сохранение…",
+      "deleteAccount": "Удалить счёт"
+    },
     "deleteConfirm": {
       "title": "Удалить счёт?",
-      "description": "Все транзакции этого счёта тоже будут удалены. Действие необратимо.",
-      "confirm": "Удалить",
-      "cancel": "Отмена"
+      "description": "Все транзакции этого счёта тоже будут удалены. Действие необратимо."
     },
     "errors": {
       "nameTaken": "Счёт с таким названием уже существует.",
