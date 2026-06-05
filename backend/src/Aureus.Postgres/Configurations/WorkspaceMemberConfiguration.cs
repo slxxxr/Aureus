@@ -22,7 +22,7 @@ public sealed class WorkspaceMemberConfiguration : IEntityTypeConfiguration<Work
 
         builder.HasIndex(member => new { member.WorkspaceId, member.UserId }).IsUnique();
 
-        builder.HasOne<WorkspaceDb>()
+        builder.HasOne(member => member.Workspace)
             .WithMany()
             .HasForeignKey(member => member.WorkspaceId)
             .OnDelete(DeleteBehavior.Restrict);

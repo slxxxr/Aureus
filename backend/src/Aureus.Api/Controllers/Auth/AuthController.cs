@@ -8,10 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Aureus.Api.Controllers.Auth;
 
-[ApiController]
 [Route("api/auth")]
 [AllowAnonymous]
-public sealed class AuthController(ISender sender) : ControllerBase
+public sealed class AuthController(ISender sender) : ApiControllerBase
 {
     [HttpPost("register")]
     [ProducesResponseType(typeof(RegisterUserResponse), StatusCodes.Status201Created)]

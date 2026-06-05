@@ -4,7 +4,6 @@ import {
   BarChart3,
   CreditCard,
   FolderTree,
-  Landmark,
   LogOut,
   Menu,
   ReceiptText,
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/LanguageToggle";
+import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { useAuth } from "@/features/auth/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -47,15 +47,7 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-border bg-muted/40 px-3 py-4 md:flex md:flex-col">
-        <div className="mb-6 flex items-center gap-3 px-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background">
-            <Landmark className="h-5 w-5" aria-hidden="true" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold leading-5">{t("common.appName")}</p>
-            <p className="text-xs text-muted-foreground">{t("common.tagline")}</p>
-          </div>
-        </div>
+        <WorkspaceSwitcher />
 
         <nav className="space-y-1" aria-label={t("navigation.primaryLabel")}>
           {navigation.map((item) => (

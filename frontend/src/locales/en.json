@@ -49,6 +49,10 @@
     "currencyLabel": "Currency",
     "currencyValue": "RUB by default"
   },
+  "workspace": {
+    "switcherLabel": "Switch workspace",
+    "listLabel": "Workspaces"
+  },
   "auth": {
     "signOut": "Sign out",
     "fields": {

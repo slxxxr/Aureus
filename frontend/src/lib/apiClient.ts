@@ -1,5 +1,6 @@
+import { TOKEN_STORAGE_KEY } from "@/lib/constants";
+
 const API_BASE_URL = "/api";
-const TOKEN_STORAGE_KEY = "aureus.token";
 
 export type ProblemDetails = {
   status?: number;
@@ -54,7 +55,7 @@ export async function apiFetch<TResponse>(path: string, options: RequestOptions 
       problem = undefined;
     }
 
-    if (response.status === 401) {
+    if (response.status === 401 && !options.anonymous) {
       window.dispatchEvent(new CustomEvent("aureus:unauthorized"));
     }
 
