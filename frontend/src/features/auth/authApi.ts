@@ -20,9 +20,9 @@ export type RegisterResponse = {
 };
 
 export function login(request: LoginRequest): Promise<LoginResponse> {
-  return apiFetch<LoginResponse>("/auth/login", { method: "POST", body: request });
+  return apiFetch<LoginResponse>("/auth/login", { method: "POST", body: request, anonymous: true });
 }
 
 export function register(request: RegisterRequest): Promise<RegisterResponse> {
-  return apiFetch<RegisterResponse>("/auth/register", { method: "POST", body: request });
+  return apiFetch<RegisterResponse>("/auth/register", { method: "POST", body: request, anonymous: true });
 }
