@@ -1,3 +1,4 @@
+using Aureus.Api.Extensions;
 using Aureus.Api.Filters;
 using Aureus.Api.Middleware;
 using Aureus.Infrastructure;
@@ -9,9 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddUseCases();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPostgres(builder.Configuration);
-builder.Services.AddControllers(options => options.Filters.Add<UseCaseExceptionFilter>());
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddControllers(options => options.Filters.Add<UseCaseExceptionFilter>())
+    .AddControllersAsServices();
+
+builder.Services.AddAuthorizationBuilder()
+    .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build());
+builder.Services.AddConfiguredSwagger();
 
 var app = builder.Build();
 
@@ -19,9 +25,11 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseConfiguredSwagger();
 }
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 
