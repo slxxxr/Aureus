@@ -3,12 +3,14 @@ using Aureus.Api.Contracts.Auth.Register;
 using Aureus.UseCases.Auth.Login;
 using Aureus.UseCases.Auth.Register;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Aureus.Api.Controllers.Auth;
 
 [ApiController]
 [Route("api/auth")]
+[AllowAnonymous]
 public sealed class AuthController(ISender sender) : ControllerBase
 {
     [HttpPost("register")]
