@@ -1,6 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-
-const TOKEN_STORAGE_KEY = "aureus.token";
+import { TOKEN_STORAGE_KEY } from "@/lib/constants";
 
 type AuthContextValue = {
   token: string | null;
