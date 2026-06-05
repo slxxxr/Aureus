@@ -1,4 +1,4 @@
-namespace Aureus.Infrastructure.Persistence.Entities;
+namespace Aureus.Postgres.Entities;
 
 public sealed class UserDb
 {

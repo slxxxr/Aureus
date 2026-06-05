@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Aureus.Infrastructure.Persistence.Migrations
+namespace Aureus.Postgres.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

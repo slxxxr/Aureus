@@ -5,11 +5,11 @@ using Moq;
 
 namespace Aureus.UnitTests.Mocks;
 
-public sealed class UserRegistrationDbMock
+public sealed class UserRepositoryMock
 {
-    private readonly Mock<IUserRegistrationDb> _mock = new();
+    private readonly Mock<IUserRepository> _mock = new();
 
-    public IUserRegistrationDb Object => _mock.Object;
+    public IUserRepository Object => _mock.Object;
 
     public User? SavedUser { get; private set; }
 
@@ -17,7 +17,7 @@ public sealed class UserRegistrationDbMock
 
     public WorkspaceMember? SavedWorkspaceMember { get; private set; }
 
-    public UserRegistrationDbMock WithExistingEmail(string email)
+    public UserRepositoryMock WithExistingEmail(string email)
     {
         _mock
             .Setup(db => db.EmailExistsAsync(email, It.IsAny<CancellationToken>()))
@@ -26,7 +26,7 @@ public sealed class UserRegistrationDbMock
         return this;
     }
 
-    public UserRegistrationDbMock WithAvailableEmail(string email)
+    public UserRepositoryMock WithAvailableEmail(string email)
     {
         _mock
             .Setup(db => db.EmailExistsAsync(email, It.IsAny<CancellationToken>()))
@@ -35,7 +35,7 @@ public sealed class UserRegistrationDbMock
         return this;
     }
 
-    public UserRegistrationDbMock CapturingRegistration()
+    public UserRepositoryMock CapturingRegistration()
     {
         _mock
             .Setup(db => db.AddAsync(

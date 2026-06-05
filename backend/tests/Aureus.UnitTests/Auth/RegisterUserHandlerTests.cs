@@ -10,12 +10,12 @@ public sealed class RegisterUserHandlerTests
     public async Task Handle_UserDoesNotExist_CreatesUserWorkspaceAndOwnerMembership()
     {
         // Arrange
-        var registrationDb = new UserRegistrationDbMock()
+        var userRepository = new UserRepositoryMock()
             .WithAvailableEmail("user@example.com")
             .CapturingRegistration();
         var passwordHasher = new PasswordHasherMock()
             .WithHash("password123", "hashed:password123");
-        var handler = new RegisterUserHandler(registrationDb.Object, passwordHasher.Object);
+        var handler = new RegisterUserHandler(userRepository.Object, passwordHasher.Object);
 
         // Act
         var result = await handler.Handle(
@@ -25,28 +25,28 @@ public sealed class RegisterUserHandlerTests
         // Assert
         Assert.NotEqual(Guid.Empty, result.UserId);
         Assert.NotEqual(Guid.Empty, result.WorkspaceId);
-        Assert.NotNull(registrationDb.SavedUser);
-        Assert.NotNull(registrationDb.SavedWorkspace);
-        Assert.NotNull(registrationDb.SavedWorkspaceMember);
-        Assert.Equal("user@example.com", registrationDb.SavedUser.Email);
-        Assert.Equal("hashed:password123", registrationDb.SavedUser.PasswordHash);
-        Assert.Equal(result.UserId, registrationDb.SavedUser.Id);
-        Assert.Equal(result.WorkspaceId, registrationDb.SavedWorkspace.Id);
-        Assert.Equal(result.UserId, registrationDb.SavedWorkspace.OwnerUserId);
-        Assert.Equal(result.WorkspaceId, registrationDb.SavedWorkspaceMember.WorkspaceId);
-        Assert.Equal(result.UserId, registrationDb.SavedWorkspaceMember.UserId);
-        Assert.Equal(WorkspaceRole.Owner, registrationDb.SavedWorkspaceMember.Role);
-        registrationDb.VerifyRegistrationSavedOnce();
+        Assert.NotNull(userRepository.SavedUser);
+        Assert.NotNull(userRepository.SavedWorkspace);
+        Assert.NotNull(userRepository.SavedWorkspaceMember);
+        Assert.Equal("user@example.com", userRepository.SavedUser.Email);
+        Assert.Equal("hashed:password123", userRepository.SavedUser.PasswordHash);
+        Assert.Equal(result.UserId, userRepository.SavedUser.Id);
+        Assert.Equal(result.WorkspaceId, userRepository.SavedWorkspace.Id);
+        Assert.Equal(result.UserId, userRepository.SavedWorkspace.OwnerUserId);
+        Assert.Equal(result.WorkspaceId, userRepository.SavedWorkspaceMember.WorkspaceId);
+        Assert.Equal(result.UserId, userRepository.SavedWorkspaceMember.UserId);
+        Assert.Equal(WorkspaceRole.Owner, userRepository.SavedWorkspaceMember.Role);
+        userRepository.VerifyRegistrationSavedOnce();
     }
 
     [Fact]
     public async Task Handle_EmailAlreadyExists_ThrowsRegistrationException()
     {
         // Arrange
-        var registrationDb = new UserRegistrationDbMock()
+        var userRepository = new UserRepositoryMock()
             .WithExistingEmail("user@example.com");
         var passwordHasher = new PasswordHasherMock();
-        var handler = new RegisterUserHandler(registrationDb.Object, passwordHasher.Object);
+        var handler = new RegisterUserHandler(userRepository.Object, passwordHasher.Object);
 
         // Act
         var exception = await Assert.ThrowsAsync<RegistrationException>(() =>
@@ -56,6 +56,6 @@ public sealed class RegisterUserHandlerTests
 
         // Assert
         Assert.Equal(RegistrationErrorCode.EmailAlreadyExists, exception.Code);
-        registrationDb.VerifyRegistrationNotSaved();
+        userRepository.VerifyRegistrationNotSaved();
     }
 }

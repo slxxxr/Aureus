@@ -1,7 +1,7 @@
-using Aureus.Infrastructure.Persistence.Entities;
+using Aureus.Postgres.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Aureus.Infrastructure;
+namespace Aureus.Postgres;
 
 public sealed class AureusDbContext(DbContextOptions<AureusDbContext> options) : DbContext(options)
 {

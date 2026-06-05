@@ -1,9 +1,9 @@
 using AutoMapper;
 using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
-using Aureus.Infrastructure.Persistence.Entities;
+using Aureus.Postgres.Entities;
 
-namespace Aureus.Infrastructure.Mappers;
+namespace Aureus.Postgres.Mappers;
 
 public sealed class DatabaseMappings : Profile
 {

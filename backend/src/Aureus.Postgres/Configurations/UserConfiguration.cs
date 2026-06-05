@@ -1,8 +1,8 @@
-using Aureus.Infrastructure.Persistence.Entities;
+using Aureus.Postgres.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Aureus.Infrastructure.Persistence.Configurations;
+namespace Aureus.Postgres.Configurations;
 
 public sealed class UserConfiguration : IEntityTypeConfiguration<UserDb>
 {

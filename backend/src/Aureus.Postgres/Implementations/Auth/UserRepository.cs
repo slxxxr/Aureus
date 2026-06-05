@@ -1,13 +1,13 @@
 using AutoMapper;
 using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
-using Aureus.Infrastructure.Persistence.Entities;
+using Aureus.Postgres.Entities;
 using Aureus.UseCases.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace Aureus.Infrastructure.Persistence;
+namespace Aureus.Postgres.Implementations.Auth;
 
-public sealed class UserRegistrationDb(AureusDbContext dbContext, IMapper mapper) : IUserRegistrationDb
+public sealed class UserRepository(AureusDbContext dbContext, IMapper mapper) : IUserRepository
 {
     public Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken)
     {
