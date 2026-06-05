@@ -14,6 +14,15 @@ public sealed class UserRepository(AureusDbContext dbContext, IMapper mapper) : 
         return dbContext.Users.AnyAsync(user => user.Email == email, cancellationToken);
     }
 
+    public async Task<User?> FindByEmailAsync(string email, CancellationToken cancellationToken)
+    {
+        var userDb = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(user => user.Email == email, cancellationToken);
+
+        return userDb is null ? null : mapper.Map<User>(userDb);
+    }
+
     public async Task AddAsync(
         User user,
         Workspace workspace,
