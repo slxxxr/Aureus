@@ -3,12 +3,13 @@ using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
 using Aureus.UseCases.Common.Persistence;
 using Aureus.UseCases.Common.Security;
+
 using MediatR;
 
 namespace Aureus.UseCases.Auth.Register;
 
 public sealed class RegisterUserHandler(
-    IUserRegistrationDb registrationDb,
+    IUserRepository userRepository,
     IPasswordHasher passwordHasher) : IRequestHandler<RegisterUserCommand, RegisterUserResult>
 {
     private const int MinimumPasswordLength = 8;
@@ -34,7 +35,7 @@ public sealed class RegisterUserHandler(
                 $"Password must be at least {MinimumPasswordLength} characters long.");
         }
 
-        if (await registrationDb.EmailExistsAsync(email, cancellationToken))
+        if (await userRepository.EmailExistsAsync(email, cancellationToken))
         {
             throw new RegistrationException(RegistrationErrorCode.EmailAlreadyExists, "Email is already registered.");
         }
@@ -68,7 +69,7 @@ public sealed class RegisterUserHandler(
             JoinedAt = now
         };
 
-        await registrationDb.AddAsync(user, workspace, workspaceMember, cancellationToken);
+        await userRepository.AddAsync(user, workspace, workspaceMember, cancellationToken);
 
         return new RegisterUserResult(userId, workspaceId);
     }

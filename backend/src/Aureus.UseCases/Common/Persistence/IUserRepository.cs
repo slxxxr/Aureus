@@ -3,7 +3,7 @@ using Aureus.Domain.Workspaces;
 
 namespace Aureus.UseCases.Common.Persistence;
 
-public interface IUserRegistrationDb
+public interface IUserRepository
 {
     Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken);
 
