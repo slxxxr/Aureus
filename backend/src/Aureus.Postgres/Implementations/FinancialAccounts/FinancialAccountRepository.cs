@@ -44,7 +44,7 @@ public sealed class FinancialAccountRepository(AureusDbContext dbContext, IMappe
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        catch (Exception ex) when (IsUniqueViolation(ex))
         {
             throw new FinancialAccountException(
                 FinancialAccountErrorCode.NameTaken,
@@ -65,7 +65,7 @@ public sealed class FinancialAccountRepository(AureusDbContext dbContext, IMappe
                           .SetProperty(a => a.UpdatedAt, account.UpdatedAt),
                     cancellationToken);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        catch (Exception ex) when (IsUniqueViolation(ex))
         {
             throw new FinancialAccountException(
                 FinancialAccountErrorCode.NameTaken,
@@ -95,4 +95,8 @@ public sealed class FinancialAccountRepository(AureusDbContext dbContext, IMappe
 
         await transaction.CommitAsync(cancellationToken);
     }
+
+    private static bool IsUniqueViolation(Exception ex) =>
+        ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } ||
+        ex is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } };
 }
