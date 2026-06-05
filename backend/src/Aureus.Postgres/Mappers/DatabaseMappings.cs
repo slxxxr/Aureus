@@ -1,4 +1,5 @@
 using AutoMapper;
+using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
 using Aureus.Postgres.Entities;
@@ -16,5 +17,7 @@ public sealed class DatabaseMappings : Profile
             .ForMember(
                 destination => destination.Role,
                 options => options.MapFrom(source => source.Role.ToString()));
+        CreateMap<FinancialAccount, FinancialAccountDb>();
+        CreateMap<FinancialAccountDb, FinancialAccount>();
     }
 }

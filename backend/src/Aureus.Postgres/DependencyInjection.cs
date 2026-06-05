@@ -1,5 +1,6 @@
 using Aureus.Postgres.Mappers;
 using Aureus.Postgres.Implementations.Auth;
+using Aureus.Postgres.Implementations.FinancialAccounts;
 using Aureus.Postgres.Implementations.Workspaces;
 using Aureus.UseCases.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,7 @@ public static class DependencyInjection
 
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
+        services.AddScoped<IFinancialAccountRepository, FinancialAccountRepository>();
 
         return services;
     }
