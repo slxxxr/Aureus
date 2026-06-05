@@ -49,6 +49,10 @@
     "currencyLabel": "Валюта",
     "currencyValue": "RUB по умолчанию"
   },
+  "workspace": {
+    "switcherLabel": "Переключить рабочее пространство",
+    "listLabel": "Рабочие пространства"
+  },
   "auth": {
     "signOut": "Выйти",
     "fields": {
