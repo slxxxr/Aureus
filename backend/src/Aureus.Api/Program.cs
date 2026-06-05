@@ -7,7 +7,7 @@ using Aureus.UseCases;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddUseCases();
-builder.Services.AddInfrastructure();
+builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPostgres(builder.Configuration);
 builder.Services.AddControllers(options => options.Filters.Add<UseCaseExceptionFilter>());
 builder.Services.AddEndpointsApiExplorer();
