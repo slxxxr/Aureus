@@ -58,11 +58,11 @@ public sealed class FinancialAccountRepository(AureusDbContext dbContext, IMappe
         {
             await dbContext.FinancialAccounts
                 .Where(a => a.Id == account.Id)
-                .ExecuteUpdateAsync(
-                    s => s.SetProperty(a => a.Name, account.Name)
-                          .SetProperty(a => a.InitialBalanceMinor, account.InitialBalanceMinor)
-                          .SetProperty(a => a.CurrentBalanceMinor, account.CurrentBalanceMinor)
-                          .SetProperty(a => a.UpdatedAt, account.UpdatedAt),
+                .ExecuteUpdateAsync(s => s
+                        .SetProperty(a => a.Name, account.Name)
+                        .SetProperty(a => a.InitialBalanceMinor, account.InitialBalanceMinor)
+                        .SetProperty(a => a.CurrentBalanceMinor, account.CurrentBalanceMinor)
+                        .SetProperty(a => a.UpdatedAt, account.UpdatedAt),
                     cancellationToken);
         }
         catch (Exception ex) when (IsUniqueViolation(ex))
@@ -81,16 +81,16 @@ public sealed class FinancialAccountRepository(AureusDbContext dbContext, IMappe
 
         await dbContext.Transactions
             .Where(t => t.FinancialAccountId == account.Id && !t.IsDeleted)
-            .ExecuteUpdateAsync(
-                s => s.SetProperty(t => t.IsDeleted, true)
-                      .SetProperty(t => t.DeletedAt, now),
+            .ExecuteUpdateAsync(s => s
+                    .SetProperty(t => t.IsDeleted, true)
+                    .SetProperty(t => t.DeletedAt, now),
                 cancellationToken);
 
         await dbContext.FinancialAccounts
             .Where(a => a.Id == account.Id)
-            .ExecuteUpdateAsync(
-                s => s.SetProperty(a => a.IsDeleted, true)
-                      .SetProperty(a => a.DeletedAt, now),
+            .ExecuteUpdateAsync(s => s
+                    .SetProperty(a => a.IsDeleted, true)
+                    .SetProperty(a => a.DeletedAt, now),
                 cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
