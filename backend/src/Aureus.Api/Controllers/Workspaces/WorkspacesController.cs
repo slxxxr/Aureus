@@ -1,6 +1,7 @@
 using Aureus.Api.Contracts.Workspaces;
 using Aureus.Domain.Workspaces;
 using Aureus.UseCases.Workspaces.CreateWorkspace;
+using Aureus.UseCases.Workspaces.DeleteWorkspace;
 using Aureus.UseCases.Workspaces.GetUserWorkspaces;
 using Aureus.UseCases.Workspaces.UpdateWorkspace;
 using AutoMapper;
@@ -42,5 +43,14 @@ public sealed class WorkspacesController(ISender sender, IMapper mapper) : ApiCo
         var workspace = await sender.Send(new UpdateWorkspaceCommand(workspaceId, CurrentUserId, request.Name), cancellationToken);
 
         return Ok(new WorkspaceResponse(workspace.Id, workspace.Name, nameof(WorkspaceRole.Owner)));
+    }
+
+    [HttpDelete("{workspaceId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DeleteAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        await sender.Send(new DeleteWorkspaceCommand(workspaceId, CurrentUserId), cancellationToken);
+
+        return NoContent();
     }
 }

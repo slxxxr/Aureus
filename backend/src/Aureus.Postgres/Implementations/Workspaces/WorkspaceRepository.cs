@@ -85,6 +85,45 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
         }
     }
 
+    public async Task DeleteAsync(Workspace workspace, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await dbContext.Transactions
+            .Where(t => t.WorkspaceId == workspace.Id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.IsDeleted, true)
+                .SetProperty(t => t.DeletedAt, now), cancellationToken);
+
+        await dbContext.FinancialAccounts
+            .Where(a => a.WorkspaceId == workspace.Id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(a => a.IsDeleted, true)
+                .SetProperty(a => a.DeletedAt, now), cancellationToken);
+
+        await dbContext.Categories
+            .Where(c => c.WorkspaceId == workspace.Id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(c => c.IsDeleted, true)
+                .SetProperty(c => c.DeletedAt, now), cancellationToken);
+
+        await dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspace.Id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(m => m.IsDeleted, true)
+                .SetProperty(m => m.DeletedAt, now), cancellationToken);
+
+        await dbContext.Workspaces
+            .Where(w => w.Id == workspace.Id)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(w => w.IsDeleted, true)
+                .SetProperty(w => w.DeletedAt, now), cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+    }
+
     private static bool IsUniqueViolation(Exception ex) =>
         ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } ||
         ex is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } };

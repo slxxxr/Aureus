@@ -80,7 +80,7 @@ public sealed class FinancialAccountRepository(AureusDbContext dbContext, IMappe
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         await dbContext.Transactions
-            .Where(t => t.FinancialAccountId == account.Id && !t.IsDeleted)
+            .Where(t => t.FinancialAccountId == account.Id)
             .ExecuteUpdateAsync(s => s
                     .SetProperty(t => t.IsDeleted, true)
                     .SetProperty(t => t.DeletedAt, now),
