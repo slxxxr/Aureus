@@ -19,6 +19,7 @@ public sealed class FinancialAccountsController(ISender sender) : ApiControllerB
     {
         var accounts = await sender.Send(new GetFinancialAccountsQuery(workspaceId), cancellationToken);
 
+        // TODO: map to response via AutoMapper (see Aureus.Api.Mappers.ContractMappings)
         var response = accounts
             .Select(a => new FinancialAccountResponse(
                 a.Id, a.Name, a.Currency,

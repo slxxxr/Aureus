@@ -1,5 +1,5 @@
-using Aureus.Postgres.Mappers;
 using Aureus.Postgres.Implementations.Auth;
+using Aureus.Postgres.Implementations.Categories;
 using Aureus.Postgres.Implementations.FinancialAccounts;
 using Aureus.Postgres.Implementations.Workspaces;
 using Aureus.UseCases.Common.Persistence;
@@ -20,14 +20,10 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString);
         });
 
-        services.AddAutoMapper(configuration =>
-        {
-            configuration.AddProfile<DatabaseMappings>();
-        });
-
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<IFinancialAccountRepository, FinancialAccountRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
 
         return services;
     }
