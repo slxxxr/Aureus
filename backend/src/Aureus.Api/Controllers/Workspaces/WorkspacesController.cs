@@ -1,14 +1,16 @@
 using Aureus.Api.Contracts.Workspaces;
+using Aureus.Domain.Workspaces;
 using Aureus.UseCases.Workspaces.CreateWorkspace;
 using Aureus.UseCases.Workspaces.GetUserWorkspaces;
 using Aureus.UseCases.Workspaces.UpdateWorkspace;
+using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Aureus.Api.Controllers.Workspaces;
 
 [Route("api/workspaces")]
-public sealed class WorkspacesController(ISender sender) : ApiControllerBase
+public sealed class WorkspacesController(ISender sender, IMapper mapper) : ApiControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<WorkspaceResponse>), StatusCodes.Status200OK)]
@@ -16,12 +18,7 @@ public sealed class WorkspacesController(ISender sender) : ApiControllerBase
     {
         var workspaces = await sender.Send(new GetUserWorkspacesQuery(CurrentUserId), cancellationToken);
 
-        // TODO: map to response via AutoMapper (see Aureus.Api.Mappers.ContractMappings)
-        var response = workspaces
-            .Select(w => new WorkspaceResponse(w.Id, w.Name, w.Role))
-            .ToList();
-
-        return Ok(response);
+        return Ok(mapper.Map<IReadOnlyList<WorkspaceResponse>>(workspaces));
     }
 
     [HttpPost]
@@ -30,7 +27,9 @@ public sealed class WorkspacesController(ISender sender) : ApiControllerBase
     {
         var workspace = await sender.Send(new CreateWorkspaceCommand(CurrentUserId, request.Name), cancellationToken);
 
-        return StatusCode(StatusCodes.Status201Created, new WorkspaceResponse(workspace.Id, workspace.Name, "Owner"));
+        return StatusCode(
+            StatusCodes.Status201Created,
+            new WorkspaceResponse(workspace.Id, workspace.Name, nameof(WorkspaceRole.Owner)));
     }
 
     [HttpPatch("{workspaceId:guid}")]
@@ -42,6 +41,6 @@ public sealed class WorkspacesController(ISender sender) : ApiControllerBase
     {
         var workspace = await sender.Send(new UpdateWorkspaceCommand(workspaceId, CurrentUserId, request.Name), cancellationToken);
 
-        return Ok(new WorkspaceResponse(workspace.Id, workspace.Name, "Owner"));
+        return Ok(new WorkspaceResponse(workspace.Id, workspace.Name, nameof(WorkspaceRole.Owner)));
     }
 }
