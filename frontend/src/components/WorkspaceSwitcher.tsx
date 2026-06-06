@@ -9,6 +9,7 @@ import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import {
   createWorkspace,
+  deleteWorkspace,
   updateWorkspace,
   type Workspace,
 } from "@/features/workspaces/workspacesApi";
@@ -97,19 +98,47 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [name, setName] = useState(workspace.name);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  const mutation = useMutation({
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+
+  const updateMutation = useMutation({
     mutationFn: () => updateWorkspace(workspace.id, { name: name.trim() }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["workspaces"] });
-      onClose();
-    },
+    onSuccess: () => { void invalidate(); onClose(); },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteWorkspace(workspace.id),
+    onSuccess: () => { void invalidate(); onClose(); },
+  });
+
+  const isPending = updateMutation.isPending || deleteMutation.isPending;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    mutation.mutate();
+    updateMutation.mutate();
   };
+
+  if (confirmingDelete) {
+    return (
+      <Modal onBackdropClick={() => setConfirmingDelete(false)}>
+        <h2 className="mb-2 text-base font-semibold">{t("workspace.deleteConfirm.title")}</h2>
+        <p className="mb-5 text-sm text-muted-foreground">{t("workspace.deleteConfirm.description")}</p>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => setConfirmingDelete(false)} disabled={deleteMutation.isPending}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            disabled={deleteMutation.isPending}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => deleteMutation.mutate()}
+          >
+            {t("common.delete")}
+          </Button>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal onBackdropClick={onClose}>
@@ -123,26 +152,36 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
             onChange={(e) => setName(e.target.value)}
             required
             autoFocus
-            disabled={mutation.isPending}
+            disabled={isPending}
           />
         </div>
 
-        {mutation.isError && (
+        {updateMutation.isError && (
           <p className="text-sm text-destructive" role="alert">
-            {resolveWorkspaceError(mutation.error, t as TFunction)}
+            {resolveWorkspaceError(updateMutation.error, t as TFunction)}
           </p>
         )}
 
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={mutation.isPending}>
-            {t("common.cancel")}
-          </Button>
-          <Button
-            type="submit"
-            disabled={mutation.isPending || !name.trim() || name.trim() === workspace.name}
+        <div className="flex items-center justify-between pt-1">
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            disabled={isPending}
+            className="text-sm text-destructive hover:underline disabled:opacity-50"
           >
-            {mutation.isPending ? t("workspace.editModal.saving") : t("workspace.editModal.save")}
-          </Button>
+            {t("workspace.editModal.deleteWorkspace")}
+          </button>
+          <div className="flex gap-2">
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="submit"
+              disabled={isPending || !name.trim() || name.trim() === workspace.name}
+            >
+              {updateMutation.isPending ? t("workspace.editModal.saving") : t("workspace.editModal.save")}
+            </Button>
+          </div>
         </div>
       </form>
     </Modal>
@@ -166,40 +205,37 @@ export function WorkspaceSwitcher() {
   return (
     <>
       <div ref={ref} className="relative mb-6 px-2">
-        <div className="group flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setOpen((prev) => !prev)}
-            className="flex min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent"
-            aria-label={t("workspace.switcherLabel")}
-            aria-expanded={open}
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background">
-              <Landmark className="h-4 w-4" aria-hidden="true" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold leading-5">
-                {activeWorkspace?.name ?? t("common.appName")}
-              </p>
-              <p className="text-xs text-muted-foreground">{t("common.appName")}</p>
-            </div>
-            <ChevronDown
-              className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
-              aria-hidden="true"
-            />
-          </button>
-
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="group flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent"
+          aria-label={t("workspace.switcherLabel")}
+          aria-expanded={open}
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background">
+            <Landmark className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold leading-5">
+              {activeWorkspace?.name ?? t("common.appName")}
+            </p>
+            <p className="text-xs text-muted-foreground">{t("common.appName")}</p>
+          </div>
           {isOwner && activeWorkspace && (
-            <button
-              type="button"
-              onClick={() => setEditingWorkspace(activeWorkspace)}
+            <span
+              role="button"
+              onClick={(e) => { e.stopPropagation(); setEditingWorkspace(activeWorkspace); }}
               className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               aria-label={t("workspace.editModal.title")}
             >
               <Pencil className="h-3.5 w-3.5" />
-            </button>
+            </span>
           )}
-        </div>
+          <ChevronDown
+            className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
+            aria-hidden="true"
+          />
+        </button>
 
         {open && (
           <div className="absolute left-2 right-2 top-full z-50 mt-1 rounded-md border border-border bg-background shadow-md">
