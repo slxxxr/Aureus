@@ -31,8 +31,10 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.Property(transaction => transaction.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(transaction => transaction.UpdatedAt).HasColumnName("updated_at");
 
+        builder.HasQueryFilter(transaction => !transaction.IsDeleted);
+
         builder.HasIndex(transaction => new { transaction.WorkspaceId, transaction.OccurredAt });
-        builder.HasIndex(transaction => new { transaction.WorkspaceId, transaction.IsDeleted });
+        builder.HasIndex(transaction => new { transaction.FinancialAccountId, transaction.IsDeleted });
         builder.HasIndex(transaction => transaction.CreatedByUserId);
 
         builder.HasOne<WorkspaceDb>()

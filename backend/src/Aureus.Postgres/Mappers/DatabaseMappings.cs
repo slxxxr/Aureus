@@ -30,5 +30,13 @@ public sealed class DatabaseMappings : Profile
             .ForMember(
                 destination => destination.Type,
                 options => options.MapFrom(source => Enum.Parse<TransactionType>(source.Type)));
+        CreateMap<Transaction, TransactionDb>()
+            .ForMember(
+                destination => destination.Type,
+                options => options.MapFrom(source => source.Type.ToString()));
+        CreateMap<TransactionDb, Transaction>()
+            .ForMember(
+                destination => destination.Type,
+                options => options.MapFrom(source => Enum.Parse<TransactionType>(source.Type)));
     }
 }
