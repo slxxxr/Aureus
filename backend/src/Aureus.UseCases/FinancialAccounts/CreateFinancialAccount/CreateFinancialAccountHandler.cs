@@ -15,7 +15,7 @@ public sealed class CreateFinancialAccountHandler(IFinancialAccountRepository re
         {
             Id = Guid.NewGuid(),
             WorkspaceId = command.WorkspaceId,
-            Name = command.Name,
+            Name = command.Name.Trim(),
             Currency = command.Currency,
             InitialBalanceMinor = command.InitialBalanceMinor,
             CurrentBalanceMinor = command.InitialBalanceMinor,
