@@ -68,12 +68,11 @@ public sealed class UpdateWorkspaceHandlerTests
         var handler = new UpdateWorkspaceHandler(repository.Object);
 
         // Act
-        var result = await handler.Handle(
-            new UpdateWorkspaceCommand(workspace.Id, ownerId, Name: "New Name"),
-            CancellationToken.None);
+        var command = new UpdateWorkspaceCommand(workspace.Id, ownerId, Name: "New Name");
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.Equal("New Name", result.Name);
+        Assert.Equal(command.Name, result.Name);
     }
 
     [Fact]
@@ -113,6 +112,6 @@ public sealed class UpdateWorkspaceHandlerTests
             CancellationToken.None);
 
         // Assert
-        Assert.Equal("Original", result.Name);
+        Assert.Equal(workspace.Name, result.Name);
     }
 }

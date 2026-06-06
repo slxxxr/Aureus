@@ -28,11 +28,11 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
 
         var stored = await repository.FindByIdAsync(workspace.Id, CancellationToken.None);
         Assert.NotNull(stored);
-        Assert.Equal("Personal", stored!.Name);
+        Assert.Equal(workspace.Name, stored!.Name);
 
         var membership = await repository.FindMembershipAsync(workspace.Id, ownerId, CancellationToken.None);
         Assert.NotNull(membership);
-        Assert.Equal(WorkspaceRole.Owner, membership!.Role);
+        Assert.Equal(member.Role, membership!.Role);
     }
 
     [Fact]

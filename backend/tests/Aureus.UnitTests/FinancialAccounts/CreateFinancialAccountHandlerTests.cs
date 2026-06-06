@@ -55,7 +55,7 @@ public sealed class CreateFinancialAccountHandlerTests
 
         // Assert
         Assert.Equal(command.WorkspaceId, result.WorkspaceId);
-        Assert.Equal("USD", result.Currency);
+        Assert.Equal(command.Currency, result.Currency);
     }
 
     [Fact]
@@ -84,8 +84,8 @@ public sealed class CreateFinancialAccountHandlerTests
         var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.Equal(0, result.InitialBalanceMinor);
-        Assert.Equal(0, result.CurrentBalanceMinor);
+        Assert.Equal(command.InitialBalanceMinor, result.InitialBalanceMinor);
+        Assert.Equal(command.InitialBalanceMinor, result.CurrentBalanceMinor);
     }
 
     [Fact]
@@ -100,6 +100,6 @@ public sealed class CreateFinancialAccountHandlerTests
         var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.Equal(-500_00, result.CurrentBalanceMinor);
+        Assert.Equal(command.InitialBalanceMinor, result.CurrentBalanceMinor);
     }
 }

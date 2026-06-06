@@ -57,8 +57,8 @@ public sealed class UpdateFinancialAccountHandlerTests
 
         // Assert
         Assert.Equal("Wallet", result.Name);
-        Assert.Equal(1000_00, result.InitialBalanceMinor);
-        Assert.Equal(800_00, result.CurrentBalanceMinor);
+        Assert.Equal(account.InitialBalanceMinor, result.InitialBalanceMinor);
+        Assert.Equal(account.CurrentBalanceMinor, result.CurrentBalanceMinor);
     }
 
     [Theory]
@@ -98,13 +98,12 @@ public sealed class UpdateFinancialAccountHandlerTests
         var handler = new UpdateFinancialAccountHandler(repository.Object);
 
         // Act
-        var result = await handler.Handle(
-            new UpdateFinancialAccountCommand(account.Id, account.WorkspaceId, Name: "Card", InitialBalanceMinor: 2000_00),
-            CancellationToken.None);
+        var command = new UpdateFinancialAccountCommand(account.Id, account.WorkspaceId, Name: "Card", InitialBalanceMinor: 2000_00);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.Equal("Card", result.Name);
-        Assert.Equal(2000_00, result.InitialBalanceMinor);
+        Assert.Equal(command.Name, result.Name);
+        Assert.Equal(command.InitialBalanceMinor, result.InitialBalanceMinor);
         Assert.Equal(1900_00, result.CurrentBalanceMinor);
     }
 
@@ -124,9 +123,9 @@ public sealed class UpdateFinancialAccountHandlerTests
             CancellationToken.None);
 
         // Assert
-        Assert.Equal("Cash", result.Name);
-        Assert.Equal(1000_00, result.InitialBalanceMinor);
-        Assert.Equal(800_00, result.CurrentBalanceMinor);
+        Assert.Equal(account.Name, result.Name);
+        Assert.Equal(account.InitialBalanceMinor, result.InitialBalanceMinor);
+        Assert.Equal(account.CurrentBalanceMinor, result.CurrentBalanceMinor);
     }
 
     [Fact]

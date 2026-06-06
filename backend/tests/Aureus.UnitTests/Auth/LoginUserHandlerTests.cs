@@ -15,7 +15,8 @@ public sealed class LoginUserHandlerTests
 
         var userRepository = new UserRepositoryMock().WithUser("user@example.com", user);
         var passwordHasher = new PasswordHasherMock().WithVerify("password123", "hashed:password123", true);
-        var jwtGenerator = new JwtTokenGeneratorMock().WithToken(userId, "user@example.com", "jwt.token.value");
+        const string accessToken = "jwt.token.value";
+        var jwtGenerator = new JwtTokenGeneratorMock().WithToken(userId, "user@example.com", accessToken);
         var handler = new LoginUserHandler(userRepository.Object, passwordHasher.Object, jwtGenerator.Object);
 
         // Act
@@ -24,7 +25,7 @@ public sealed class LoginUserHandlerTests
             CancellationToken.None);
 
         // Assert
-        Assert.Equal("jwt.token.value", result.AccessToken);
+        Assert.Equal(accessToken, result.AccessToken);
     }
 
     [Fact]
@@ -73,7 +74,8 @@ public sealed class LoginUserHandlerTests
 
         var userRepository = new UserRepositoryMock().WithUser("user@example.com", user);
         var passwordHasher = new PasswordHasherMock().WithVerify("password123", "hashed:password123", true);
-        var jwtGenerator = new JwtTokenGeneratorMock().WithToken(userId, "user@example.com", "jwt.token.value");
+        const string accessToken = "jwt.token.value";
+        var jwtGenerator = new JwtTokenGeneratorMock().WithToken(userId, "user@example.com", accessToken);
         var handler = new LoginUserHandler(userRepository.Object, passwordHasher.Object, jwtGenerator.Object);
 
         // Act
@@ -82,6 +84,6 @@ public sealed class LoginUserHandlerTests
             CancellationToken.None);
 
         // Assert
-        Assert.Equal("jwt.token.value", result.AccessToken);
+        Assert.Equal(accessToken, result.AccessToken);
     }
 }
