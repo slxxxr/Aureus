@@ -68,7 +68,12 @@
       "title": "Edit workspace",
       "nameLabel": "Name",
       "save": "Save",
-      "saving": "Saving…"
+      "saving": "Saving…",
+      "deleteWorkspace": "Delete workspace"
+    },
+    "deleteConfirm": {
+      "title": "Delete workspace?",
+      "description": "All accounts, categories, and transactions in this workspace will also be deleted. This action cannot be undone."
     },
     "errors": {
       "nameTaken": "A workspace with this name already exists.",

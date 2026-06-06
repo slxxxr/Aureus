@@ -25,3 +25,7 @@ export function createWorkspace(payload: CreateWorkspacePayload): Promise<Worksp
 export function updateWorkspace(workspaceId: string, payload: UpdateWorkspacePayload): Promise<Workspace> {
   return apiFetch<Workspace>(`/workspaces/${workspaceId}`, { method: "PATCH", body: payload });
 }
+
+export function deleteWorkspace(workspaceId: string): Promise<void> {
+  return apiFetch<void>(`/workspaces/${workspaceId}`, { method: "DELETE" });
+}

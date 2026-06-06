@@ -9,6 +9,7 @@ import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import {
   createWorkspace,
+  deleteWorkspace,
   updateWorkspace,
   type Workspace,
 } from "@/features/workspaces/workspacesApi";
@@ -97,19 +98,47 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [name, setName] = useState(workspace.name);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  const mutation = useMutation({
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["workspaces"] });
+
+  const updateMutation = useMutation({
     mutationFn: () => updateWorkspace(workspace.id, { name: name.trim() }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["workspaces"] });
-      onClose();
-    },
+    onSuccess: () => { void invalidate(); onClose(); },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteWorkspace(workspace.id),
+    onSuccess: () => { void invalidate(); onClose(); },
+  });
+
+  const isPending = updateMutation.isPending || deleteMutation.isPending;
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    mutation.mutate();
+    updateMutation.mutate();
   };
+
+  if (confirmingDelete) {
+    return (
+      <Modal onBackdropClick={() => setConfirmingDelete(false)}>
+        <h2 className="mb-2 text-base font-semibold">{t("workspace.deleteConfirm.title")}</h2>
+        <p className="mb-5 text-sm text-muted-foreground">{t("workspace.deleteConfirm.description")}</p>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => setConfirmingDelete(false)} disabled={deleteMutation.isPending}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            disabled={deleteMutation.isPending}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => deleteMutation.mutate()}
+          >
+            {t("common.delete")}
+          </Button>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal onBackdropClick={onClose}>
@@ -123,26 +152,36 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
             onChange={(e) => setName(e.target.value)}
             required
             autoFocus
-            disabled={mutation.isPending}
+            disabled={isPending}
           />
         </div>
 
-        {mutation.isError && (
+        {updateMutation.isError && (
           <p className="text-sm text-destructive" role="alert">
-            {resolveWorkspaceError(mutation.error, t as TFunction)}
+            {resolveWorkspaceError(updateMutation.error, t as TFunction)}
           </p>
         )}
 
-        <div className="flex justify-end gap-2 pt-1">
-          <Button type="button" variant="secondary" onClick={onClose} disabled={mutation.isPending}>
-            {t("common.cancel")}
-          </Button>
-          <Button
-            type="submit"
-            disabled={mutation.isPending || !name.trim() || name.trim() === workspace.name}
+        <div className="flex items-center justify-between pt-1">
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            disabled={isPending}
+            className="text-sm text-destructive hover:underline disabled:opacity-50"
           >
-            {mutation.isPending ? t("workspace.editModal.saving") : t("workspace.editModal.save")}
-          </Button>
+            {t("workspace.editModal.deleteWorkspace")}
+          </button>
+          <div className="flex gap-2">
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
+              {t("common.cancel")}
+            </Button>
+            <Button
+              type="submit"
+              disabled={isPending || !name.trim() || name.trim() === workspace.name}
+            >
+              {updateMutation.isPending ? t("workspace.editModal.saving") : t("workspace.editModal.save")}
+            </Button>
+          </div>
         </div>
       </form>
     </Modal>
