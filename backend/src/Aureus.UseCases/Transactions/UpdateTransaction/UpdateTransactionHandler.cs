@@ -1,5 +1,4 @@
 using Aureus.Domain.Categories;
-using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transactions;
 using Aureus.UseCases.Common.Persistence;
 using MediatR;
@@ -8,7 +7,6 @@ namespace Aureus.UseCases.Transactions.UpdateTransaction;
 
 public sealed class UpdateTransactionHandler(
     ITransactionRepository transactionRepository,
-    IFinancialAccountRepository accountRepository,
     ICategoryRepository categoryRepository)
     : IRequestHandler<UpdateTransactionCommand, Transaction>
 {
@@ -22,16 +20,6 @@ public sealed class UpdateTransactionHandler(
             throw new TransactionException(
                 TransactionErrorCode.NotFound,
                 $"Transaction {command.TransactionId} not found.");
-        }
-
-        var account = await accountRepository.FindByIdAsync(
-            transaction.FinancialAccountId, command.WorkspaceId, cancellationToken);
-
-        if (account is null)
-        {
-            throw new FinancialAccountException(
-                FinancialAccountErrorCode.NotFound,
-                $"Financial account {transaction.FinancialAccountId} not found.");
         }
 
         if (command.CategoryId is not null)
@@ -49,6 +37,8 @@ public sealed class UpdateTransactionHandler(
             transaction.CategoryId = command.CategoryId.Value;
         }
 
+        long balanceDelta = 0;
+
         if (command.AmountMinor is not null)
         {
             var oldEffect = transaction.Type == TransactionType.Income
@@ -59,7 +49,7 @@ public sealed class UpdateTransactionHandler(
                 ? command.AmountMinor.Value
                 : -command.AmountMinor.Value;
 
-            account.CurrentBalanceMinor += newEffect - oldEffect;
+            balanceDelta = newEffect - oldEffect;
             transaction.AmountMinor = command.AmountMinor.Value;
         }
 
@@ -75,7 +65,7 @@ public sealed class UpdateTransactionHandler(
 
         transaction.UpdatedAt = DateTimeOffset.UtcNow;
 
-        await transactionRepository.UpdateAsync(transaction, account, cancellationToken);
+        await transactionRepository.UpdateAsync(transaction, balanceDelta, cancellationToken);
 
         return transaction;
     }

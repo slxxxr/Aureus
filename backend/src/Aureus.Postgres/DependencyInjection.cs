@@ -1,6 +1,7 @@
 using Aureus.Postgres.Implementations.Auth;
 using Aureus.Postgres.Implementations.Categories;
 using Aureus.Postgres.Implementations.FinancialAccounts;
+using Aureus.Postgres.Implementations.Transactions;
 using Aureus.Postgres.Implementations.Workspaces;
 using Aureus.UseCases.Common.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<IFinancialAccountRepository, FinancialAccountRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<ITransactionRepository, TransactionRepository>();
 
         return services;
     }

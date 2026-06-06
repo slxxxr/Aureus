@@ -34,8 +34,7 @@ public sealed class CreateTransactionHandler(
                 $"Category {command.CategoryId} not found.");
         }
 
-        var effect = command.Type == TransactionType.Income ? command.AmountMinor : -command.AmountMinor;
-        account.CurrentBalanceMinor += effect;
+        var balanceDelta = command.Type == TransactionType.Income ? command.AmountMinor : -command.AmountMinor;
 
         var transaction = new Transaction
         {
@@ -52,7 +51,7 @@ public sealed class CreateTransactionHandler(
             CreatedAt = DateTimeOffset.UtcNow,
         };
 
-        await transactionRepository.AddAsync(transaction, account, cancellationToken);
+        await transactionRepository.AddAsync(transaction, balanceDelta, cancellationToken);
 
         return transaction;
     }
