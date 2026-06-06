@@ -1,6 +1,12 @@
+using Aureus.Domain.Categories;
+using Aureus.Domain.FinancialAccounts;
+using Aureus.Domain.Transactions;
 using Aureus.Domain.Workspaces;
 using Aureus.IntegrationTests.Common;
 using Aureus.Postgres.Entities;
+using Aureus.Postgres.Implementations.Categories;
+using Aureus.Postgres.Implementations.FinancialAccounts;
+using Aureus.Postgres.Implementations.Transactions;
 using Aureus.Postgres.Implementations.Workspaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -139,6 +145,101 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         Assert.Null(membership);
     }
 
+    [Fact]
+    public async Task DeleteAsync_SoftDeletesWorkspace()
+    {
+        // Arrange
+        var ownerId = await SeedUserAsync();
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+
+        // Act
+        await using (var db = fixture.CreateDbContext())
+        {
+            var repo = new WorkspaceRepository(db, fixture.Mapper);
+            var workspace = await repo.FindByIdAsync(workspaceId, CancellationToken.None);
+            await repo.DeleteAsync(workspace!, CancellationToken.None);
+        }
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var stored = await new WorkspaceRepository(assertDb, fixture.Mapper)
+            .FindByIdAsync(workspaceId, CancellationToken.None);
+        Assert.Null(stored);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_CascadesToWorkspaceMembers()
+    {
+        // Arrange
+        var ownerId = await SeedUserAsync();
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+
+        // Act
+        await DeleteWorkspaceAsync(workspaceId);
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var membership = await new WorkspaceRepository(assertDb, fixture.Mapper)
+            .FindMembershipAsync(workspaceId, ownerId, CancellationToken.None);
+        Assert.Null(membership);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_CascadesToFinancialAccounts()
+    {
+        // Arrange
+        var ownerId = await SeedUserAsync();
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var accountId = await SeedAccountAsync(workspaceId);
+
+        // Act
+        await DeleteWorkspaceAsync(workspaceId);
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var account = await new FinancialAccountRepository(assertDb, fixture.Mapper)
+            .FindByIdAsync(accountId, workspaceId, CancellationToken.None);
+        Assert.Null(account);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_CascadesToCategories()
+    {
+        // Arrange
+        var ownerId = await SeedUserAsync();
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var categoryId = await SeedCategoryAsync(workspaceId);
+
+        // Act
+        await DeleteWorkspaceAsync(workspaceId);
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var category = await new CategoryRepository(assertDb, fixture.Mapper)
+            .FindByIdAsync(categoryId, workspaceId, CancellationToken.None);
+        Assert.Null(category);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_CascadesToTransactions()
+    {
+        // Arrange
+        var ownerId = await SeedUserAsync();
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var accountId = await SeedAccountAsync(workspaceId);
+        var categoryId = await SeedCategoryAsync(workspaceId);
+        var transactionId = await SeedTransactionAsync(workspaceId, accountId, categoryId, ownerId);
+
+        // Act
+        await DeleteWorkspaceAsync(workspaceId);
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var transaction = await new TransactionRepository(assertDb, fixture.Mapper)
+            .FindByIdAsync(transactionId, workspaceId, CancellationToken.None);
+        Assert.Null(transaction);
+    }
+
     private static (Workspace Workspace, WorkspaceMember Member) NewWorkspace(Guid ownerId, string name)
     {
         var workspace = new Workspace
@@ -206,5 +307,76 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(m => m.IsDeleted, true)
                 .SetProperty(m => m.DeletedAt, DateTimeOffset.UtcNow));
+    }
+
+    private async Task DeleteWorkspaceAsync(Guid workspaceId)
+    {
+        await using var db = fixture.CreateDbContext();
+        var repo = new WorkspaceRepository(db, fixture.Mapper);
+        var workspace = await repo.FindByIdAsync(workspaceId, CancellationToken.None);
+        await repo.DeleteAsync(workspace!, CancellationToken.None);
+    }
+
+    private async Task<Guid> SeedAccountAsync(Guid workspaceId)
+    {
+        var account = new FinancialAccount
+        {
+            Id = Guid.NewGuid(),
+            WorkspaceId = workspaceId,
+            Name = $"account-{Guid.NewGuid():N}",
+            Currency = "RUB",
+            InitialBalanceMinor = 0,
+            CurrentBalanceMinor = 0,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+
+        await using var db = fixture.CreateDbContext();
+        await new FinancialAccountRepository(db, fixture.Mapper).AddAsync(account, CancellationToken.None);
+
+        return account.Id;
+    }
+
+    private async Task<Guid> SeedCategoryAsync(Guid workspaceId)
+    {
+        var category = new Category
+        {
+            Id = Guid.NewGuid(),
+            WorkspaceId = workspaceId,
+            Name = $"cat-{Guid.NewGuid():N}",
+            Type = TransactionType.Expense,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+
+        await using var db = fixture.CreateDbContext();
+        await new CategoryRepository(db, fixture.Mapper).AddAsync(category, CancellationToken.None);
+
+        return category.Id;
+    }
+
+    private async Task<Guid> SeedTransactionAsync(
+        Guid workspaceId,
+        Guid accountId,
+        Guid categoryId,
+        Guid createdByUserId)
+    {
+        var transaction = new Transaction
+        {
+            Id = Guid.NewGuid(),
+            WorkspaceId = workspaceId,
+            FinancialAccountId = accountId,
+            CategoryId = categoryId,
+            CreatedByUserId = createdByUserId,
+            Name = "Transaction",
+            Type = TransactionType.Expense,
+            AmountMinor = 10_00,
+            Currency = "RUB",
+            OccurredAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+
+        await using var db = fixture.CreateDbContext();
+        await new TransactionRepository(db, fixture.Mapper).AddAsync(transaction, -10_00, CancellationToken.None);
+
+        return transaction.Id;
     }
 }

@@ -61,4 +61,19 @@ public sealed class WorkspaceRepositoryMock
 
     public void VerifyUpdateNotCalled() =>
         _mock.Verify(r => r.UpdateAsync(It.IsAny<Workspace>(), It.IsAny<CancellationToken>()), Times.Never);
+
+    public WorkspaceRepositoryMock CapturingDelete()
+    {
+        _mock
+            .Setup(r => r.DeleteAsync(It.IsAny<Workspace>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        return this;
+    }
+
+    public void VerifyDeleteCalledOnce() =>
+        _mock.Verify(r => r.DeleteAsync(It.IsAny<Workspace>(), It.IsAny<CancellationToken>()), Times.Once);
+
+    public void VerifyDeleteNotCalled() =>
+        _mock.Verify(r => r.DeleteAsync(It.IsAny<Workspace>(), It.IsAny<CancellationToken>()), Times.Never);
 }
