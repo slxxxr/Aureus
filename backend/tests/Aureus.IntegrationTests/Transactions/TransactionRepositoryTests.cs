@@ -1,8 +1,5 @@
 using Aureus.Domain.Transactions;
 using Aureus.IntegrationTests.Common;
-using Aureus.Postgres.Entities;
-using Aureus.Postgres.Implementations.Categories;
-using Aureus.Postgres.Implementations.FinancialAccounts;
 using Aureus.Postgres.Implementations.Transactions;
 
 namespace Aureus.IntegrationTests.Transactions;
@@ -14,9 +11,9 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     public async Task AddAsync_ValidTransaction_PersistsTransaction()
     {
         // Arrange
-        var (workspaceId, userId) = await SeedWorkspaceAsync();
-        var accountId = await SeedAccountAsync(workspaceId);
-        var categoryId = await SeedCategoryAsync(workspaceId);
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var transaction = NewTransaction(workspaceId, accountId, categoryId, userId, "Bought bread", TransactionType.Expense, 50_00);
 
         // Act
@@ -46,9 +43,9 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         TransactionType type, long amountMinor, long expectedBalance)
     {
         // Arrange
-        var (workspaceId, userId) = await SeedWorkspaceAsync();
-        var accountId = await SeedAccountAsync(workspaceId, initialBalance: 100_00);
-        var categoryId = await SeedCategoryAsync(workspaceId);
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 100_00);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var balanceDelta = type == TransactionType.Income ? amountMinor : -amountMinor;
         var transaction = NewTransaction(workspaceId, accountId, categoryId, userId, "Transaction", type, amountMinor);
 
@@ -68,18 +65,18 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     public async Task FindByIdAsync_SoftDeletedTransaction_ReturnsNull()
     {
         // Arrange
-        var (workspaceId, userId) = await SeedWorkspaceAsync();
-        var accountId = await SeedAccountAsync(workspaceId);
-        var categoryId = await SeedCategoryAsync(workspaceId);
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var transactionId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId);
-        await DeleteTransactionAsync(transactionId, workspaceId);
 
         // Act
-        await using var db = fixture.CreateDbContext();
-        var stored = await new TransactionRepository(db, fixture.Mapper)
-            .FindByIdAsync(transactionId, workspaceId, CancellationToken.None);
+        await DeleteTransactionAsync(transactionId, workspaceId);
 
         // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var stored = await new TransactionRepository(assertDb, fixture.Mapper)
+            .FindByIdAsync(transactionId, workspaceId, CancellationToken.None);
         Assert.Null(stored);
     }
 
@@ -87,10 +84,10 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     public async Task FindByIdAsync_WrongWorkspace_ReturnsNull()
     {
         // Arrange
-        var (workspaceId, userId) = await SeedWorkspaceAsync();
-        var (otherWorkspaceId, _) = await SeedWorkspaceAsync();
-        var accountId = await SeedAccountAsync(workspaceId);
-        var categoryId = await SeedCategoryAsync(workspaceId);
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var (otherWorkspaceId, _) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var transactionId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId);
 
         // Act
@@ -106,9 +103,9 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     public async Task GetByWorkspaceIdAsync_SoftDeletedTransaction_ExcludesIt()
     {
         // Arrange
-        var (workspaceId, userId) = await SeedWorkspaceAsync();
-        var accountId = await SeedAccountAsync(workspaceId);
-        var categoryId = await SeedCategoryAsync(workspaceId);
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var liveId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId);
         var deletedId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId);
         await DeleteTransactionAsync(deletedId, workspaceId);
@@ -127,9 +124,9 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     public async Task GetByWorkspaceIdAsync_ReturnsTransactionsOrderedByOccurredAtDescending()
     {
         // Arrange
-        var (workspaceId, userId) = await SeedWorkspaceAsync();
-        var accountId = await SeedAccountAsync(workspaceId);
-        var categoryId = await SeedCategoryAsync(workspaceId);
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var now = DateTimeOffset.UtcNow;
         var olderId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: now.AddDays(-2));
         var newerId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: now);
@@ -147,10 +144,10 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     public async Task UpdateAsync_ValidTransaction_UpdatesFields()
     {
         // Arrange
-        var (workspaceId, userId) = await SeedWorkspaceAsync();
-        var accountId = await SeedAccountAsync(workspaceId);
-        var categoryId = await SeedCategoryAsync(workspaceId);
-        var newCategoryId = await SeedCategoryAsync(workspaceId);
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        var newCategoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var transactionId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, name: "Bought bread");
 
         // Act
@@ -179,9 +176,9 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     public async Task UpdateAsync_AmountChanged_UpdatesAccountBalance()
     {
         // Arrange
-        var (workspaceId, userId) = await SeedWorkspaceAsync();
-        var accountId = await SeedAccountAsync(workspaceId, initialBalance: 0);
-        var categoryId = await SeedCategoryAsync(workspaceId);
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 0);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var transactionId = await AddTransactionAsync(
             workspaceId, accountId, categoryId, userId,
             type: TransactionType.Income, amountMinor: 100_00);
@@ -205,18 +202,18 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     public async Task DeleteAsync_SoftDeletesTransaction()
     {
         // Arrange
-        var (workspaceId, userId) = await SeedWorkspaceAsync();
-        var accountId = await SeedAccountAsync(workspaceId);
-        var categoryId = await SeedCategoryAsync(workspaceId);
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var transactionId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId);
-        await DeleteTransactionAsync(transactionId, workspaceId);
 
         // Act
-        await using var db = fixture.CreateDbContext();
-        var stored = await new TransactionRepository(db, fixture.Mapper)
-            .FindByIdAsync(transactionId, workspaceId, CancellationToken.None);
+        await DeleteTransactionAsync(transactionId, workspaceId);
 
         // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var stored = await new TransactionRepository(assertDb, fixture.Mapper)
+            .FindByIdAsync(transactionId, workspaceId, CancellationToken.None);
         Assert.Null(stored);
     }
 
@@ -224,18 +221,16 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     public async Task DeleteAsync_ReversesAccountBalance()
     {
         // Arrange
-        var (workspaceId, userId) = await SeedWorkspaceAsync();
-        var accountId = await SeedAccountAsync(workspaceId, initialBalance: 0);
-        var categoryId = await SeedCategoryAsync(workspaceId);
-        await AddTransactionAsync(
-            workspaceId, accountId, categoryId, userId,
-            type: TransactionType.Income, amountMinor: 100_00);
-        var transactionId = await AddTransactionAsync(
-            workspaceId, accountId, categoryId, userId,
-            type: TransactionType.Income, amountMinor: 100_00);
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 0);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        await AddTransactionAsync(workspaceId, accountId, categoryId, userId, type: TransactionType.Income, amountMinor: 100_00);
+        var transactionId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, type: TransactionType.Income, amountMinor: 100_00);
+
+        // Act
         await DeleteTransactionAsync(transactionId, workspaceId);
 
-        // Act & Assert
+        // Assert
         var balance = await GetAccountBalanceAsync(accountId, workspaceId);
         Assert.Equal(100_00, balance);
     }
@@ -262,69 +257,6 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         OccurredAt = occurredAt ?? DateTimeOffset.UtcNow,
         CreatedAt = DateTimeOffset.UtcNow,
     };
-
-    private async Task<Guid> SeedUserAsync()
-    {
-        await using var db = fixture.CreateDbContext();
-        var user = new UserDb
-        {
-            Id = Guid.NewGuid(),
-            Email = $"{Guid.NewGuid():N}@test.local",
-            PasswordHash = "hash",
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
-        db.Users.Add(user);
-        await db.SaveChangesAsync();
-        return user.Id;
-    }
-
-    private async Task<(Guid WorkspaceId, Guid OwnerId)> SeedWorkspaceAsync()
-    {
-        var ownerId = await SeedUserAsync();
-        await using var db = fixture.CreateDbContext();
-        var workspace = new WorkspaceDb
-        {
-            Id = Guid.NewGuid(),
-            OwnerUserId = ownerId,
-            Name = $"ws-{Guid.NewGuid():N}",
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
-        db.Workspaces.Add(workspace);
-        await db.SaveChangesAsync();
-        return (workspace.Id, ownerId);
-    }
-
-    private async Task<Guid> SeedAccountAsync(Guid workspaceId, long initialBalance = 0)
-    {
-        await using var db = fixture.CreateDbContext();
-        var account = new Domain.FinancialAccounts.FinancialAccount
-        {
-            Id = Guid.NewGuid(),
-            WorkspaceId = workspaceId,
-            Name = $"account-{Guid.NewGuid():N}",
-            Currency = "RUB",
-            InitialBalanceMinor = initialBalance,
-            CurrentBalanceMinor = initialBalance,
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
-        await new FinancialAccountRepository(db, fixture.Mapper).AddAsync(account, CancellationToken.None);
-        return account.Id;
-    }
-
-    private async Task<Guid> SeedCategoryAsync(Guid workspaceId)
-    {
-        await using var db = fixture.CreateDbContext();
-        var category = new Domain.Categories.Category
-        {
-            Id = Guid.NewGuid(),
-            WorkspaceId = workspaceId,
-            Name = $"cat-{Guid.NewGuid():N}",
-            Type = TransactionType.Expense,
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
-        await new CategoryRepository(db, fixture.Mapper).AddAsync(category, CancellationToken.None);
-        return category.Id;
-    }
 
     private async Task<Guid> AddTransactionAsync(
         Guid workspaceId,
@@ -360,8 +292,7 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     private async Task<long> GetAccountBalanceAsync(Guid accountId, Guid workspaceId)
     {
         await using var db = fixture.CreateDbContext();
-        var account = await new FinancialAccountRepository(db, fixture.Mapper)
-            .FindByIdAsync(accountId, workspaceId, CancellationToken.None);
+        var account = await TestData.FindAccountAsync(db, fixture.Mapper, accountId, workspaceId);
         return account!.CurrentBalanceMinor;
     }
 }
