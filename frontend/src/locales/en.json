@@ -53,7 +53,27 @@
   },
   "workspace": {
     "switcherLabel": "Switch workspace",
-    "listLabel": "Workspaces"
+    "listLabel": "Workspaces",
+    "newWorkspace": "New workspace",
+    "createModal": {
+      "title": "New workspace",
+      "nameLabel": "Name",
+      "namePlaceholder": "Workspace name",
+      "submit": "Create",
+      "submitting": "Creating…"
+    },
+    "editModal": {
+      "title": "Edit workspace",
+      "nameLabel": "Name",
+      "save": "Save",
+      "saving": "Saving…"
+    },
+    "errors": {
+      "nameTaken": "A workspace with this name already exists.",
+      "notFound": "Workspace not found.",
+      "forbidden": "Only the workspace owner can do this.",
+      "generic": "Something went wrong. Please try again."
+    }
   },
   "financialAccounts": {
     "title": "Accounts",
