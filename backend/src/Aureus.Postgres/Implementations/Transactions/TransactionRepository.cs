@@ -57,6 +57,7 @@ public sealed class TransactionRepository(AureusDbContext dbContext, IMapper map
             .Where(t => t.Id == transaction.Id)
             .ExecuteUpdateAsync(
                 s => s
+                    .SetProperty(t => t.Name, transaction.Name)
                     .SetProperty(t => t.AmountMinor, transaction.AmountMinor)
                     .SetProperty(t => t.CategoryId, transaction.CategoryId)
                     .SetProperty(t => t.OccurredAt, transaction.OccurredAt)
