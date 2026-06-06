@@ -1,0 +1,14 @@
+using Aureus.Domain.Transactions;
+using Aureus.UseCases.Common.Persistence;
+using MediatR;
+
+namespace Aureus.UseCases.Transactions.GetTransactions;
+
+public sealed class GetTransactionsHandler(ITransactionRepository repository)
+    : IRequestHandler<GetTransactionsQuery, IReadOnlyList<Transaction>>
+{
+    public Task<IReadOnlyList<Transaction>> Handle(GetTransactionsQuery query, CancellationToken cancellationToken)
+    {
+        return repository.GetByWorkspaceIdAsync(query.WorkspaceId, cancellationToken);
+    }
+}

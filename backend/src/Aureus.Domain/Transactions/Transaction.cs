@@ -12,6 +12,8 @@ public sealed class Transaction
 
     public Guid CreatedByUserId { get; set; }
 
+    public string Name { get; set; } = string.Empty;
+
     public TransactionType Type { get; set; }
 
     public long AmountMinor { get; set; }

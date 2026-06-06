@@ -6,6 +6,7 @@ namespace Aureus.Postgres.Configurations;
 
 public sealed class TransactionConfiguration : IEntityTypeConfiguration<TransactionDb>
 {
+    private const int NameMaxLength = 200;
     private const int TypeMaxLength = 32;
     private const int CurrencyCodeMaxLength = 3;
     private const int NoteMaxLength = 500;
@@ -21,6 +22,7 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.Property(transaction => transaction.FinancialAccountId).HasColumnName("financial_account_id").IsRequired();
         builder.Property(transaction => transaction.CategoryId).HasColumnName("category_id").IsRequired();
         builder.Property(transaction => transaction.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
+        builder.Property(transaction => transaction.Name).HasColumnName("name").HasMaxLength(NameMaxLength).IsRequired();
         builder.Property(transaction => transaction.Type).HasColumnName("type").HasMaxLength(TypeMaxLength).IsRequired();
         builder.Property(transaction => transaction.AmountMinor).HasColumnName("amount_minor").IsRequired();
         builder.Property(transaction => transaction.Currency).HasColumnName("currency").HasMaxLength(CurrencyCodeMaxLength).IsRequired();
@@ -31,8 +33,10 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.Property(transaction => transaction.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(transaction => transaction.UpdatedAt).HasColumnName("updated_at");
 
+        builder.HasQueryFilter(transaction => !transaction.IsDeleted);
+
         builder.HasIndex(transaction => new { transaction.WorkspaceId, transaction.OccurredAt });
-        builder.HasIndex(transaction => new { transaction.WorkspaceId, transaction.IsDeleted });
+        builder.HasIndex(transaction => new { transaction.FinancialAccountId, transaction.IsDeleted });
         builder.HasIndex(transaction => transaction.CreatedByUserId);
 
         builder.HasOne<WorkspaceDb>()
