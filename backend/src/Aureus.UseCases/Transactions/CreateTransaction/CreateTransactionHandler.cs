@@ -43,6 +43,7 @@ public sealed class CreateTransactionHandler(
             FinancialAccountId = command.FinancialAccountId,
             CategoryId = command.CategoryId,
             CreatedByUserId = command.CreatedByUserId,
+            Name = command.Name.Trim(),
             Type = command.Type,
             AmountMinor = command.AmountMinor,
             Currency = account.Currency,

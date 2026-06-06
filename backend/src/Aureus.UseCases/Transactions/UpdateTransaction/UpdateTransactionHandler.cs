@@ -37,6 +37,11 @@ public sealed class UpdateTransactionHandler(
             transaction.CategoryId = command.CategoryId.Value;
         }
 
+        if (command.Name is not null)
+        {
+            transaction.Name = command.Name.Trim();
+        }
+
         long balanceDelta = 0;
 
         if (command.AmountMinor is not null)

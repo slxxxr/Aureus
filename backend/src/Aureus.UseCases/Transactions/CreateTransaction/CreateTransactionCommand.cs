@@ -8,6 +8,7 @@ public sealed record CreateTransactionCommand(
     Guid FinancialAccountId,
     Guid CategoryId,
     Guid CreatedByUserId,
+    string Name,
     TransactionType Type,
     long AmountMinor,
     DateTimeOffset OccurredAt,
