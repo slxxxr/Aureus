@@ -12,6 +12,10 @@ public sealed class Category
 
     public TransactionType Type { get; set; }
 
+    public bool IsDeleted { get; set; }
+
+    public DateTimeOffset? DeletedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? UpdatedAt { get; set; }

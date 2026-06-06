@@ -10,6 +10,10 @@ public sealed class CategoryDb
 
     public string Type { get; set; } = string.Empty;
 
+    public bool IsDeleted { get; set; }
+
+    public DateTimeOffset? DeletedAt { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? UpdatedAt { get; set; }

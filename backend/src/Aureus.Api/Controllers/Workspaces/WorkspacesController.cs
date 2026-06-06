@@ -16,6 +16,7 @@ public sealed class WorkspacesController(ISender sender) : ApiControllerBase
     {
         var workspaces = await sender.Send(new GetUserWorkspacesQuery(CurrentUserId), cancellationToken);
 
+        // TODO: map to response via AutoMapper (see Aureus.Api.Mappers.ContractMappings)
         var response = workspaces
             .Select(w => new WorkspaceResponse(w.Id, w.Name, w.Role))
             .ToList();
