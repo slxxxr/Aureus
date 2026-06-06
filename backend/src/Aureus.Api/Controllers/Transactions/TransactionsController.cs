@@ -35,6 +35,7 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
             request.FinancialAccountId,
             request.CategoryId,
             CurrentUserId,
+            request.Name,
             request.Type,
             request.AmountMinor,
             request.OccurredAt,
@@ -56,6 +57,7 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
         var command = new UpdateTransactionCommand(
             transactionId,
             workspaceId,
+            request.Name,
             request.AmountMinor,
             request.CategoryId,
             request.OccurredAt,

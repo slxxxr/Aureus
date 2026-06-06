@@ -7,6 +7,7 @@ public sealed record TransactionResponse(
     Guid FinancialAccountId,
     Guid CategoryId,
     Guid CreatedByUserId,
+    string Name,
     TransactionType Type,
     long AmountMinor,
     string Currency,
