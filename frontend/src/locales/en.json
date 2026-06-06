@@ -19,7 +19,9 @@
     "accounts": "Accounts",
     "transactions": "Transactions",
     "categories": "Categories",
-    "settings": "Settings"
+    "settings": "Settings",
+    "collapseSidebar": "Collapse",
+    "expandSidebar": "Expand"
   },
   "pages": {
     "dashboard": {

@@ -190,7 +190,7 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
 
 // ─── workspace switcher ───────────────────────────────────────────────────────
 
-export function WorkspaceSwitcher() {
+export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }) {
   const { t } = useTranslation();
   const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspace();
   const [open, setOpen] = useState(false);
@@ -202,9 +202,72 @@ export function WorkspaceSwitcher() {
 
   const isOwner = activeWorkspace?.role === "Owner";
 
+  const dropdown = open && (
+    <div className="absolute left-0 top-full z-50 mt-1 w-52 rounded-md border border-border bg-background shadow-md">
+      <ul role="menu" aria-label={t("workspace.listLabel")}>
+        {workspaces.map((workspace) => (
+          <li key={workspace.id} role="none">
+            <button
+              type="button"
+              onClick={() => { setActiveWorkspace(workspace); setOpen(false); }}
+              role="menuitem"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+            >
+              <span className="flex-1 truncate text-left">{workspace.name}</span>
+              <Check
+                className={cn("h-4 w-4 shrink-0", workspace.id !== activeWorkspace?.id && "invisible")}
+                aria-hidden="true"
+              />
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div className="border-t border-border p-1">
+        <button
+          type="button"
+          onClick={() => { setShowCreate(true); setOpen(false); }}
+          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          {t("workspace.newWorkspace")}
+        </button>
+      </div>
+    </div>
+  );
+
+  const modals = (
+    <>
+      {showCreate && <CreateWorkspaceModal onClose={() => setShowCreate(false)} />}
+      {editingWorkspace && (
+        <EditWorkspaceModal workspace={editingWorkspace} onClose={() => setEditingWorkspace(null)} />
+      )}
+    </>
+  );
+
+  if (collapsed) {
+    return (
+      <>
+        <div ref={ref} className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background transition-colors hover:bg-accent"
+            aria-label={activeWorkspace?.name ?? t("common.appName")}
+            aria-expanded={open}
+            title={activeWorkspace?.name ?? t("common.appName")}
+          >
+            <Landmark className="h-4 w-4" aria-hidden="true" />
+          </button>
+          {dropdown}
+        </div>
+        {modals}
+      </>
+    );
+  }
+
   return (
     <>
-      <div ref={ref} className="relative mb-6 px-2">
+      <div ref={ref} className="relative">
         <button
           type="button"
           onClick={() => setOpen((prev) => !prev)}
@@ -236,45 +299,9 @@ export function WorkspaceSwitcher() {
             aria-hidden="true"
           />
         </button>
-
-        {open && (
-          <div className="absolute left-2 right-2 top-full z-50 mt-1 rounded-md border border-border bg-background shadow-md">
-            <ul role="menu" aria-label={t("workspace.listLabel")}>
-              {workspaces.map((workspace) => (
-                <li key={workspace.id} role="none">
-                  <button
-                    type="button"
-                    onClick={() => { setActiveWorkspace(workspace); setOpen(false); }}
-                    role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
-                  >
-                    <span className="flex-1 truncate text-left">{workspace.name}</span>
-                    <Check
-                      className={cn("h-4 w-4 shrink-0", workspace.id !== activeWorkspace?.id && "invisible")}
-                      aria-hidden="true"
-                    />
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="border-t border-border p-1">
-              <button
-                type="button"
-                onClick={() => { setShowCreate(true); setOpen(false); }}
-                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                {t("workspace.newWorkspace")}
-              </button>
-            </div>
-          </div>
-        )}
+        {dropdown}
       </div>
-
-      {showCreate && <CreateWorkspaceModal onClose={() => setShowCreate(false)} />}
-      {editingWorkspace && (
-        <EditWorkspaceModal workspace={editingWorkspace} onClose={() => setEditingWorkspace(null)} />
-      )}
+      {modals}
     </>
   );
 }

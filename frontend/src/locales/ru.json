@@ -19,7 +19,9 @@
     "accounts": "Счета",
     "transactions": "Транзакции",
     "categories": "Категории",
-    "settings": "Настройки"
+    "settings": "Настройки",
+    "collapseSidebar": "Свернуть",
+    "expandSidebar": "Развернуть"
   },
   "pages": {
     "dashboard": {
