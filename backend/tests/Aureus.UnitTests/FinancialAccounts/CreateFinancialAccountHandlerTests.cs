@@ -28,7 +28,7 @@ public sealed class CreateFinancialAccountHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ValidCommand_TrimsNameFromCommand()
+    public async Task Handle_ValidCommand_NormalizesWhitespace()
     {
         // Arrange
         var repository = new FinancialAccountRepositoryMock().CapturingAdd();

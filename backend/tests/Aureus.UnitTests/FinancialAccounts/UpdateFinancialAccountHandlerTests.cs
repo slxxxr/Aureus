@@ -130,7 +130,7 @@ public sealed class UpdateFinancialAccountHandlerTests
     }
 
     [Fact]
-    public async Task Handle_NameProvided_TrimsWhitespace()
+    public async Task Handle_NameProvided_NormalizesWhitespace()
     {
         // Arrange
         var account = ExistingAccount(name: "Cash");
