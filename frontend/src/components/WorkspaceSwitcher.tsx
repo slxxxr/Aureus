@@ -151,7 +151,7 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
 
 // ─── workspace switcher ───────────────────────────────────────────────────────
 
-export function WorkspaceSwitcher() {
+export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }) {
   const { t } = useTranslation();
   const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspace();
   const [open, setOpen] = useState(false);
@@ -163,82 +163,106 @@ export function WorkspaceSwitcher() {
 
   const isOwner = activeWorkspace?.role === "Owner";
 
-  return (
-    <>
-      <div ref={ref} className="relative mb-6 px-2">
-        <div className="group flex items-center gap-1">
-          <button
-            type="button"
-            onClick={() => setOpen((prev) => !prev)}
-            className="flex min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent"
-            aria-label={t("workspace.switcherLabel")}
-            aria-expanded={open}
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background">
-              <Landmark className="h-4 w-4" aria-hidden="true" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold leading-5">
-                {activeWorkspace?.name ?? t("common.appName")}
-              </p>
-              <p className="text-xs text-muted-foreground">{t("common.appName")}</p>
-            </div>
-            <ChevronDown
-              className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
-              aria-hidden="true"
-            />
-          </button>
-
-          {isOwner && activeWorkspace && (
+  const dropdown = open && (
+    <div className="absolute left-0 top-full z-50 mt-1 w-52 rounded-md border border-border bg-background shadow-md">
+      <ul role="menu" aria-label={t("workspace.listLabel")}>
+        {workspaces.map((workspace) => (
+          <li key={workspace.id} role="none">
             <button
               type="button"
-              onClick={() => setEditingWorkspace(activeWorkspace)}
-              className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              aria-label={t("workspace.editModal.title")}
+              onClick={() => { setActiveWorkspace(workspace); setOpen(false); }}
+              role="menuitem"
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <span className="flex-1 truncate text-left">{workspace.name}</span>
+              <Check
+                className={cn("h-4 w-4 shrink-0", workspace.id !== activeWorkspace?.id && "invisible")}
+                aria-hidden="true"
+              />
             </button>
-          )}
-        </div>
-
-        {open && (
-          <div className="absolute left-2 right-2 top-full z-50 mt-1 rounded-md border border-border bg-background shadow-md">
-            <ul role="menu" aria-label={t("workspace.listLabel")}>
-              {workspaces.map((workspace) => (
-                <li key={workspace.id} role="none">
-                  <button
-                    type="button"
-                    onClick={() => { setActiveWorkspace(workspace); setOpen(false); }}
-                    role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
-                  >
-                    <span className="flex-1 truncate text-left">{workspace.name}</span>
-                    <Check
-                      className={cn("h-4 w-4 shrink-0", workspace.id !== activeWorkspace?.id && "invisible")}
-                      aria-hidden="true"
-                    />
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <div className="border-t border-border p-1">
-              <button
-                type="button"
-                onClick={() => { setShowCreate(true); setOpen(false); }}
-                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <Plus className="h-4 w-4" aria-hidden="true" />
-                {t("workspace.newWorkspace")}
-              </button>
-            </div>
-          </div>
-        )}
+          </li>
+        ))}
+      </ul>
+      <div className="border-t border-border p-1">
+        <button
+          type="button"
+          onClick={() => { setShowCreate(true); setOpen(false); }}
+          className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          {t("workspace.newWorkspace")}
+        </button>
       </div>
+    </div>
+  );
 
+  const modals = (
+    <>
       {showCreate && <CreateWorkspaceModal onClose={() => setShowCreate(false)} />}
       {editingWorkspace && (
         <EditWorkspaceModal workspace={editingWorkspace} onClose={() => setEditingWorkspace(null)} />
       )}
+    </>
+  );
+
+  if (collapsed) {
+    return (
+      <>
+        <div ref={ref} className="relative">
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background transition-colors hover:bg-accent"
+            aria-label={activeWorkspace?.name ?? t("common.appName")}
+            aria-expanded={open}
+            title={activeWorkspace?.name ?? t("common.appName")}
+          >
+            <Landmark className="h-4 w-4" aria-hidden="true" />
+          </button>
+          {dropdown}
+        </div>
+        {modals}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <div ref={ref} className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          className="group flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent"
+          aria-label={t("workspace.switcherLabel")}
+          aria-expanded={open}
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background">
+            <Landmark className="h-4 w-4" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold leading-5">
+              {activeWorkspace?.name ?? t("common.appName")}
+            </p>
+            <p className="text-xs text-muted-foreground">{t("common.appName")}</p>
+          </div>
+          {isOwner && activeWorkspace && (
+            <span
+              role="button"
+              onClick={(e) => { e.stopPropagation(); setEditingWorkspace(activeWorkspace); }}
+              className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              aria-label={t("workspace.editModal.title")}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </span>
+          )}
+          <ChevronDown
+            className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
+            aria-hidden="true"
+          />
+        </button>
+        {dropdown}
+      </div>
+      {modals}
     </>
   );
 }
