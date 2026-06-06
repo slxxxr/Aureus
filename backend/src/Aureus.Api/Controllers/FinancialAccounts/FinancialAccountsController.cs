@@ -4,6 +4,7 @@ using Aureus.UseCases.FinancialAccounts.CreateFinancialAccount;
 using Aureus.UseCases.FinancialAccounts.DeleteFinancialAccount;
 using Aureus.UseCases.FinancialAccounts.GetFinancialAccounts;
 using Aureus.UseCases.FinancialAccounts.UpdateFinancialAccount;
+using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,7 +12,7 @@ namespace Aureus.Api.Controllers.FinancialAccounts;
 
 [ValidateWorkspaceMember]
 [Route("api/workspaces/{workspaceId:guid}/financial-accounts")]
-public sealed class FinancialAccountsController(ISender sender) : ApiControllerBase
+public sealed class FinancialAccountsController(ISender sender, IMapper mapper) : ApiControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<FinancialAccountResponse>), StatusCodes.Status200OK)]
@@ -19,15 +20,7 @@ public sealed class FinancialAccountsController(ISender sender) : ApiControllerB
     {
         var accounts = await sender.Send(new GetFinancialAccountsQuery(workspaceId), cancellationToken);
 
-        // TODO: map to response via AutoMapper (see Aureus.Api.Mappers.ContractMappings)
-        var response = accounts
-            .Select(a => new FinancialAccountResponse(
-                a.Id, a.Name, a.Currency,
-                a.InitialBalanceMinor, a.CurrentBalanceMinor,
-                a.CreatedAt, a.UpdatedAt))
-            .ToList();
-
-        return Ok(response);
+        return Ok(mapper.Map<IReadOnlyList<FinancialAccountResponse>>(accounts));
     }
 
     [HttpPost]
@@ -42,12 +35,7 @@ public sealed class FinancialAccountsController(ISender sender) : ApiControllerB
 
         var account = await sender.Send(command, cancellationToken);
 
-        var response = new FinancialAccountResponse(
-            account.Id, account.Name, account.Currency,
-            account.InitialBalanceMinor, account.CurrentBalanceMinor,
-            account.CreatedAt, account.UpdatedAt);
-
-        return StatusCode(StatusCodes.Status201Created, response);
+        return StatusCode(StatusCodes.Status201Created, mapper.Map<FinancialAccountResponse>(account));
     }
 
     [HttpPatch("{accountId:guid}")]
@@ -63,12 +51,7 @@ public sealed class FinancialAccountsController(ISender sender) : ApiControllerB
 
         var account = await sender.Send(command, cancellationToken);
 
-        var response = new FinancialAccountResponse(
-            account.Id, account.Name, account.Currency,
-            account.InitialBalanceMinor, account.CurrentBalanceMinor,
-            account.CreatedAt, account.UpdatedAt);
-
-        return Ok(response);
+        return Ok(mapper.Map<FinancialAccountResponse>(account));
     }
 
     [HttpDelete("{accountId:guid}")]
@@ -79,6 +62,7 @@ public sealed class FinancialAccountsController(ISender sender) : ApiControllerB
         CancellationToken cancellationToken)
     {
         await sender.Send(new DeleteFinancialAccountCommand(accountId, workspaceId), cancellationToken);
+
         return NoContent();
     }
 }
