@@ -13,6 +13,7 @@ public sealed class DatabaseMappings : Profile
         CreateMap<User, UserDb>();
         CreateMap<UserDb, User>();
         CreateMap<Workspace, WorkspaceDb>();
+        CreateMap<WorkspaceDb, Workspace>();
         CreateMap<WorkspaceMember, WorkspaceMemberDb>()
             .ForMember(
                 destination => destination.Role,
