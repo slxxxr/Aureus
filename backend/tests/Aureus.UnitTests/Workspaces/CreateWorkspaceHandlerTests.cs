@@ -19,11 +19,13 @@ public sealed class CreateWorkspaceHandlerTests
         var repository = new WorkspaceRepositoryMock().CapturingAdd();
         var handler = new CreateWorkspaceHandler(repository.Object);
 
+        var command = DefaultCommand(name: "My Workspace", userId: userId);
+
         // Act
-        var result = await handler.Handle(DefaultCommand(name: "My Workspace", userId: userId), CancellationToken.None);
+        var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.Equal("My Workspace", result.Name);
+        Assert.Equal(command.Name, result.Name);
         Assert.Equal(userId, result.OwnerUserId);
     }
 

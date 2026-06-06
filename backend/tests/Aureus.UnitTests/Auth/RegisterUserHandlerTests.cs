@@ -14,8 +14,9 @@ public sealed class RegisterUserHandlerTests
         var userRepository = new UserRepositoryMock()
             .WithAvailableEmail("user@example.com")
             .CapturingRegistration();
+        const string passwordHash = "hashed:password123";
         var passwordHasher = new PasswordHasherMock()
-            .WithHash("password123", "hashed:password123");
+            .WithHash("password123", passwordHash);
         var handler = new RegisterUserHandler(userRepository.Object, passwordHasher.Object);
 
         // Act
@@ -30,7 +31,7 @@ public sealed class RegisterUserHandlerTests
         Assert.NotNull(userRepository.SavedWorkspace);
         Assert.NotNull(userRepository.SavedWorkspaceMember);
         Assert.Equal("user@example.com", userRepository.SavedUser.Email);
-        Assert.Equal("hashed:password123", userRepository.SavedUser.PasswordHash);
+        Assert.Equal(passwordHash, userRepository.SavedUser.PasswordHash);
         Assert.Equal(result.UserId, userRepository.SavedUser.Id);
         Assert.Equal(result.WorkspaceId, userRepository.SavedWorkspace.Id);
         Assert.Equal(result.UserId, userRepository.SavedWorkspace.OwnerUserId);
