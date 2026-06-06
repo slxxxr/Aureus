@@ -1,12 +1,5 @@
-using Aureus.Domain.Categories;
-using Aureus.Domain.FinancialAccounts;
-using Aureus.Domain.Transactions;
 using Aureus.Domain.Workspaces;
 using Aureus.IntegrationTests.Common;
-using Aureus.Postgres.Entities;
-using Aureus.Postgres.Implementations.Categories;
-using Aureus.Postgres.Implementations.FinancialAccounts;
-using Aureus.Postgres.Implementations.Transactions;
 using Aureus.Postgres.Implementations.Workspaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,7 +12,7 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task AddAsync_ValidWorkspace_PersistsWorkspaceAndOwnerMember()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         var (workspace, member) = NewWorkspace(ownerId, "Personal");
 
         // Act
@@ -45,7 +38,7 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task AddAsync_DuplicateOwnerAndName_ThrowsNameTaken()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         await AddWorkspaceAsync(ownerId, "Personal");
         var (workspace, member) = NewWorkspace(ownerId, "Personal");
 
@@ -64,8 +57,8 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task AddAsync_SameNameDifferentOwner_Succeeds()
     {
         // Arrange
-        var firstOwner = await SeedUserAsync();
-        var secondOwner = await SeedUserAsync();
+        var firstOwner = await TestData.SeedUserAsync(fixture);
+        var secondOwner = await TestData.SeedUserAsync(fixture);
         await AddWorkspaceAsync(firstOwner, "Personal");
 
         // Act
@@ -81,7 +74,7 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task AddAsync_NameReusedAfterSoftDeletedWorkspace_Succeeds()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         var firstId = await AddWorkspaceAsync(ownerId, "Personal");
         await SoftDeleteWorkspaceAsync(firstId);
 
@@ -98,7 +91,7 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task FindByIdAsync_SoftDeletedWorkspace_ReturnsNull()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
         await SoftDeleteWorkspaceAsync(workspaceId);
 
@@ -114,7 +107,7 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task GetByUserIdAsync_SoftDeletedWorkspace_ExcludesIt()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         var liveId = await AddWorkspaceAsync(ownerId, "Live");
         var deletedId = await AddWorkspaceAsync(ownerId, "Deleted");
         await SoftDeleteWorkspaceAsync(deletedId);
@@ -129,10 +122,55 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task UpdateAsync_ValidWorkspace_UpdatesName()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+
+        // Act
+        await using (var db = fixture.CreateDbContext())
+        {
+            var repo = new WorkspaceRepository(db, fixture.Mapper);
+            var workspace = await repo.FindByIdAsync(workspaceId, CancellationToken.None);
+            workspace!.Name = "Business";
+            workspace.UpdatedAt = DateTimeOffset.UtcNow;
+            await repo.UpdateAsync(workspace, CancellationToken.None);
+        }
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var stored = await new WorkspaceRepository(assertDb, fixture.Mapper)
+            .FindByIdAsync(workspaceId, CancellationToken.None);
+        Assert.Equal("Business", stored!.Name);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_DuplicateName_ThrowsNameTaken()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        await AddWorkspaceAsync(ownerId, "Personal");
+        var secondId = await AddWorkspaceAsync(ownerId, "Business");
+
+        await using var db = fixture.CreateDbContext();
+        var repo = new WorkspaceRepository(db, fixture.Mapper);
+        var workspace = await repo.FindByIdAsync(secondId, CancellationToken.None);
+        workspace!.Name = "Personal";
+
+        // Act
+        var exception = await Assert.ThrowsAsync<WorkspaceException>(() =>
+            repo.UpdateAsync(workspace, CancellationToken.None));
+
+        // Assert
+        Assert.Equal(WorkspaceErrorCode.NameTaken, exception.Code);
+    }
+
+    [Fact]
     public async Task FindMembershipAsync_SoftDeletedMember_ReturnsNull()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
         await SoftDeleteMemberAsync(workspaceId, ownerId);
 
@@ -149,16 +187,11 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task DeleteAsync_SoftDeletesWorkspace()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
 
         // Act
-        await using (var db = fixture.CreateDbContext())
-        {
-            var repo = new WorkspaceRepository(db, fixture.Mapper);
-            var workspace = await repo.FindByIdAsync(workspaceId, CancellationToken.None);
-            await repo.DeleteAsync(workspace!, CancellationToken.None);
-        }
+        await DeleteWorkspaceAsync(workspaceId);
 
         // Assert
         await using var assertDb = fixture.CreateDbContext();
@@ -171,7 +204,7 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task DeleteAsync_CascadesToWorkspaceMembers()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
 
         // Act
@@ -188,17 +221,16 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task DeleteAsync_CascadesToFinancialAccounts()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
-        var accountId = await SeedAccountAsync(workspaceId);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
 
         // Act
         await DeleteWorkspaceAsync(workspaceId);
 
         // Assert
         await using var assertDb = fixture.CreateDbContext();
-        var account = await new FinancialAccountRepository(assertDb, fixture.Mapper)
-            .FindByIdAsync(accountId, workspaceId, CancellationToken.None);
+        var account = await TestData.FindAccountAsync(assertDb, fixture.Mapper, accountId, workspaceId);
         Assert.Null(account);
     }
 
@@ -206,17 +238,16 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task DeleteAsync_CascadesToCategories()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
-        var categoryId = await SeedCategoryAsync(workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
 
         // Act
         await DeleteWorkspaceAsync(workspaceId);
 
         // Assert
         await using var assertDb = fixture.CreateDbContext();
-        var category = await new CategoryRepository(assertDb, fixture.Mapper)
-            .FindByIdAsync(categoryId, workspaceId, CancellationToken.None);
+        var category = await TestData.FindCategoryAsync(assertDb, fixture.Mapper, categoryId, workspaceId);
         Assert.Null(category);
     }
 
@@ -224,19 +255,18 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     public async Task DeleteAsync_CascadesToTransactions()
     {
         // Arrange
-        var ownerId = await SeedUserAsync();
+        var ownerId = await TestData.SeedUserAsync(fixture);
         var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
-        var accountId = await SeedAccountAsync(workspaceId);
-        var categoryId = await SeedCategoryAsync(workspaceId);
-        var transactionId = await SeedTransactionAsync(workspaceId, accountId, categoryId, ownerId);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        var transactionId = await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryId, ownerId);
 
         // Act
         await DeleteWorkspaceAsync(workspaceId);
 
         // Assert
         await using var assertDb = fixture.CreateDbContext();
-        var transaction = await new TransactionRepository(assertDb, fixture.Mapper)
-            .FindByIdAsync(transactionId, workspaceId, CancellationToken.None);
+        var transaction = await TestData.FindTransactionAsync(assertDb, fixture.Mapper, transactionId, workspaceId);
         Assert.Null(transaction);
     }
 
@@ -260,23 +290,6 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         };
 
         return (workspace, member);
-    }
-
-    private async Task<Guid> SeedUserAsync()
-    {
-        await using var db = fixture.CreateDbContext();
-        var user = new UserDb
-        {
-            Id = Guid.NewGuid(),
-            Email = $"{Guid.NewGuid():N}@test.local",
-            PasswordHash = "hash",
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
-
-        db.Users.Add(user);
-        await db.SaveChangesAsync();
-
-        return user.Id;
     }
 
     private async Task<Guid> AddWorkspaceAsync(Guid ownerId, string name)
@@ -315,68 +328,5 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         var repo = new WorkspaceRepository(db, fixture.Mapper);
         var workspace = await repo.FindByIdAsync(workspaceId, CancellationToken.None);
         await repo.DeleteAsync(workspace!, CancellationToken.None);
-    }
-
-    private async Task<Guid> SeedAccountAsync(Guid workspaceId)
-    {
-        var account = new FinancialAccount
-        {
-            Id = Guid.NewGuid(),
-            WorkspaceId = workspaceId,
-            Name = $"account-{Guid.NewGuid():N}",
-            Currency = "RUB",
-            InitialBalanceMinor = 0,
-            CurrentBalanceMinor = 0,
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
-
-        await using var db = fixture.CreateDbContext();
-        await new FinancialAccountRepository(db, fixture.Mapper).AddAsync(account, CancellationToken.None);
-
-        return account.Id;
-    }
-
-    private async Task<Guid> SeedCategoryAsync(Guid workspaceId)
-    {
-        var category = new Category
-        {
-            Id = Guid.NewGuid(),
-            WorkspaceId = workspaceId,
-            Name = $"cat-{Guid.NewGuid():N}",
-            Type = TransactionType.Expense,
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
-
-        await using var db = fixture.CreateDbContext();
-        await new CategoryRepository(db, fixture.Mapper).AddAsync(category, CancellationToken.None);
-
-        return category.Id;
-    }
-
-    private async Task<Guid> SeedTransactionAsync(
-        Guid workspaceId,
-        Guid accountId,
-        Guid categoryId,
-        Guid createdByUserId)
-    {
-        var transaction = new Transaction
-        {
-            Id = Guid.NewGuid(),
-            WorkspaceId = workspaceId,
-            FinancialAccountId = accountId,
-            CategoryId = categoryId,
-            CreatedByUserId = createdByUserId,
-            Name = "Transaction",
-            Type = TransactionType.Expense,
-            AmountMinor = 10_00,
-            Currency = "RUB",
-            OccurredAt = DateTimeOffset.UtcNow,
-            CreatedAt = DateTimeOffset.UtcNow,
-        };
-
-        await using var db = fixture.CreateDbContext();
-        await new TransactionRepository(db, fixture.Mapper).AddAsync(transaction, -10_00, CancellationToken.None);
-
-        return transaction.Id;
     }
 }
