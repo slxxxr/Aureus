@@ -22,7 +22,7 @@ public sealed class UpdateFinancialAccountHandler(IFinancialAccountRepository re
 
         if (command.Name is not null)
         {
-            account.Name = command.Name;
+            account.Name = command.Name.Trim();
         }
 
         if (command.InitialBalanceMinor is not null)
