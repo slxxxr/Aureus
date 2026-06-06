@@ -19,8 +19,14 @@ public sealed class WorkspaceMemberConfiguration : IEntityTypeConfiguration<Work
         builder.Property(member => member.UserId).HasColumnName("user_id").IsRequired();
         builder.Property(member => member.Role).HasColumnName("role").HasMaxLength(RoleMaxLength).IsRequired();
         builder.Property(member => member.JoinedAt).HasColumnName("joined_at").IsRequired();
+        builder.Property(member => member.IsDeleted).HasColumnName("is_deleted").IsRequired();
+        builder.Property(member => member.DeletedAt).HasColumnName("deleted_at");
 
-        builder.HasIndex(member => new { member.WorkspaceId, member.UserId }).IsUnique();
+        builder.HasQueryFilter(member => !member.IsDeleted);
+
+        builder.HasIndex(member => new { member.WorkspaceId, member.UserId })
+            .IsUnique()
+            .HasFilter("\"is_deleted\" = false");
 
         builder.HasOne(member => member.Workspace)
             .WithMany()

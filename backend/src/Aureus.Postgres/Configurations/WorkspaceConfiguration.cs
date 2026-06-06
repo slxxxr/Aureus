@@ -19,10 +19,18 @@ public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<WorkspaceD
         builder.Property(workspace => workspace.Name).HasColumnName("name").HasMaxLength(NameMaxLength).IsRequired();
         builder.Property(workspace => workspace.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(workspace => workspace.UpdatedAt).HasColumnName("updated_at");
+        builder.Property(workspace => workspace.IsDeleted).HasColumnName("is_deleted").IsRequired();
+        builder.Property(workspace => workspace.DeletedAt).HasColumnName("deleted_at");
+
+        builder.HasQueryFilter(workspace => !workspace.IsDeleted);
 
         builder.HasOne<UserDb>()
             .WithMany()
             .HasForeignKey(workspace => workspace.OwnerUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(workspace => new { workspace.OwnerUserId, workspace.Name })
+            .IsUnique()
+            .HasFilter("\"is_deleted\" = false");
     }
 }

@@ -11,4 +11,8 @@ public sealed class WorkspaceMember
     public WorkspaceRole Role { get; set; }
 
     public DateTimeOffset JoinedAt { get; set; }
+
+    public bool IsDeleted { get; set; }
+
+    public DateTimeOffset? DeletedAt { get; set; }
 }

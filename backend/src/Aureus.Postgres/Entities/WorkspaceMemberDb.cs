@@ -12,5 +12,9 @@ public sealed class WorkspaceMemberDb
 
     public DateTimeOffset JoinedAt { get; set; }
 
+    public bool IsDeleted { get; set; }
+
+    public DateTimeOffset? DeletedAt { get; set; }
+
     public WorkspaceDb Workspace { get; set; } = null!;
 }
