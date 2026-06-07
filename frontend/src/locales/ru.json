@@ -114,6 +114,40 @@
       "generic": "Что-то пошло не так. Попробуйте ещё раз."
     }
   },
+  "categories": {
+    "expenseSection": "Расходы",
+    "incomeSection": "Доходы",
+    "typeExpense": "Расход",
+    "typeIncome": "Доход",
+    "addCategory": "Добавить категорию",
+    "emptySection": "Нет категорий",
+    "statsLast30Days": "за последние 30 дней",
+    "emptyTitle": "Нет категорий",
+    "emptyDescription": "Создайте первую категорию для классификации транзакций.",
+    "createModal": {
+      "title": "Новая категория",
+      "nameLabel": "Название",
+      "namePlaceholder": "Название категории",
+"submit": "Создать",
+      "submitting": "Создание…"
+    },
+    "editModal": {
+      "title": "Редактировать категорию",
+      "nameLabel": "Название",
+      "save": "Сохранить",
+      "saving": "Сохранение…",
+      "deleteCategory": "Удалить категорию"
+    },
+    "deleteConfirm": {
+      "title": "Удалить категорию?",
+      "description": "Транзакции с этой категорией не будут удалены. Действие необратимо."
+    },
+    "errors": {
+      "nameTaken": "Категория с таким названием и типом уже существует.",
+      "notFound": "Категория не найдена.",
+      "generic": "Что-то пошло не так. Попробуйте ещё раз."
+    }
+  },
   "auth": {
     "signOut": "Выйти",
     "fields": {

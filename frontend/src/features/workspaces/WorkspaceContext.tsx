@@ -38,7 +38,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     if (workspaces.length === 0) return;
     const isValid = workspaces.some((w) => w.id === activeWorkspaceId);
     if (!isValid) {
-      setActiveWorkspaceId(workspaces[0].id);
+      const fallbackId = workspaces[0].id;
+      localStorage.setItem(ACTIVE_WORKSPACE_KEY, fallbackId);
+      setActiveWorkspaceId(fallbackId);
     }
   }, [workspaces, activeWorkspaceId]);
 

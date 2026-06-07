@@ -7,7 +7,11 @@ import { WorkspaceProvider } from "@/features/workspaces/WorkspaceContext";
 import "@/i18n";
 import "@/index.css";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1 },
+  },
+});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

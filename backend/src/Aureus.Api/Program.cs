@@ -12,7 +12,9 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPostgres(builder.Configuration);
 builder.Services.AddMappings();
 builder.Services.AddControllers(options => options.Filters.Add<UseCaseExceptionFilter>())
-    .AddControllersAsServices();
+    .AddControllersAsServices()
+    .AddJsonOptions(options =>
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
 builder.Services.AddAuthorizationBuilder()
     .SetFallbackPolicy(new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder()
