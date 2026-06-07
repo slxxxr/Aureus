@@ -148,6 +148,53 @@
       "generic": "Что-то пошло не так. Попробуйте ещё раз."
     }
   },
+  "transactions": {
+    "addTransaction": "Добавить",
+    "emptyTitle": "Нет транзакций",
+    "emptyDescription": "Добавьте первую транзакцию для учёта доходов и расходов.",
+    "emptyNoAccounts": "Сначала создайте счёт",
+    "emptyNoAccountsHint": "Перейдите в раздел «Счета» и добавьте хотя бы один счёт.",
+    "emptyNoCategories": "Сначала создайте категорию",
+    "emptyNoCategoriesHint": "Перейдите в раздел «Категории» и добавьте хотя бы одну.",
+    "emptyFiltered": "Нет транзакций по выбранным фильтрам.",
+    "unknownCategory": "Без категории",
+    "unknownAccount": "Неизвестный счёт",
+    "filters": {
+      "account": "Счёт",
+      "allAccounts": "Все счета",
+      "type": "Тип",
+      "typeAll": "Все",
+      "typeIncome": "Доходы",
+      "typeExpense": "Расходы"
+    },
+    "date": {
+      "today": "Сегодня",
+      "yesterday": "Вчера"
+    },
+    "createModal": {
+      "title": "Новая транзакция",
+      "nameLabel": "Название",
+      "namePlaceholder": "Введите название",
+      "amountLabel": "Сумма",
+      "accountLabel": "Счёт",
+      "selectAccount": "Выберите счёт",
+      "categoryLabel": "Категория",
+      "selectCategory": "Выберите категорию",
+      "noAccounts": "Нет счетов. Создайте счёт в разделе «Счета».",
+      "noCategoriesForType": "Нет категорий этого типа. Создайте их в разделе «Категории».",
+      "dateLabel": "Дата",
+      "noteLabel": "Заметка (необязательно)",
+      "notePlaceholder": "Дополнительная информация",
+      "submit": "Добавить",
+      "submitting": "Сохранение…"
+    },
+    "errors": {
+      "notFound": "Транзакция не найдена.",
+      "accountNotFound": "Счёт не найден.",
+      "categoryNotFound": "Категория не найдена.",
+      "generic": "Что-то пошло не так. Попробуйте ещё раз."
+    }
+  },
   "auth": {
     "signOut": "Выйти",
     "fields": {
