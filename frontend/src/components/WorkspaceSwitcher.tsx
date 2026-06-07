@@ -1,5 +1,4 @@
 import { useRef, useState, type FormEvent } from "react";
-import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,22 +16,7 @@ import { resolveWorkspaceError } from "@/features/workspaces/resolveWorkspaceErr
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-// ─── modal wrapper ────────────────────────────────────────────────────────────
-
-function Modal({ children, onBackdropClick }: { children: React.ReactNode; onBackdropClick: () => void }) {
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onBackdropClick(); }}
-    >
-      <div className="w-full max-w-sm rounded-lg border border-border bg-background p-6 shadow-lg">
-        {children}
-      </div>
-    </div>,
-    document.body,
-  );
-}
+import { Modal } from "@/components/ui/modal";
 
 // ─── create modal ─────────────────────────────────────────────────────────────
 
@@ -51,15 +35,10 @@ function CreateWorkspaceModal({ onClose }: { onClose: () => void }) {
     },
   });
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    mutation.mutate({ name: name.trim() });
-  };
-
   return (
     <Modal onBackdropClick={onClose}>
       <h2 className="mb-5 text-base font-semibold">{t("workspace.createModal.title")}</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={(e: FormEvent) => { e.preventDefault(); mutation.mutate({ name: name.trim() }); }} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="create-workspace-name">{t("workspace.createModal.nameLabel")}</Label>
           <Input
@@ -114,11 +93,6 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
 
   const isPending = updateMutation.isPending || deleteMutation.isPending;
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    updateMutation.mutate();
-  };
-
   if (confirmingDelete) {
     return (
       <Modal onBackdropClick={() => setConfirmingDelete(false)}>
@@ -143,7 +117,7 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
   return (
     <Modal onBackdropClick={onClose}>
       <h2 className="mb-5 text-base font-semibold">{t("workspace.editModal.title")}</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={(e: FormEvent) => { e.preventDefault(); updateMutation.mutate(); }} className="space-y-4">
         <div className="space-y-1.5">
           <Label htmlFor="edit-workspace-name">{t("workspace.editModal.nameLabel")}</Label>
           <Input
@@ -200,25 +174,44 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
 
   useClickOutside(ref, () => setOpen(false));
 
-  const isOwner = activeWorkspace?.role === "Owner";
+  const openEdit = (workspace: Workspace) => {
+    setEditingWorkspace(workspace);
+    setOpen(false);
+  };
 
+  // Dropdown stretches to the full width of the ref container (matches sidebar width).
   const dropdown = open && (
-    <div className="absolute left-0 top-full z-50 mt-1 w-52 rounded-md border border-border bg-background shadow-md">
+    <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[12rem] rounded-md border border-border bg-background shadow-md">
       <ul role="menu" aria-label={t("workspace.listLabel")}>
         {workspaces.map((workspace) => (
           <li key={workspace.id} role="none">
-            <button
-              type="button"
-              onClick={() => { setActiveWorkspace(workspace); setOpen(false); }}
-              role="menuitem"
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
-            >
-              <span className="flex-1 truncate text-left">{workspace.name}</span>
-              <Check
-                className={cn("h-4 w-4 shrink-0", workspace.id !== activeWorkspace?.id && "invisible")}
-                aria-hidden="true"
-              />
-            </button>
+            {/* Order: [name] → [pencil on hover] → [checkmark] */}
+            <div className="group flex items-center hover:bg-accent">
+              <button
+                type="button"
+                onClick={() => { setActiveWorkspace(workspace); setOpen(false); }}
+                role="menuitem"
+                className="flex min-w-0 flex-1 items-center py-2 pl-3 pr-1 text-sm"
+              >
+                <span className="flex-1 truncate text-left">{workspace.name}</span>
+              </button>
+              {workspace.role === "Owner" && (
+                <button
+                  type="button"
+                  onClick={() => openEdit(workspace)}
+                  className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  aria-label={t("workspace.editModal.title")}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+              )}
+              <div className="px-2">
+                <Check
+                  className={cn("h-4 w-4 shrink-0 text-muted-foreground", workspace.id !== activeWorkspace?.id && "invisible")}
+                  aria-hidden="true"
+                />
+              </div>
+            </div>
           </li>
         ))}
       </ul>
@@ -268,37 +261,55 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
   return (
     <>
       <div ref={ref} className="relative">
-        <button
-          type="button"
-          onClick={() => setOpen((prev) => !prev)}
-          className="group flex w-full items-center gap-3 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent"
-          aria-label={t("workspace.switcherLabel")}
-          aria-expanded={open}
-        >
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background">
-            <Landmark className="h-4 w-4" aria-hidden="true" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold leading-5">
-              {activeWorkspace?.name ?? t("common.appName")}
-            </p>
-            <p className="text-xs text-muted-foreground">{t("common.appName")}</p>
-          </div>
-          {isOwner && activeWorkspace && (
-            <span
-              role="button"
-              onClick={(e) => { e.stopPropagation(); setEditingWorkspace(activeWorkspace); }}
+        {/*
+          Outer div is the hover target (group) for the pencil opacity transition.
+          Main trigger button covers icon + name + chevron area.
+          Pencil button is a sibling — before the chevron — no nested <button> in <button>.
+        */}
+        <div className="group flex w-full items-center rounded-md transition-colors hover:bg-accent">
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            className="flex min-w-0 flex-1 items-center gap-3 px-2 py-1.5 text-left"
+            aria-label={t("workspace.switcherLabel")}
+            aria-expanded={open}
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-background">
+              <Landmark className="h-4 w-4" aria-hidden="true" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold leading-5">
+                {activeWorkspace?.name ?? t("common.appName")}
+              </p>
+              <p className="text-xs text-muted-foreground">{t("common.appName")}</p>
+            </div>
+          </button>
+
+          {/* Pencil left of chevron — sibling button, not nested */}
+          {activeWorkspace?.role === "Owner" && (
+            <button
+              type="button"
+              onClick={() => openEdit(activeWorkspace)}
               className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               aria-label={t("workspace.editModal.title")}
             >
               <Pencil className="h-3.5 w-3.5" />
-            </span>
+            </button>
           )}
-          <ChevronDown
-            className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")}
+
+          {/* Chevron is visual-only, toggling happens on the main button */}
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            className="mr-1 shrink-0 rounded p-1 text-muted-foreground hover:text-foreground"
+            tabIndex={-1}
             aria-hidden="true"
-          />
-        </button>
+          >
+            <ChevronDown
+              className={cn("h-4 w-4 transition-transform", open && "rotate-180")}
+            />
+          </button>
+        </div>
         {dropdown}
       </div>
       {modals}
