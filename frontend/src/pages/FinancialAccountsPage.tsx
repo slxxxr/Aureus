@@ -16,6 +16,7 @@ import { formatMoney } from "@/lib/formatMoney";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Modal } from "@/components/ui/modal";
 
 const CURRENCIES = ["RUB", "USD", "EUR"] as const;
 
@@ -52,21 +53,6 @@ function AccountSkeleton() {
       <div className="h-4 w-28 rounded bg-muted" />
       <div className="h-7 w-32 rounded bg-muted" />
       <div className="h-3 w-12 rounded bg-muted" />
-    </div>
-  );
-}
-
-// ─── modal wrapper ────────────────────────────────────────────────────────────
-
-function Modal({ children, onBackdropClick }: { children: React.ReactNode; onBackdropClick: () => void }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onBackdropClick(); }}
-    >
-      <div className="w-full max-w-sm rounded-lg border border-border bg-background p-6 shadow-lg">
-        {children}
-      </div>
     </div>
   );
 }
@@ -324,7 +310,8 @@ export function FinancialAccountsPage() {
   return (
     <div>
       {isLoading && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <AccountSkeleton />
           <AccountSkeleton />
           <AccountSkeleton />
           <AccountSkeleton />
@@ -345,12 +332,12 @@ export function FinancialAccountsPage() {
       {!isLoading && accounts && accounts.length > 0 && (
         <>
           <div className="mb-5 flex justify-end">
-            <Button size="sm" onClick={() => setShowCreate(true)}>
-              <Plus className="mr-1.5 h-4 w-4" />
+            <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="h-7 gap-1.5 px-2 text-xs">
+              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               {t("financialAccounts.addAccount")}
             </Button>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {accounts.map((account) => (
               <AccountCard key={account.id} account={account} workspaceId={activeWorkspace!.id} />
             ))}

@@ -114,6 +114,40 @@
       "generic": "Something went wrong. Please try again."
     }
   },
+  "categories": {
+    "expenseSection": "Expenses",
+    "incomeSection": "Income",
+    "typeExpense": "Expense",
+    "typeIncome": "Income",
+    "addCategory": "Add category",
+    "emptySection": "No categories",
+    "statsLast30Days": "last 30 days",
+    "emptyTitle": "No categories yet",
+    "emptyDescription": "Create your first category to classify transactions.",
+    "createModal": {
+      "title": "New category",
+      "nameLabel": "Name",
+      "namePlaceholder": "Category name",
+"submit": "Create",
+      "submitting": "Creating…"
+    },
+    "editModal": {
+      "title": "Edit category",
+      "nameLabel": "Name",
+      "save": "Save",
+      "saving": "Saving…",
+      "deleteCategory": "Delete category"
+    },
+    "deleteConfirm": {
+      "title": "Delete category?",
+      "description": "Transactions using this category will not be deleted. This action cannot be undone."
+    },
+    "errors": {
+      "nameTaken": "A category with this name and type already exists.",
+      "notFound": "Category not found.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
   "auth": {
     "signOut": "Sign out",
     "fields": {
