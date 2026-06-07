@@ -53,6 +53,7 @@ function CreateCategoryModal({
             placeholder={t("categories.createModal.namePlaceholder")}
             required
             autoFocus
+            autoComplete="off"
             disabled={mutation.isPending}
           />
         </div>
@@ -142,6 +143,7 @@ function EditCategoryModal({
             onChange={(e) => setName(e.target.value)}
             required
             autoFocus
+            autoComplete="off"
             disabled={isPending}
           />
         </div>
