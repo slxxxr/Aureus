@@ -98,6 +98,7 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
             placeholder={t("financialAccounts.createModal.namePlaceholder")}
             required
             autoFocus
+            autoComplete="off"
             disabled={mutation.isPending}
           />
         </div>
@@ -116,6 +117,7 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
             value={initialBalance}
             onChange={(e) => setInitialBalance(e.target.value)}
             placeholder="0.00"
+            autoComplete="off"
             disabled={mutation.isPending}
           />
         </div>
@@ -210,6 +212,7 @@ function EditAccountModal({
             onChange={(e) => setName(e.target.value)}
             required
             autoFocus
+            autoComplete="off"
             disabled={isPending}
           />
         </div>
@@ -222,6 +225,7 @@ function EditAccountModal({
             step="0.01"
             value={initialBalance}
             onChange={(e) => setInitialBalance(e.target.value)}
+            autoComplete="off"
             disabled={isPending}
           />
         </div>
@@ -309,6 +313,14 @@ export function FinancialAccountsPage() {
 
   return (
     <div>
+      {/* always-visible ghost button */}
+      <div className="mb-3 flex justify-end">
+        <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="h-6 gap-1 px-1.5 text-xs">
+          <Plus className="h-3 w-3" aria-hidden="true" />
+          {t("financialAccounts.addAccount")}
+        </Button>
+      </div>
+
       {isLoading && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <AccountSkeleton />
@@ -319,30 +331,18 @@ export function FinancialAccountsPage() {
       )}
 
       {!isLoading && accounts?.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="pt-8 text-center">
           <p className="text-sm font-medium">{t("financialAccounts.emptyTitle")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t("financialAccounts.emptyDescription")}</p>
-          <Button className="mt-5" size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            {t("financialAccounts.addAccount")}
-          </Button>
         </div>
       )}
 
       {!isLoading && accounts && accounts.length > 0 && (
-        <>
-          <div className="mb-5 flex justify-end">
-            <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="h-7 gap-1.5 px-2 text-xs">
-              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-              {t("financialAccounts.addAccount")}
-            </Button>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {accounts.map((account) => (
-              <AccountCard key={account.id} account={account} workspaceId={activeWorkspace!.id} />
-            ))}
-          </div>
-        </>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {accounts.map((account) => (
+            <AccountCard key={account.id} account={account} workspaceId={activeWorkspace!.id} />
+          ))}
+        </div>
       )}
 
       {showCreate && activeWorkspace && (
