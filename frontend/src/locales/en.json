@@ -149,7 +149,7 @@
     }
   },
   "transactions": {
-    "addTransaction": "Add",
+    "addTransaction": "Add Transaction",
     "emptyTitle": "No transactions yet",
     "emptyDescription": "Add your first transaction to start tracking income and expenses.",
     "emptyNoAccounts": "Create an account first",
@@ -187,6 +187,22 @@
       "notePlaceholder": "Additional details",
       "submit": "Add",
       "submitting": "Saving…"
+    },
+    "editModal": {
+      "title": "Edit transaction",
+      "nameLabel": "Name",
+      "amountLabel": "Amount",
+      "categoryLabel": "Category",
+      "dateLabel": "Date",
+      "noteLabel": "Note (optional)",
+      "notePlaceholder": "Additional details",
+      "save": "Save",
+      "saving": "Saving…",
+      "deleteTransaction": "Delete transaction"
+    },
+    "deleteConfirm": {
+      "title": "Delete transaction?",
+      "description": "This action cannot be undone. The account balance will be recalculated."
     },
     "errors": {
       "notFound": "Transaction not found.",

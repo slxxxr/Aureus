@@ -84,12 +84,12 @@
   },
   "financialAccounts": {
     "title": "Счета",
-    "addAccount": "Добавить счёт",
+    "addAccount": "Добавить счет",
     "emptyTitle": "Нет счетов",
-    "emptyDescription": "Создайте первый счёт, чтобы начать учёт финансов.",
+    "emptyDescription": "Создайте первый счет, чтобы начать учёт финансов.",
     "createModal": {
-      "title": "Новый счёт",
-      "namePlaceholder": "Название счёта",
+      "title": "Новый счет",
+      "namePlaceholder": "Название счета",
       "nameLabel": "Название",
       "currencyLabel": "Валюта",
       "initialBalanceLabel": "Начальный баланс",
@@ -97,20 +97,20 @@
       "submitting": "Создание…"
     },
     "editModal": {
-      "title": "Редактировать счёт",
+      "title": "Редактировать счет",
       "nameLabel": "Название",
       "initialBalanceLabel": "Начальный баланс",
       "save": "Сохранить",
       "saving": "Сохранение…",
-      "deleteAccount": "Удалить счёт"
+      "deleteAccount": "Удалить счет"
     },
     "deleteConfirm": {
-      "title": "Удалить счёт?",
-      "description": "Все транзакции этого счёта тоже будут удалены. Действие необратимо."
+      "title": "Удалить счет?",
+      "description": "Все транзакции этого счета тоже будут удалены. Действие необратимо."
     },
     "errors": {
-      "nameTaken": "Счёт с таким названием уже существует.",
-      "notFound": "Счёт не найден.",
+      "nameTaken": "Счет с таким названием уже существует.",
+      "notFound": "Счет не найден.",
       "generic": "Что-то пошло не так. Попробуйте ещё раз."
     }
   },
@@ -149,18 +149,18 @@
     }
   },
   "transactions": {
-    "addTransaction": "Добавить",
+    "addTransaction": "Добавить транзакцию",
     "emptyTitle": "Нет транзакций",
     "emptyDescription": "Добавьте первую транзакцию для учёта доходов и расходов.",
-    "emptyNoAccounts": "Сначала создайте счёт",
-    "emptyNoAccountsHint": "Перейдите в раздел «Счета» и добавьте хотя бы один счёт.",
+    "emptyNoAccounts": "Сначала создайте счет",
+    "emptyNoAccountsHint": "Перейдите в раздел «Счета» и добавьте хотя бы один счет.",
     "emptyNoCategories": "Сначала создайте категорию",
     "emptyNoCategoriesHint": "Перейдите в раздел «Категории» и добавьте хотя бы одну.",
     "emptyFiltered": "Нет транзакций по выбранным фильтрам.",
     "unknownCategory": "Без категории",
-    "unknownAccount": "Неизвестный счёт",
+    "unknownAccount": "Неизвестный счет",
     "filters": {
-      "account": "Счёт",
+      "account": "Счет",
       "allAccounts": "Все счета",
       "type": "Тип",
       "typeAll": "Все",
@@ -176,11 +176,11 @@
       "nameLabel": "Название",
       "namePlaceholder": "Введите название",
       "amountLabel": "Сумма",
-      "accountLabel": "Счёт",
-      "selectAccount": "Выберите счёт",
+      "accountLabel": "Счет",
+      "selectAccount": "Выберите счет",
       "categoryLabel": "Категория",
       "selectCategory": "Выберите категорию",
-      "noAccounts": "Нет счетов. Создайте счёт в разделе «Счета».",
+      "noAccounts": "Нет счетов. Создайте счет в разделе «Счета».",
       "noCategoriesForType": "Нет категорий этого типа. Создайте их в разделе «Категории».",
       "dateLabel": "Дата",
       "noteLabel": "Заметка (необязательно)",
@@ -188,9 +188,25 @@
       "submit": "Добавить",
       "submitting": "Сохранение…"
     },
+    "editModal": {
+      "title": "Редактировать транзакцию",
+      "nameLabel": "Название",
+      "amountLabel": "Сумма",
+      "categoryLabel": "Категория",
+      "dateLabel": "Дата",
+      "noteLabel": "Заметка (необязательно)",
+      "notePlaceholder": "Дополнительная информация",
+      "save": "Сохранить",
+      "saving": "Сохранение…",
+      "deleteTransaction": "Удалить транзакцию"
+    },
+    "deleteConfirm": {
+      "title": "Удалить транзакцию?",
+      "description": "Это действие необратимо. Баланс счета будет пересчитан."
+    },
     "errors": {
       "notFound": "Транзакция не найдена.",
-      "accountNotFound": "Счёт не найден.",
+      "accountNotFound": "Счет не найден.",
       "categoryNotFound": "Категория не найдена.",
       "generic": "Что-то пошло не так. Попробуйте ещё раз."
     }

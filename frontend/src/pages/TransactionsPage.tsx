@@ -2,13 +2,15 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/formatMoney";
 import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import {
   getTransactions,
   createTransaction,
+  updateTransaction,
+  deleteTransaction,
   type Transaction,
   type TransactionType,
 } from "@/features/transactions/transactionsApi";
@@ -25,6 +27,8 @@ import { Modal } from "@/components/ui/modal";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { MultiSelect } from "@/components/ui/custom-select";
 import { DatePicker } from "@/components/ui/date-picker";
+
+const MAX_AMOUNT = 1_000_000_000;
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -43,14 +47,15 @@ function formatDateLabel(dateKey: string, t: TFunction): string {
 }
 
 function getDailyNet(items: Transaction[]): string | null {
-  const currencies = new Set(items.map((tx) => tx.currency));
-  if (currencies.size !== 1) return null;
-  const currency = [...currencies][0];
-  const net = items.reduce(
-    (sum, tx) => sum + (tx.type === "Income" ? tx.amountMinor : -tx.amountMinor),
-    0,
-  );
-  return (net > 0 ? "+" : "") + formatMoney(net, currency);
+  if (items.length === 0) return null;
+  const byCurrency = new Map<string, number>();
+  for (const tx of items) {
+    const sign = tx.type === "Income" ? 1 : -1;
+    byCurrency.set(tx.currency, (byCurrency.get(tx.currency) ?? 0) + sign * tx.amountMinor);
+  }
+  return Array.from(byCurrency.entries())
+    .map(([currency, net]) => (net > 0 ? "+" : "") + formatMoney(net, currency))
+    .join(" · ");
 }
 
 // ─── create modal ─────────────────────────────────────────────────────────────
@@ -110,14 +115,17 @@ function CreateTransactionModal({
 
   const missingAccounts = accounts.length === 0;
   const missingCategoryForType = filteredCategories.length === 0;
-  const amountValid = amount !== "" && !isNaN(parseFloat(amount)) && parseFloat(amount) > 0;
+  const amountNum = parseFloat(amount);
+  const amountValid = amount !== "" && !isNaN(amountNum) && amountNum > 0;
+  const amountOverMax = amountValid && amountNum > MAX_AMOUNT;
   const canSubmit =
     !missingAccounts &&
     !missingCategoryForType &&
     name.trim() &&
     accountId &&
     categoryId &&
-    amountValid;
+    amountValid &&
+    !amountOverMax;
 
   return (
     <Modal onBackdropClick={onClose}>
@@ -157,6 +165,7 @@ function CreateTransactionModal({
             required
             autoFocus
             autoComplete="off"
+            maxLength={200}
             disabled={mutation.isPending}
           />
         </div>
@@ -178,6 +187,9 @@ function CreateTransactionModal({
             autoComplete="off"
             disabled={mutation.isPending}
           />
+          {amountOverMax && (
+            <p className="text-xs text-destructive">Максимум: 1 000 000 000</p>
+          )}
         </div>
 
         {/* account */}
@@ -235,6 +247,7 @@ function CreateTransactionModal({
             onChange={(e) => setNote(e.target.value)}
             placeholder={t("transactions.createModal.notePlaceholder")}
             autoComplete="off"
+            maxLength={500}
             disabled={mutation.isPending}
           />
         </div>
@@ -260,16 +273,205 @@ function CreateTransactionModal({
   );
 }
 
+// ─── edit modal ───────────────────────────────────────────────────────────────
+
+function EditTransactionModal({
+  tx,
+  workspaceId,
+  categories,
+  accounts,
+  onClose,
+}: {
+  tx: Transaction;
+  workspaceId: string;
+  categories: Category[];
+  accounts: FinancialAccount[];
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const filteredCategories = categories.filter((c) => c.type === tx.type);
+
+  const [name, setName] = useState(tx.name);
+  const [amount, setAmount] = useState((tx.amountMinor / 100).toFixed(2));
+  const [categoryId, setCategoryId] = useState(tx.categoryId);
+  const [date, setDate] = useState(getLocalDateKey(tx.occurredAt));
+  const [note, setNote] = useState(tx.note ?? "");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["transactions", workspaceId] });
+    void queryClient.invalidateQueries({ queryKey: ["financial-accounts", workspaceId] });
+  };
+
+  const updateMutation = useMutation({
+    mutationFn: () => {
+      const newAmountMinor = Math.round(parseFloat(amount) * 100);
+      const occurredAt = new Date(date + "T00:00:00").toISOString();
+      return updateTransaction(workspaceId, tx.id, {
+        name: name.trim() !== tx.name ? name.trim() : undefined,
+        amountMinor: newAmountMinor !== tx.amountMinor ? newAmountMinor : undefined,
+        categoryId: categoryId !== tx.categoryId ? categoryId : undefined,
+        occurredAt: occurredAt !== new Date(tx.occurredAt).toISOString() ? occurredAt : undefined,
+        note: note.trim() !== (tx.note ?? "") ? (note.trim() || null) : undefined,
+      });
+    },
+    onSuccess: () => { invalidate(); onClose(); },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteTransaction(workspaceId, tx.id),
+    onSuccess: () => { invalidate(); onClose(); },
+  });
+
+  const isPending = updateMutation.isPending || deleteMutation.isPending;
+  const amountNum = parseFloat(amount);
+  const amountValid = amount !== "" && !isNaN(amountNum) && amountNum > 0;
+  const amountOverMax = amountValid && amountNum > MAX_AMOUNT;
+  const canSave = name.trim() && categoryId && amountValid && !amountOverMax;
+  const accountName = accounts.find((a) => a.id === tx.financialAccountId)?.name ?? t("transactions.unknownAccount");
+
+  if (confirmingDelete) {
+    return (
+      <Modal onBackdropClick={() => setConfirmingDelete(false)}>
+        <h2 className="mb-2 text-base font-semibold">{t("transactions.deleteConfirm.title")}</h2>
+        <p className="mb-5 text-sm text-muted-foreground">{t("transactions.deleteConfirm.description")}</p>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => setConfirmingDelete(false)} disabled={deleteMutation.isPending}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            disabled={deleteMutation.isPending}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => deleteMutation.mutate()}
+          >
+            {t("common.delete")}
+          </Button>
+        </div>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal onBackdropClick={onClose}>
+      <h2 className="mb-1 text-base font-semibold">{t("transactions.editModal.title")}</h2>
+      <p className="mb-4 text-xs text-muted-foreground">
+        {tx.type === "Income" ? t("transactions.filters.typeIncome") : t("transactions.filters.typeExpense")} · {accountName}
+      </p>
+      <form
+        onSubmit={(e: FormEvent) => { e.preventDefault(); if (canSave) updateMutation.mutate(); }}
+        className="space-y-4"
+      >
+        {/* name */}
+        <div className="space-y-1.5">
+          <Label htmlFor="edit-tx-name">{t("transactions.editModal.nameLabel")}</Label>
+          <Input
+            id="edit-tx-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            autoFocus
+            autoComplete="off"
+            maxLength={200}
+            disabled={isPending}
+          />
+        </div>
+
+        {/* amount */}
+        <div className="space-y-1.5">
+          <Label htmlFor="edit-tx-amount">{t("transactions.editModal.amountLabel")}</Label>
+          <Input
+            id="edit-tx-amount"
+            type="text"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => {
+              const val = e.target.value.replace(",", ".");
+              if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) setAmount(val);
+            }}
+            required
+            autoComplete="off"
+            disabled={isPending}
+          />
+          {amountOverMax && (
+            <p className="text-xs text-destructive">Максимум: 1 000 000 000</p>
+          )}
+        </div>
+
+        {/* category */}
+        <div className="space-y-1.5">
+          <Label>{t("transactions.editModal.categoryLabel")}</Label>
+          <CustomSelect
+            value={categoryId}
+            onChange={setCategoryId}
+            options={filteredCategories.map((c) => ({ value: c.id, label: c.name }))}
+            placeholder={t("transactions.createModal.selectCategory")}
+            disabled={isPending}
+          />
+        </div>
+
+        {/* date */}
+        <div className="space-y-1.5">
+          <Label>{t("transactions.editModal.dateLabel")}</Label>
+          <DatePicker value={date} onChange={setDate} disabled={isPending} />
+        </div>
+
+        {/* note */}
+        <div className="space-y-1.5">
+          <Label htmlFor="edit-tx-note">{t("transactions.editModal.noteLabel")}</Label>
+          <Input
+            id="edit-tx-note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={t("transactions.editModal.notePlaceholder")}
+            autoComplete="off"
+            maxLength={500}
+            disabled={isPending}
+          />
+        </div>
+
+        {updateMutation.isError && (
+          <p className="text-sm text-destructive" role="alert">
+            {resolveTransactionError(updateMutation.error, t as TFunction)}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between pt-1">
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            disabled={isPending}
+            className="text-sm text-destructive hover:underline disabled:opacity-50"
+          >
+            {t("transactions.editModal.deleteTransaction")}
+          </button>
+          <div className="flex gap-2">
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending || !canSave}>
+              {updateMutation.isPending ? t("transactions.editModal.saving") : t("transactions.editModal.save")}
+            </Button>
+          </div>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 // ─── transaction row ──────────────────────────────────────────────────────────
 
 function TransactionRow({
   tx,
   categoryMap,
   accountMap,
+  onEdit,
 }: {
   tx: Transaction;
   categoryMap: Map<string, Category>;
   accountMap: Map<string, FinancialAccount>;
+  onEdit: () => void;
 }) {
   const { t } = useTranslation();
   const isIncome = tx.type === "Income";
@@ -277,7 +479,7 @@ function TransactionRow({
   const account = accountMap.get(tx.financialAccountId);
 
   return (
-    <div className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent/60">
+    <div className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent/60">
       {/* type icon */}
       <div
         className={cn(
@@ -317,6 +519,15 @@ function TransactionRow({
           {account?.name ?? t("transactions.unknownAccount")}
         </p>
       </div>
+
+      {/* edit pencil */}
+      <button
+        onClick={onEdit}
+        className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+        aria-label={t("transactions.editModal.title")}
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }
@@ -328,23 +539,25 @@ function DateGroup({
   items,
   categoryMap,
   accountMap,
+  onEdit,
 }: {
   dateKey: string;
   items: Transaction[];
   categoryMap: Map<string, Category>;
   accountMap: Map<string, FinancialAccount>;
+  onEdit: (tx: Transaction) => void;
 }) {
   const { t } = useTranslation();
   const net = getDailyNet(items);
 
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between px-3">
+      <div className="mb-1 flex items-center px-3 pr-8">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {formatDateLabel(dateKey, t as TFunction)}
         </span>
         {net && (
-          <span className="text-xs font-medium tabular-nums text-muted-foreground">{net}</span>
+          <span className="ml-auto text-xs font-medium tabular-nums text-muted-foreground">{net}</span>
         )}
       </div>
       <div className="space-y-0.5">
@@ -354,6 +567,7 @@ function DateGroup({
             tx={tx}
             categoryMap={categoryMap}
             accountMap={accountMap}
+            onEdit={() => onEdit(tx)}
           />
         ))}
       </div>
@@ -467,6 +681,7 @@ export function TransactionsPage() {
   const [accountFilter, setAccountFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<"" | TransactionType>("");
   const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState<Transaction | null>(null);
 
   const { data: transactions = [], isLoading: txLoading } = useQuery({
     queryKey: ["transactions", activeWorkspace?.id],
@@ -539,63 +754,62 @@ export function TransactionsPage() {
         : "transactions.emptyDescription";
 
   return (
-    <div>
-      {/* top bar */}
-      <div className="mb-3 flex items-center justify-end">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setShowCreate(true)}
-          className="h-6 gap-1 px-1.5 text-xs"
-        >
-          <Plus className="h-3 w-3" aria-hidden="true" />
-          {t("transactions.addTransaction")}
-        </Button>
-      </div>
+    <div className="flex gap-6">
+      {/* filter panel */}
+      {!isLoading && hasData && (
+        <FilterSidebar
+          accounts={accounts}
+          accountFilter={accountFilter}
+          onAccountChange={setAccountFilter}
+          typeFilter={typeFilter}
+          onTypeChange={setTypeFilter}
+        />
+      )}
 
-      <div className="flex gap-6">
-        {/* filter panel */}
-        {!isLoading && hasData && (
-          <FilterSidebar
-            accounts={accounts}
-            accountFilter={accountFilter}
-            onAccountChange={setAccountFilter}
-            typeFilter={typeFilter}
-            onTypeChange={setTypeFilter}
-          />
+      {/* main content */}
+      <div className="min-w-0 flex-1">
+        {/* add button — sticky below header so it stays visible while scrolling */}
+        <div className="sticky top-14 z-10 mb-3 flex justify-end border-b border-border/50 bg-background pb-1.5 pt-0.5 pr-8">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setShowCreate(true)}
+            className="gap-1.5"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            {t("transactions.addTransaction")}
+          </Button>
+        </div>
+
+        {isLoading && <TransactionsSkeleton />}
+
+        {!isLoading && !hasData && (
+          <div className="pt-8 text-center">
+            <p className="text-sm font-medium">{t(emptyTitleKey)}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t(emptyDescKey)}</p>
+          </div>
         )}
 
-        {/* main content */}
-        <div className="min-w-0 flex-1">
-          {isLoading && <TransactionsSkeleton />}
+        {!isLoading && hasData && !hasFiltered && (
+          <p className="py-10 text-center text-sm text-muted-foreground">
+            {t("transactions.emptyFiltered")}
+          </p>
+        )}
 
-          {!isLoading && !hasData && (
-            <div className="pt-8 text-center">
-              <p className="text-sm font-medium">{t(emptyTitleKey)}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{t(emptyDescKey)}</p>
-            </div>
-          )}
-
-          {!isLoading && hasData && !hasFiltered && (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              {t("transactions.emptyFiltered")}
-            </p>
-          )}
-
-          {!isLoading && hasFiltered && (
-            <div className="space-y-6">
-              {groups.map(({ dateKey, items }) => (
-                <DateGroup
-                  key={dateKey}
-                  dateKey={dateKey}
-                  items={items}
-                  categoryMap={categoryMap}
-                  accountMap={accountMap}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        {!isLoading && hasFiltered && (
+          <div className="space-y-6">
+            {groups.map(({ dateKey, items }) => (
+              <DateGroup
+                key={dateKey}
+                dateKey={dateKey}
+                items={items}
+                categoryMap={categoryMap}
+                accountMap={accountMap}
+                onEdit={setEditing}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {showCreate && activeWorkspace && (
@@ -604,6 +818,15 @@ export function TransactionsPage() {
           accounts={accounts}
           categories={categories}
           onClose={() => setShowCreate(false)}
+        />
+      )}
+      {editing && activeWorkspace && (
+        <EditTransactionModal
+          tx={editing}
+          workspaceId={activeWorkspace.id}
+          categories={categories}
+          accounts={accounts}
+          onClose={() => setEditing(null)}
         />
       )}
     </div>
