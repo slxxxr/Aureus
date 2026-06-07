@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Modal } from "@/components/ui/modal";
 
 const CURRENCIES = ["RUB", "USD", "EUR"] as const;
+const MAX_AMOUNT = 1_000_000_000;
 
 // ─── currency select ──────────────────────────────────────────────────────────
 
@@ -67,6 +68,8 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
   const [currency, setCurrency] = useState("RUB");
   const [initialBalance, setInitialBalance] = useState("");
 
+  const balanceOverMax = initialBalance !== "" && parseFloat(initialBalance) > MAX_AMOUNT;
+
   const mutation = useMutation({
     mutationFn: (payload: { name: string; currency: string; initialBalanceMinor: number }) =>
       createFinancialAccount(workspaceId, payload),
@@ -78,6 +81,7 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (balanceOverMax) return;
     mutation.mutate({
       name: name.trim(),
       currency,
@@ -99,6 +103,7 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
             required
             autoFocus
             autoComplete="off"
+            maxLength={120}
             disabled={mutation.isPending}
           />
         </div>
@@ -112,14 +117,20 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
           <Label htmlFor="create-balance">{t("financialAccounts.createModal.initialBalanceLabel")}</Label>
           <Input
             id="create-balance"
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             value={initialBalance}
-            onChange={(e) => setInitialBalance(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value.replace(",", ".");
+              if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) setInitialBalance(val);
+            }}
             placeholder="0.00"
             autoComplete="off"
             disabled={mutation.isPending}
           />
+          {balanceOverMax && (
+            <p className="text-xs text-destructive">Максимум: 1 000 000 000</p>
+          )}
         </div>
 
         {mutation.isError && (
@@ -159,8 +170,15 @@ function EditAccountModal({
   const [initialBalance, setInitialBalance] = useState((account.initialBalanceMinor / 100).toFixed(2));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["financial-accounts", workspaceId] });
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["financial-accounts", workspaceId] });
+  };
+  const invalidateAll = () => {
+    invalidate();
+    void queryClient.invalidateQueries({ queryKey: ["transactions", workspaceId] });
+  };
 
+  const balanceOverMax = initialBalance !== "" && parseFloat(initialBalance) > MAX_AMOUNT;
   const newInitialMinor = Math.round(parseFloat(initialBalance || "0") * 100);
 
   const updateMutation = useMutation({
@@ -169,15 +187,16 @@ function EditAccountModal({
         name: name.trim() !== account.name ? name.trim() : undefined,
         initialBalanceMinor: newInitialMinor !== account.initialBalanceMinor ? newInitialMinor : undefined,
       }),
-    onSuccess: () => { void invalidate(); onClose(); },
+    onSuccess: () => { invalidate(); onClose(); },
   });
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteFinancialAccount(workspaceId, account.id),
-    onSuccess: () => { void invalidate(); onClose(); },
+    onSuccess: () => { invalidateAll(); onClose(); },
   });
 
   const isPending = updateMutation.isPending || deleteMutation.isPending;
+  const canUpdate = name.trim() && !balanceOverMax;
 
   if (confirmingDelete) {
     return (
@@ -213,6 +232,7 @@ function EditAccountModal({
             required
             autoFocus
             autoComplete="off"
+            maxLength={120}
             disabled={isPending}
           />
         </div>
@@ -221,13 +241,19 @@ function EditAccountModal({
           <Label htmlFor="edit-balance">{t("financialAccounts.editModal.initialBalanceLabel")}</Label>
           <Input
             id="edit-balance"
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             value={initialBalance}
-            onChange={(e) => setInitialBalance(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value.replace(",", ".");
+              if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) setInitialBalance(val);
+            }}
             autoComplete="off"
             disabled={isPending}
           />
+          {balanceOverMax && (
+            <p className="text-xs text-destructive">Максимум: 1 000 000 000</p>
+          )}
         </div>
 
         {updateMutation.isError && (
@@ -249,7 +275,7 @@ function EditAccountModal({
             <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={isPending || !name.trim()}>
+            <Button type="submit" disabled={isPending || !canUpdate}>
               {updateMutation.isPending ? t("financialAccounts.editModal.saving") : t("financialAccounts.editModal.save")}
             </Button>
           </div>

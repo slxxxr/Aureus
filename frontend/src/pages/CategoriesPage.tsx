@@ -54,6 +54,7 @@ function CreateCategoryModal({
             required
             autoFocus
             autoComplete="off"
+            maxLength={120}
             disabled={mutation.isPending}
           />
         </div>
@@ -144,6 +145,7 @@ function EditCategoryModal({
             required
             autoFocus
             autoComplete="off"
+            maxLength={120}
             disabled={isPending}
           />
         </div>

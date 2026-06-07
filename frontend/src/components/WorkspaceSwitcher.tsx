@@ -49,6 +49,7 @@ function CreateWorkspaceModal({ onClose }: { onClose: () => void }) {
             required
             autoFocus
             autoComplete="off"
+            maxLength={120}
             disabled={mutation.isPending}
           />
         </div>
@@ -128,6 +129,7 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
             required
             autoFocus
             autoComplete="off"
+            maxLength={120}
             disabled={isPending}
           />
         </div>
