@@ -49,7 +49,12 @@ public sealed class TransactionRepository(AureusDbContext dbContext, IMapper map
         await dbTransaction.CommitAsync(cancellationToken);
     }
 
-    public async Task UpdateAsync(Transaction transaction, long balanceDelta, CancellationToken cancellationToken)
+    public async Task UpdateAsync(
+        Transaction transaction,
+        Guid oldAccountId,
+        long oldAccountDelta,
+        long newAccountDelta,
+        CancellationToken cancellationToken)
     {
         await using var dbTransaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
@@ -59,18 +64,30 @@ public sealed class TransactionRepository(AureusDbContext dbContext, IMapper map
                 s => s
                     .SetProperty(t => t.Name, transaction.Name)
                     .SetProperty(t => t.AmountMinor, transaction.AmountMinor)
+                    .SetProperty(t => t.Type, transaction.Type.ToString())
+                    .SetProperty(t => t.FinancialAccountId, transaction.FinancialAccountId)
+                    .SetProperty(t => t.Currency, transaction.Currency)
                     .SetProperty(t => t.CategoryId, transaction.CategoryId)
                     .SetProperty(t => t.OccurredAt, transaction.OccurredAt)
                     .SetProperty(t => t.Note, transaction.Note)
                     .SetProperty(t => t.UpdatedAt, transaction.UpdatedAt),
                 cancellationToken);
 
-        if (balanceDelta != 0)
+        if (oldAccountDelta != 0)
+        {
+            await dbContext.FinancialAccounts
+                .Where(a => a.Id == oldAccountId)
+                .ExecuteUpdateAsync(
+                    s => s.SetProperty(a => a.CurrentBalanceMinor, a => a.CurrentBalanceMinor + oldAccountDelta),
+                    cancellationToken);
+        }
+
+        if (newAccountDelta != 0)
         {
             await dbContext.FinancialAccounts
                 .Where(a => a.Id == transaction.FinancialAccountId)
                 .ExecuteUpdateAsync(
-                    s => s.SetProperty(a => a.CurrentBalanceMinor, a => a.CurrentBalanceMinor + balanceDelta),
+                    s => s.SetProperty(a => a.CurrentBalanceMinor, a => a.CurrentBalanceMinor + newAccountDelta),
                     cancellationToken);
         }
 

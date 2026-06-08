@@ -1,3 +1,4 @@
+using Aureus.Domain.Transactions;
 using MediatR;
 
 namespace Aureus.UseCases.Transactions.UpdateTransaction;
@@ -8,5 +9,7 @@ public sealed record UpdateTransactionCommand(
     string? Name,
     long? AmountMinor,
     Guid? CategoryId,
+    Guid? FinancialAccountId,
+    TransactionType? Type,
     DateTimeOffset? OccurredAt,
-    string? Note) : IRequest<Domain.Transactions.Transaction>;
+    string? Note) : IRequest<Transaction>;

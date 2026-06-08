@@ -14,7 +14,13 @@ public sealed class TransactionRepositoryMock
     public long? SavedBalanceDelta { get; private set; }
 
     public Transaction? UpdatedTransaction { get; private set; }
-    public long? UpdatedBalanceDelta { get; private set; }
+    public Guid? UpdatedOldAccountId { get; private set; }
+    public long? UpdatedOldAccountDelta { get; private set; }
+    public long? UpdatedNewAccountDelta { get; private set; }
+
+    public long? UpdatedBalanceDelta => UpdatedOldAccountDelta.HasValue && UpdatedNewAccountDelta.HasValue
+        ? UpdatedOldAccountDelta.Value + UpdatedNewAccountDelta.Value
+        : null;
 
     public Transaction? DeletedTransaction { get; private set; }
     public long? DeletedBalanceDelta { get; private set; }
@@ -54,11 +60,18 @@ public sealed class TransactionRepositoryMock
     public TransactionRepositoryMock CapturingUpdate()
     {
         _mock
-            .Setup(r => r.UpdateAsync(It.IsAny<Transaction>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .Callback<Transaction, long, CancellationToken>((t, delta, _) =>
+            .Setup(r => r.UpdateAsync(
+                It.IsAny<Transaction>(),
+                It.IsAny<Guid>(),
+                It.IsAny<long>(),
+                It.IsAny<long>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<Transaction, Guid, long, long, CancellationToken>((t, oldAccountId, oldDelta, newDelta, _) =>
             {
                 UpdatedTransaction = t;
-                UpdatedBalanceDelta = delta;
+                UpdatedOldAccountId = oldAccountId;
+                UpdatedOldAccountDelta = oldDelta;
+                UpdatedNewAccountDelta = newDelta;
             })
             .Returns(Task.CompletedTask);
 
@@ -80,8 +93,10 @@ public sealed class TransactionRepositoryMock
     }
 
     public void VerifyDeleteCalledOnce() =>
-        _mock.Verify(r => r.DeleteAsync(It.IsAny<Transaction>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mock.Verify(r => r.DeleteAsync(It.IsAny<Transaction>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
+            Times.Once);
 
     public void VerifyDeleteNotCalled() =>
-        _mock.Verify(r => r.DeleteAsync(It.IsAny<Transaction>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+        _mock.Verify(r => r.DeleteAsync(It.IsAny<Transaction>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
+            Times.Never);
 }
