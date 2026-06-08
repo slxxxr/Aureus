@@ -124,7 +124,7 @@ export function AppLayout() {
 
       {/* Fixed sidebar */}
       <aside
-        className="fixed inset-y-0 left-0 hidden border-r border-border bg-muted/40 py-4 md:flex md:flex-col"
+        className="fixed inset-y-0 left-0 z-40 hidden border-r border-border bg-muted/40 py-4 md:flex md:flex-col"
         style={{ width: effectiveWidth, transition: sidebarTransition }}
       >
         <div className={cn("mb-6 flex items-center", isCollapsed ? "h-12 justify-center px-2" : "px-3")}>
