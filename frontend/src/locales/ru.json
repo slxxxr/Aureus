@@ -3,7 +3,10 @@
     "appName": "Aureus",
     "tagline": "Личные финансы",
     "cancel": "Отмена",
-    "delete": "Удалить"
+    "delete": "Удалить",
+    "validation": {
+      "amountTooLarge": "Максимум: 1 000 000 000"
+    }
   },
   "language": {
     "switchLabel": "Переключение языка",

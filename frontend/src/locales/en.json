@@ -3,7 +3,10 @@
     "appName": "Aureus",
     "tagline": "Personal finance",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "validation": {
+      "amountTooLarge": "Maximum: 1 000 000 000"
+    }
   },
   "language": {
     "switchLabel": "Language switcher",
