@@ -200,8 +200,10 @@
     },
     "editModal": {
       "title": "Edit transaction",
+      "typeLabel": "Type",
       "nameLabel": "Name",
       "amountLabel": "Amount",
+      "accountLabel": "Account",
       "categoryLabel": "Category",
       "dateLabel": "Date",
       "noteLabel": "Note (optional)",
@@ -218,6 +220,8 @@
       "notFound": "Transaction not found.",
       "accountNotFound": "Account not found.",
       "categoryNotFound": "Category not found.",
+      "categoryRequired": "A category is required when changing the transaction type.",
+      "categoryTypeMismatch": "The category type does not match the transaction type.",
       "generic": "Something went wrong. Please try again."
     }
   },

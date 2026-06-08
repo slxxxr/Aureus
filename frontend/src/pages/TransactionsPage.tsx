@@ -298,14 +298,23 @@ function EditTransactionModal({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const filteredCategories = categories.filter((c) => c.type === tx.type);
-
+  const [type, setType] = useState<TransactionType>(tx.type);
   const [name, setName] = useState(tx.name);
   const [amount, setAmount] = useState((tx.amountMinor / 100).toFixed(2));
+  const [accountId, setAccountId] = useState(tx.financialAccountId);
   const [categoryId, setCategoryId] = useState(tx.categoryId);
   const [date, setDate] = useState(getLocalDateKey(tx.occurredAt));
   const [note, setNote] = useState(tx.note ?? "");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const filteredCategories = categories.filter((c) => c.type === type);
+
+  const handleTypeChange = (newType: TransactionType) => {
+    setType(newType);
+    if (!categories.some((c) => c.id === categoryId && c.type === newType)) {
+      setCategoryId("");
+    }
+  };
 
   const invalidate = () => {
     void queryClient.invalidateQueries({ queryKey: ["transactions", workspaceId] });
@@ -320,6 +329,8 @@ function EditTransactionModal({
         name: name.trim() !== tx.name ? name.trim() : undefined,
         amountMinor: newAmountMinor !== tx.amountMinor ? newAmountMinor : undefined,
         categoryId: categoryId !== tx.categoryId ? categoryId : undefined,
+        financialAccountId: accountId !== tx.financialAccountId ? accountId : undefined,
+        type: type !== tx.type ? type : undefined,
         occurredAt: occurredAt !== new Date(tx.occurredAt).toISOString() ? occurredAt : undefined,
         note: note.trim() !== (tx.note ?? "") ? (note.trim() || null) : undefined,
       });
@@ -336,8 +347,8 @@ function EditTransactionModal({
   const amountNum = parseFloat(amount);
   const amountValid = amount !== "" && !isNaN(amountNum) && amountNum > 0;
   const amountOverMax = amountValid && amountNum > MAX_AMOUNT;
-  const canSave = name.trim() && categoryId && amountValid && !amountOverMax;
-  const accountName = accounts.find((a) => a.id === tx.financialAccountId)?.name ?? t("transactions.unknownAccount");
+  const missingCategoryForType = filteredCategories.length === 0;
+  const canSave = name.trim() && categoryId && amountValid && !amountOverMax && !missingCategoryForType;
 
   if (confirmingDelete) {
     return (
@@ -362,14 +373,31 @@ function EditTransactionModal({
 
   return (
     <Modal onBackdropClick={onClose}>
-      <h2 className="mb-1 text-base font-semibold">{t("transactions.editModal.title")}</h2>
-      <p className="mb-4 text-xs text-muted-foreground">
-        {tx.type === "Income" ? t("transactions.filters.typeIncome") : t("transactions.filters.typeExpense")} · {accountName}
-      </p>
+      <h2 className="mb-5 text-base font-semibold">{t("transactions.editModal.title")}</h2>
       <form
         onSubmit={(e: FormEvent) => { e.preventDefault(); if (canSave) updateMutation.mutate(); }}
         className="space-y-4"
       >
+        {/* type toggle */}
+        <div className="flex rounded-md border border-input">
+          {(["Expense", "Income"] as TransactionType[]).map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => handleTypeChange(opt)}
+              disabled={isPending}
+              className={cn(
+                "flex-1 py-1.5 text-sm font-medium transition-colors first:rounded-l-[5px] last:rounded-r-[5px]",
+                type === opt
+                  ? "bg-accent text-foreground"
+                  : "text-muted-foreground hover:bg-accent/60",
+              )}
+            >
+              {t(opt === "Income" ? "categories.typeIncome" : "categories.typeExpense")}
+            </button>
+          ))}
+        </div>
+
         {/* name */}
         <div className="space-y-1.5">
           <Label htmlFor="edit-tx-name">{t("transactions.editModal.nameLabel")}</Label>
@@ -411,16 +439,34 @@ function EditTransactionModal({
           )}
         </div>
 
+        {/* account */}
+        <div className="space-y-1.5">
+          <Label>{t("transactions.editModal.accountLabel")}</Label>
+          <CustomSelect
+            value={accountId}
+            onChange={setAccountId}
+            options={accounts.map((a) => ({ value: a.id, label: a.name }))}
+            placeholder={t("transactions.createModal.selectAccount")}
+            disabled={isPending}
+          />
+        </div>
+
         {/* category */}
         <div className="space-y-1.5">
           <Label>{t("transactions.editModal.categoryLabel")}</Label>
-          <CustomSelect
-            value={categoryId}
-            onChange={setCategoryId}
-            options={filteredCategories.map((c) => ({ value: c.id, label: c.name }))}
-            placeholder={t("transactions.createModal.selectCategory")}
-            disabled={isPending}
-          />
+          {missingCategoryForType ? (
+            <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              {t("transactions.createModal.noCategoriesForType")}
+            </p>
+          ) : (
+            <CustomSelect
+              value={categoryId}
+              onChange={setCategoryId}
+              options={filteredCategories.map((c) => ({ value: c.id, label: c.name }))}
+              placeholder={t("transactions.createModal.selectCategory")}
+              disabled={isPending}
+            />
+          )}
         </div>
 
         {/* date */}

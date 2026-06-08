@@ -1,6 +1,5 @@
 using Aureus.Domain.Workspaces;
 using Aureus.UseCases.Common.Persistence;
-using Aureus.UseCases.Workspaces.GetUserWorkspaces;
 using Moq;
 
 namespace Aureus.UnitTests.Mocks;

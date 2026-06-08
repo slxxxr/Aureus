@@ -159,7 +159,7 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
             transaction.Note = "at cafe";
             transaction.CategoryId = newCategoryId;
             transaction.UpdatedAt = DateTimeOffset.UtcNow;
-            await repo.UpdateAsync(transaction, 0, CancellationToken.None);
+            await repo.UpdateAsync(transaction, transaction.FinancialAccountId, 0, 0, CancellationToken.None);
         }
 
         // Assert
@@ -190,12 +190,44 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
             var transaction = await repo.FindByIdAsync(transactionId, workspaceId, CancellationToken.None);
             transaction!.AmountMinor = 200_00;
             transaction.UpdatedAt = DateTimeOffset.UtcNow;
-            await repo.UpdateAsync(transaction, 100_00, CancellationToken.None);
+            // Income 100→200: old effect +100 (oldDelta=-100), new effect +200 (newDelta=+200), total=+100
+            await repo.UpdateAsync(transaction, transaction.FinancialAccountId, -100_00, 200_00, CancellationToken.None);
         }
 
         // Assert
         var balance = await GetAccountBalanceAsync(accountId, workspaceId);
         Assert.Equal(200_00, balance);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_AccountChanged_ReversesOldAndUpdatesNew()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountAId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 0);
+        var accountBId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 0);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        var transactionId = await AddTransactionAsync(
+            workspaceId, accountAId, categoryId, userId,
+            type: TransactionType.Expense, amountMinor: 100_00);
+
+        // Act — move transaction from account A to account B
+        await using (var db = fixture.CreateDbContext())
+        {
+            var repo = new TransactionRepository(db, fixture.Mapper);
+            var transaction = await repo.FindByIdAsync(transactionId, workspaceId, CancellationToken.None);
+            var oldAccountId = transaction!.FinancialAccountId;
+            transaction.FinancialAccountId = accountBId;
+            transaction.UpdatedAt = DateTimeOffset.UtcNow;
+            // Expense 100: reverse on old (+100), apply on new (-100)
+            await repo.UpdateAsync(transaction, oldAccountId, 100_00, -100_00, CancellationToken.None);
+        }
+
+        // Assert
+        var balanceA = await GetAccountBalanceAsync(accountAId, workspaceId);
+        var balanceB = await GetAccountBalanceAsync(accountBId, workspaceId);
+        Assert.Equal(0, balanceA);      // restored
+        Assert.Equal(-100_00, balanceB); // expense applied
     }
 
     [Fact]

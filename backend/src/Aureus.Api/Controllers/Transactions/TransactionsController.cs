@@ -60,6 +60,8 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
             request.Name,
             request.AmountMinor,
             request.CategoryId,
+            request.FinancialAccountId,
+            request.Type,
             request.OccurredAt,
             request.Note);
 

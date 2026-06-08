@@ -7,7 +7,8 @@ namespace Aureus.UseCases.Transactions.UpdateTransaction;
 
 public sealed class UpdateTransactionHandler(
     ITransactionRepository transactionRepository,
-    ICategoryRepository categoryRepository)
+    ICategoryRepository categoryRepository,
+    IFinancialAccountRepository accountRepository)
     : IRequestHandler<UpdateTransactionCommand, Transaction>
 {
     public async Task<Transaction> Handle(UpdateTransactionCommand command, CancellationToken cancellationToken)
@@ -22,6 +23,22 @@ public sealed class UpdateTransactionHandler(
                 $"Transaction {command.TransactionId} not found.");
         }
 
+        var oldAccountId = transaction.FinancialAccountId;
+        var oldType = transaction.Type;
+        var oldAmount = transaction.AmountMinor;
+
+        if (command.Type is not null)
+        {
+            if (command.CategoryId is null)
+            {
+                throw new TransactionException(
+                    TransactionErrorCode.CategoryRequiredOnTypeChange,
+                    "CategoryId is required when changing transaction type.");
+            }
+
+            transaction.Type = command.Type.Value;
+        }
+
         if (command.CategoryId is not null)
         {
             var category = await categoryRepository.FindByIdAsync(
@@ -34,7 +51,30 @@ public sealed class UpdateTransactionHandler(
                     $"Category {command.CategoryId} not found.");
             }
 
+            if (category.Type != transaction.Type)
+            {
+                throw new TransactionException(
+                    TransactionErrorCode.CategoryTypeMismatch,
+                    $"Category type {category.Type} does not match transaction type {transaction.Type}.");
+            }
+
             transaction.CategoryId = command.CategoryId.Value;
+        }
+
+        if (command.FinancialAccountId is not null)
+        {
+            var account = await accountRepository.FindByIdAsync(
+                command.FinancialAccountId.Value, command.WorkspaceId, cancellationToken);
+
+            if (account is null)
+            {
+                throw new TransactionException(
+                    TransactionErrorCode.AccountNotFound,
+                    $"Financial account {command.FinancialAccountId} not found.");
+            }
+
+            transaction.FinancialAccountId = command.FinancialAccountId.Value;
+            transaction.Currency = account.Currency;
         }
 
         if (command.Name is not null)
@@ -42,19 +82,8 @@ public sealed class UpdateTransactionHandler(
             transaction.Name = command.Name.Trim();
         }
 
-        long balanceDelta = 0;
-
         if (command.AmountMinor is not null)
         {
-            var oldEffect = transaction.Type == TransactionType.Income
-                ? transaction.AmountMinor
-                : -transaction.AmountMinor;
-
-            var newEffect = transaction.Type == TransactionType.Income
-                ? command.AmountMinor.Value
-                : -command.AmountMinor.Value;
-
-            balanceDelta = newEffect - oldEffect;
             transaction.AmountMinor = command.AmountMinor.Value;
         }
 
@@ -70,7 +99,15 @@ public sealed class UpdateTransactionHandler(
 
         transaction.UpdatedAt = DateTimeOffset.UtcNow;
 
-        await transactionRepository.UpdateAsync(transaction, balanceDelta, cancellationToken);
+        var oldEffect = oldType == TransactionType.Income ? oldAmount : -oldAmount;
+        var newEffect = transaction.Type == TransactionType.Income ? transaction.AmountMinor : -transaction.AmountMinor;
+
+        await transactionRepository.UpdateAsync(
+            transaction,
+            oldAccountId,
+            oldAccountDelta: -oldEffect,
+            newAccountDelta: newEffect,
+            cancellationToken);
 
         return transaction;
     }
