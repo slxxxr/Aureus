@@ -124,12 +124,17 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
               const val = e.target.value.replace(",", ".");
               if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) setInitialBalance(val);
             }}
+            onBlur={() => {
+              const n = parseFloat(initialBalance);
+              if (!isNaN(n) && n >= 0) setInitialBalance(n.toFixed(2));
+              else if (initialBalance !== "") setInitialBalance("");
+            }}
             placeholder="0.00"
             autoComplete="off"
             disabled={mutation.isPending}
           />
           {balanceOverMax && (
-            <p className="text-xs text-destructive">Максимум: 1 000 000 000</p>
+            <p className="text-xs text-destructive">{t("common.validation.amountTooLarge")}</p>
           )}
         </div>
 
@@ -248,11 +253,16 @@ function EditAccountModal({
               const val = e.target.value.replace(",", ".");
               if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) setInitialBalance(val);
             }}
+            onBlur={() => {
+              const n = parseFloat(initialBalance);
+              if (!isNaN(n) && n >= 0) setInitialBalance(n.toFixed(2));
+              else if (initialBalance !== "") setInitialBalance("");
+            }}
             autoComplete="off"
             disabled={isPending}
           />
           {balanceOverMax && (
-            <p className="text-xs text-destructive">Максимум: 1 000 000 000</p>
+            <p className="text-xs text-destructive">{t("common.validation.amountTooLarge")}</p>
           )}
         </div>
 
@@ -339,10 +349,9 @@ export function FinancialAccountsPage() {
 
   return (
     <div>
-      {/* always-visible ghost button */}
-      <div className="mb-3 flex justify-end">
-        <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="h-6 gap-1 px-1.5 text-xs">
-          <Plus className="h-3 w-3" aria-hidden="true" />
+      <div className="mb-3 flex justify-end pt-9">
+        <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="gap-1.5">
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           {t("financialAccounts.addAccount")}
         </Button>
       </div>

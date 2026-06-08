@@ -89,8 +89,10 @@ function CreateTransactionModal({
 
   const handleTypeChange = (newType: TransactionType) => {
     setType(newType);
-    const stillValid = filteredCategories.some((c) => c.id === categoryId && c.type === newType);
-    if (!stillValid) setCategoryId("");
+    // Check if the currently selected category is valid for the new type
+    if (!categories.some((c) => c.id === categoryId && c.type === newType)) {
+      setCategoryId("");
+    }
   };
 
   const mutation = useMutation({
@@ -182,13 +184,18 @@ function CreateTransactionModal({
               const val = e.target.value.replace(",", ".");
               if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) setAmount(val);
             }}
+            onBlur={() => {
+              const n = parseFloat(amount);
+              if (!isNaN(n) && n > 0) setAmount(n.toFixed(2));
+              else if (amount !== "") setAmount("");
+            }}
             placeholder="0.00"
             required
             autoComplete="off"
             disabled={mutation.isPending}
           />
           {amountOverMax && (
-            <p className="text-xs text-destructive">Максимум: 1 000 000 000</p>
+            <p className="text-xs text-destructive">{t("common.validation.amountTooLarge")}</p>
           )}
         </div>
 
@@ -390,12 +397,17 @@ function EditTransactionModal({
               const val = e.target.value.replace(",", ".");
               if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) setAmount(val);
             }}
+            onBlur={() => {
+              const n = parseFloat(amount);
+              if (!isNaN(n) && n > 0) setAmount(n.toFixed(2));
+              else if (amount !== "") setAmount("");
+            }}
             required
             autoComplete="off"
             disabled={isPending}
           />
           {amountOverMax && (
-            <p className="text-xs text-destructive">Максимум: 1 000 000 000</p>
+            <p className="text-xs text-destructive">{t("common.validation.amountTooLarge")}</p>
           )}
         </div>
 
@@ -631,7 +643,7 @@ function FilterSidebar({
 
   return (
     <aside className="w-48 shrink-0">
-      <div className="sticky top-20 space-y-5">
+      <div className="sticky top-0 space-y-5 pt-10">
         {/* account filter */}
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -769,7 +781,7 @@ export function TransactionsPage() {
       {/* main content */}
       <div className="min-w-0 flex-1">
         {/* add button — sticky below header so it stays visible while scrolling */}
-        <div className="sticky top-14 z-10 mb-3 flex justify-end border-b border-border/50 bg-background pb-1.5 pt-0.5 pr-8">
+        <div className="sticky top-0 z-10 mb-3 flex justify-end bg-background pb-0 pt-9 pr-8">
           <Button
             size="sm"
             variant="ghost"

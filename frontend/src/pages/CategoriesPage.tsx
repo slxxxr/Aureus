@@ -224,8 +224,8 @@ function CategorySection({
     <div>
       <div className="mb-3 flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
-        <Button size="sm" variant="ghost" onClick={onAdd} className="h-6 gap-1 px-1.5 text-xs">
-          <Plus className="h-3 w-3" aria-hidden="true" />
+        <Button size="sm" variant="ghost" onClick={onAdd} className="gap-1.5">
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
           {t("categories.addCategory")}
         </Button>
       </div>
@@ -288,7 +288,7 @@ export function CategoriesPage() {
   const income = (categories ?? []).filter((c) => c.type === "Income");
 
   return (
-    <div>
+    <div className="pt-9">
       {isLoading && <CategoriesSkeleton />}
 
       {!isLoading && (
