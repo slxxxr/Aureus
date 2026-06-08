@@ -18,6 +18,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Modal } from "@/components/ui/modal";
 
+const MAX_NAME_CHARS = 24;
+const truncateName = (name: string) =>
+  name.length > MAX_NAME_CHARS ? `${name.slice(0, MAX_NAME_CHARS)}…` : name;
+
 // ─── create modal ─────────────────────────────────────────────────────────────
 
 function CreateWorkspaceModal({ onClose }: { onClose: () => void }) {
@@ -183,9 +187,13 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
     setOpen(false);
   };
 
-  // Dropdown stretches to the full width of the ref container (matches sidebar width).
   const dropdown = open && (
-    <div className="absolute left-0 top-full z-50 mt-1 w-full min-w-[12rem] rounded-md border border-border bg-background shadow-md">
+    <div
+      className={cn(
+        "absolute left-0 top-full z-50 mt-1 rounded-md border border-border bg-background shadow-md",
+        collapsed ? "min-w-[12rem]" : "w-full",
+      )}
+    >
       <ul role="menu" aria-label={t("workspace.listLabel")}>
         {workspaces.map((workspace) => (
           <li key={workspace.id} role="none">
@@ -195,9 +203,10 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
                 type="button"
                 onClick={() => { setActiveWorkspace(workspace); setOpen(false); }}
                 role="menuitem"
+                title={workspace.name}
                 className="flex min-w-0 flex-1 items-center py-2 pl-3 pr-1 text-sm"
               >
-                <span className="flex-1 truncate text-left">{workspace.name}</span>
+                <span className="flex-1 truncate text-left">{truncateName(workspace.name)}</span>
               </button>
               {workspace.role === "Owner" && (
                 <button
@@ -264,7 +273,7 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
 
   return (
     <>
-      <div ref={ref} className="relative">
+      <div ref={ref} className="relative w-full min-w-0">
         {/*
           Outer div is the hover target (group) for the pencil opacity transition.
           Main trigger button covers icon + name + chevron area.
@@ -282,8 +291,8 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
               <Landmark className="h-4 w-4" aria-hidden="true" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold leading-5">
-                {activeWorkspace?.name ?? t("common.appName")}
+              <p className="truncate text-sm font-semibold leading-5" title={activeWorkspace?.name}>
+                {activeWorkspace ? truncateName(activeWorkspace.name) : t("common.appName")}
               </p>
               <p className="text-xs text-muted-foreground">{t("common.appName")}</p>
             </div>
