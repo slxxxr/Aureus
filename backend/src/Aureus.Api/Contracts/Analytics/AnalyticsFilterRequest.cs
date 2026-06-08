@@ -10,5 +10,7 @@ public sealed class AnalyticsFilterRequest
 
     public Guid[]? AccountIds { get; set; }
 
+    public Guid[]? CategoryIds { get; set; }
+
     public TransactionType? Type { get; set; }
 }

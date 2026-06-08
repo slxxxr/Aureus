@@ -108,6 +108,28 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task GetSummaryAsync_CategoryFilter_LimitsToSelectedCategories()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var selectedCategory = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var otherCategory = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        const long selectedCategoryExpense = 100_00;
+        const long otherCategoryExpense = 50_00;
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, selectedCategory, userId, TransactionType.Expense, selectedCategoryExpense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, otherCategory, userId, TransactionType.Expense, otherCategoryExpense);
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var summary = await new AnalyticsRepository(db)
+            .GetSummaryAsync(Filter(workspaceId, categoryIds: [selectedCategory]), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(selectedCategoryExpense, Assert.Single(summary).ExpensesMinor);
+    }
+
+    [Fact]
     public async Task GetBreakdownAsync_ByCategory_SumsPerCategory()
     {
         // Arrange
@@ -219,5 +241,6 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         DateTimeOffset? from = null,
         DateTimeOffset? to = null,
         IReadOnlyList<Guid>? accountIds = null,
-        TransactionType? type = null) => new(workspaceId, from, to, accountIds, type);
+        TransactionType? type = null,
+        IReadOnlyList<Guid>? categoryIds = null) => new(workspaceId, from, to, accountIds, type, categoryIds);
 }

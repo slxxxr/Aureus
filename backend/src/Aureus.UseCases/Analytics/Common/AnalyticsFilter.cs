@@ -7,4 +7,5 @@ public sealed record AnalyticsFilter(
     DateTimeOffset? From,
     DateTimeOffset? To,
     IReadOnlyList<Guid>? AccountIds,
-    TransactionType? Type);
+    TransactionType? Type,
+    IReadOnlyList<Guid>? CategoryIds = null);

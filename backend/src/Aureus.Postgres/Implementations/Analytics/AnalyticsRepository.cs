@@ -141,6 +141,11 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
             source = source.Where(transaction => filter.AccountIds.Contains(transaction.FinancialAccountId));
         }
 
+        if (filter.CategoryIds is { Count: > 0 })
+        {
+            source = source.Where(transaction => filter.CategoryIds.Contains(transaction.CategoryId));
+        }
+
         if (filter.Type is not null)
         {
             var type = filter.Type.Value.ToString();
