@@ -1,13 +1,17 @@
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "@/app/AppLayout";
 import { GuestRoute, ProtectedRoute } from "@/app/routeGuards";
 import { FinancialAccountsPage } from "@/pages/FinancialAccountsPage";
 import { CategoriesPage } from "@/pages/CategoriesPage";
-import { DashboardPage } from "@/pages/DashboardPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { TransactionsPage } from "@/pages/TransactionsPage";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { RegisterPage } from "@/pages/auth/RegisterPage";
+
+const DashboardPage = lazy(() =>
+  import("@/pages/DashboardPage").then((module) => ({ default: module.DashboardPage })),
+);
 
 export function App() {
   return (
@@ -20,7 +24,7 @@ export function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            <Route index element={<DashboardPage />} />
+            <Route index element={<Suspense fallback={null}><DashboardPage /></Suspense>} />
             <Route path="accounts" element={<FinancialAccountsPage />} />
             <Route path="transactions" element={<TransactionsPage />} />
             <Route path="categories" element={<CategoriesPage />} />

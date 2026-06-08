@@ -1,11 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type SelectOption = {
   value: string;
   label: string;
+};
+
+export type SelectGroup = {
+  label: string;
+  options: SelectOption[];
 };
 
 type DropdownPos = { top: number; left: number; width: number };
@@ -127,18 +133,21 @@ export function CustomSelect({
 export function MultiSelect({
   values,
   onChange,
-  options,
+  options = [],
+  groups,
   allLabel,
   disabled,
   className,
 }: {
   values: string[];
   onChange: (v: string[]) => void;
-  options: SelectOption[];
+  options?: SelectOption[];
+  groups?: SelectGroup[];
   allLabel: string;
   disabled?: boolean;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -147,20 +156,41 @@ export function MultiSelect({
   useOutsideClose(triggerRef, dropdownRef, open, () => setOpen(false));
 
   const isAll = values.length === 0;
+  const allOptions = groups ? groups.flatMap((group) => group.options) : options;
 
   const triggerLabel = isAll
     ? allLabel
     : values.length === 1
-      ? (options.find((o) => o.value === values[0])?.label ?? allLabel)
-      : `${values.length} счёта`;
+      ? (allOptions.find((o) => o.value === values[0])?.label ?? allLabel)
+      : t("common.selected", { count: values.length });
 
   const toggle = (v: string) => {
     if (values.includes(v)) {
-      const next = values.filter((x) => x !== v);
-      onChange(next);
+      onChange(values.filter((x) => x !== v));
     } else {
       onChange([...values, v]);
     }
+  };
+
+  const renderOption = (opt: SelectOption) => {
+    const checked = values.includes(opt.value);
+    return (
+      <button
+        key={opt.value}
+        type="button"
+        onClick={() => toggle(opt.value)}
+        className={cn(
+          "flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors",
+          checked ? "bg-accent/60" : "hover:bg-accent/60",
+        )}
+      >
+        <Check
+          className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground", !checked && "invisible")}
+          aria-hidden="true"
+        />
+        <span className="flex-1 truncate text-left">{opt.label}</span>
+      </button>
+    );
   };
 
   return (
@@ -205,26 +235,16 @@ export function MultiSelect({
               <span className="flex-1 truncate text-left">{allLabel}</span>
             </button>
 
-            {options.map((opt) => {
-              const checked = values.includes(opt.value);
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => toggle(opt.value)}
-                  className={cn(
-                    "flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors",
-                    checked ? "bg-accent/60" : "hover:bg-accent/60",
-                  )}
-                >
-                  <Check
-                    className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground", !checked && "invisible")}
-                    aria-hidden="true"
-                  />
-                  <span className="flex-1 truncate text-left">{opt.label}</span>
-                </button>
-              );
-            })}
+            {groups
+              ? groups.map((group) => (
+                  <div key={group.label}>
+                    <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      {group.label}
+                    </p>
+                    {group.options.map(renderOption)}
+                  </div>
+                ))
+              : options.map(renderOption)}
           </div>,
           document.body,
         )}
