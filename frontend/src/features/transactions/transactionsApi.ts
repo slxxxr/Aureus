@@ -31,6 +31,8 @@ export type UpdateTransactionPayload = {
   name?: string;
   amountMinor?: number;
   categoryId?: string;
+  financialAccountId?: string;
+  type?: TransactionType;
   occurredAt?: string;
   note?: string | null;
 };

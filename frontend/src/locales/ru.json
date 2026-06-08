@@ -200,8 +200,10 @@
     },
     "editModal": {
       "title": "Редактировать транзакцию",
+      "typeLabel": "Тип",
       "nameLabel": "Название",
       "amountLabel": "Сумма",
+      "accountLabel": "Счет",
       "categoryLabel": "Категория",
       "dateLabel": "Дата",
       "noteLabel": "Заметка (необязательно)",
@@ -218,6 +220,8 @@
       "notFound": "Транзакция не найдена.",
       "accountNotFound": "Счет не найден.",
       "categoryNotFound": "Категория не найдена.",
+      "categoryRequired": "При смене типа необходимо выбрать категорию.",
+      "categoryTypeMismatch": "Тип категории не совпадает с типом транзакции.",
       "generic": "Что-то пошло не так. Попробуйте ещё раз."
     }
   },
