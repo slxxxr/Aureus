@@ -3,7 +3,17 @@
     "appName": "Aureus",
     "tagline": "Personal finance",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "validation": {
+      "amountTooLarge": "Maximum: 1 000 000 000"
+    },
+    "datePicker": {
+      "placeholder": "Select date",
+      "prevMonth": "Previous month",
+      "nextMonth": "Next month",
+      "months": ["January","February","March","April","May","June","July","August","September","October","November","December"],
+      "days": ["Mo","Tu","We","Th","Fr","Sa","Su"]
+    }
   },
   "language": {
     "switchLabel": "Language switcher",
@@ -145,6 +155,69 @@
     "errors": {
       "nameTaken": "A category with this name and type already exists.",
       "notFound": "Category not found.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "transactions": {
+    "addTransaction": "Add Transaction",
+    "emptyTitle": "No transactions yet",
+    "emptyDescription": "Add your first transaction to start tracking income and expenses.",
+    "emptyNoAccounts": "Create an account first",
+    "emptyNoAccountsHint": "Go to the Accounts section and add at least one account.",
+    "emptyNoCategories": "Create a category first",
+    "emptyNoCategoriesHint": "Go to the Categories section and add at least one category.",
+    "emptyFiltered": "No transactions match the selected filters.",
+    "unknownCategory": "No category",
+    "unknownAccount": "Unknown account",
+    "filters": {
+      "account": "Account",
+      "allAccounts": "All accounts",
+      "type": "Type",
+      "typeAll": "All",
+      "typeIncome": "Income",
+      "typeExpense": "Expenses"
+    },
+    "date": {
+      "today": "Today",
+      "yesterday": "Yesterday"
+    },
+    "createModal": {
+      "title": "New transaction",
+      "nameLabel": "Name",
+      "namePlaceholder": "Enter a name",
+      "amountLabel": "Amount",
+      "accountLabel": "Account",
+      "selectAccount": "Select account",
+      "categoryLabel": "Category",
+      "selectCategory": "Select category",
+      "noAccounts": "No accounts. Create one in the Accounts section.",
+      "noCategoriesForType": "No categories for this type. Create them in the Categories section.",
+      "dateLabel": "Date",
+      "noteLabel": "Note (optional)",
+      "notePlaceholder": "Additional details",
+      "submit": "Add",
+      "submitting": "Saving…"
+    },
+    "editModal": {
+      "title": "Edit transaction",
+      "nameLabel": "Name",
+      "amountLabel": "Amount",
+      "categoryLabel": "Category",
+      "dateLabel": "Date",
+      "noteLabel": "Note (optional)",
+      "notePlaceholder": "Additional details",
+      "save": "Save",
+      "saving": "Saving…",
+      "deleteTransaction": "Delete transaction"
+    },
+    "deleteConfirm": {
+      "title": "Delete transaction?",
+      "description": "This action cannot be undone. The account balance will be recalculated."
+    },
+    "errors": {
+      "notFound": "Transaction not found.",
+      "accountNotFound": "Account not found.",
+      "categoryNotFound": "Category not found.",
       "generic": "Something went wrong. Please try again."
     }
   },

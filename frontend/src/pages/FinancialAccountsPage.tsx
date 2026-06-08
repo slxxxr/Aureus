@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Modal } from "@/components/ui/modal";
 
 const CURRENCIES = ["RUB", "USD", "EUR"] as const;
+const MAX_AMOUNT = 1_000_000_000;
 
 // ─── currency select ──────────────────────────────────────────────────────────
 
@@ -67,6 +68,8 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
   const [currency, setCurrency] = useState("RUB");
   const [initialBalance, setInitialBalance] = useState("");
 
+  const balanceOverMax = initialBalance !== "" && parseFloat(initialBalance) > MAX_AMOUNT;
+
   const mutation = useMutation({
     mutationFn: (payload: { name: string; currency: string; initialBalanceMinor: number }) =>
       createFinancialAccount(workspaceId, payload),
@@ -78,6 +81,7 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (balanceOverMax) return;
     mutation.mutate({
       name: name.trim(),
       currency,
@@ -98,6 +102,8 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
             placeholder={t("financialAccounts.createModal.namePlaceholder")}
             required
             autoFocus
+            autoComplete="off"
+            maxLength={120}
             disabled={mutation.isPending}
           />
         </div>
@@ -111,13 +117,25 @@ function CreateAccountModal({ workspaceId, onClose }: { workspaceId: string; onC
           <Label htmlFor="create-balance">{t("financialAccounts.createModal.initialBalanceLabel")}</Label>
           <Input
             id="create-balance"
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             value={initialBalance}
-            onChange={(e) => setInitialBalance(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value.replace(",", ".");
+              if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) setInitialBalance(val);
+            }}
+            onBlur={() => {
+              const n = parseFloat(initialBalance);
+              if (!isNaN(n) && n >= 0) setInitialBalance(n.toFixed(2));
+              else if (initialBalance !== "") setInitialBalance("");
+            }}
             placeholder="0.00"
+            autoComplete="off"
             disabled={mutation.isPending}
           />
+          {balanceOverMax && (
+            <p className="text-xs text-destructive">{t("common.validation.amountTooLarge")}</p>
+          )}
         </div>
 
         {mutation.isError && (
@@ -157,8 +175,15 @@ function EditAccountModal({
   const [initialBalance, setInitialBalance] = useState((account.initialBalanceMinor / 100).toFixed(2));
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["financial-accounts", workspaceId] });
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["financial-accounts", workspaceId] });
+  };
+  const invalidateAll = () => {
+    invalidate();
+    void queryClient.invalidateQueries({ queryKey: ["transactions", workspaceId] });
+  };
 
+  const balanceOverMax = initialBalance !== "" && parseFloat(initialBalance) > MAX_AMOUNT;
   const newInitialMinor = Math.round(parseFloat(initialBalance || "0") * 100);
 
   const updateMutation = useMutation({
@@ -167,15 +192,16 @@ function EditAccountModal({
         name: name.trim() !== account.name ? name.trim() : undefined,
         initialBalanceMinor: newInitialMinor !== account.initialBalanceMinor ? newInitialMinor : undefined,
       }),
-    onSuccess: () => { void invalidate(); onClose(); },
+    onSuccess: () => { invalidate(); onClose(); },
   });
 
   const deleteMutation = useMutation({
     mutationFn: () => deleteFinancialAccount(workspaceId, account.id),
-    onSuccess: () => { void invalidate(); onClose(); },
+    onSuccess: () => { invalidateAll(); onClose(); },
   });
 
   const isPending = updateMutation.isPending || deleteMutation.isPending;
+  const canUpdate = name.trim() && !balanceOverMax;
 
   if (confirmingDelete) {
     return (
@@ -210,6 +236,8 @@ function EditAccountModal({
             onChange={(e) => setName(e.target.value)}
             required
             autoFocus
+            autoComplete="off"
+            maxLength={120}
             disabled={isPending}
           />
         </div>
@@ -218,12 +246,24 @@ function EditAccountModal({
           <Label htmlFor="edit-balance">{t("financialAccounts.editModal.initialBalanceLabel")}</Label>
           <Input
             id="edit-balance"
-            type="number"
-            step="0.01"
+            type="text"
+            inputMode="decimal"
             value={initialBalance}
-            onChange={(e) => setInitialBalance(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value.replace(",", ".");
+              if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) setInitialBalance(val);
+            }}
+            onBlur={() => {
+              const n = parseFloat(initialBalance);
+              if (!isNaN(n) && n >= 0) setInitialBalance(n.toFixed(2));
+              else if (initialBalance !== "") setInitialBalance("");
+            }}
+            autoComplete="off"
             disabled={isPending}
           />
+          {balanceOverMax && (
+            <p className="text-xs text-destructive">{t("common.validation.amountTooLarge")}</p>
+          )}
         </div>
 
         {updateMutation.isError && (
@@ -245,7 +285,7 @@ function EditAccountModal({
             <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit" disabled={isPending || !name.trim()}>
+            <Button type="submit" disabled={isPending || !canUpdate}>
               {updateMutation.isPending ? t("financialAccounts.editModal.saving") : t("financialAccounts.editModal.save")}
             </Button>
           </div>
@@ -309,6 +349,13 @@ export function FinancialAccountsPage() {
 
   return (
     <div>
+      <div className="mb-3 flex justify-end pt-9">
+        <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="gap-1.5">
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("financialAccounts.addAccount")}
+        </Button>
+      </div>
+
       {isLoading && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <AccountSkeleton />
@@ -319,30 +366,18 @@ export function FinancialAccountsPage() {
       )}
 
       {!isLoading && accounts?.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="pt-8 text-center">
           <p className="text-sm font-medium">{t("financialAccounts.emptyTitle")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t("financialAccounts.emptyDescription")}</p>
-          <Button className="mt-5" size="sm" onClick={() => setShowCreate(true)}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            {t("financialAccounts.addAccount")}
-          </Button>
         </div>
       )}
 
       {!isLoading && accounts && accounts.length > 0 && (
-        <>
-          <div className="mb-5 flex justify-end">
-            <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="h-7 gap-1.5 px-2 text-xs">
-              <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-              {t("financialAccounts.addAccount")}
-            </Button>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {accounts.map((account) => (
-              <AccountCard key={account.id} account={account} workspaceId={activeWorkspace!.id} />
-            ))}
-          </div>
-        </>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {accounts.map((account) => (
+            <AccountCard key={account.id} account={account} workspaceId={activeWorkspace!.id} />
+          ))}
+        </div>
       )}
 
       {showCreate && activeWorkspace && (

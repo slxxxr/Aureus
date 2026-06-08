@@ -9,7 +9,7 @@ export function PlaceholderPage({ titleKey, descriptionKey }: PlaceholderPagePro
   const { t } = useTranslation();
 
   return (
-    <section className="mx-auto max-w-5xl">
+    <section className="mx-auto max-w-5xl pt-4">
       <div className="border-b border-border pb-5">
         <h2 className="text-2xl font-semibold tracking-normal">{t(titleKey)}</h2>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{t(descriptionKey)}</p>

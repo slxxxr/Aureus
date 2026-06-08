@@ -48,6 +48,8 @@ function CreateWorkspaceModal({ onClose }: { onClose: () => void }) {
             placeholder={t("workspace.createModal.namePlaceholder")}
             required
             autoFocus
+            autoComplete="off"
+            maxLength={120}
             disabled={mutation.isPending}
           />
         </div>
@@ -126,6 +128,8 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
             onChange={(e) => setName(e.target.value)}
             required
             autoFocus
+            autoComplete="off"
+            maxLength={120}
             disabled={isPending}
           />
         </div>

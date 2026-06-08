@@ -115,7 +115,7 @@ export function AppLayout() {
   const sidebarTransition = isResizing ? "none" : "width 200ms ease";
 
   return (
-    <div className="flex min-h-screen overflow-x-hidden bg-background text-foreground">
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
       {/* Spacer that matches sidebar width — pushes content right on desktop */}
       <div
         className="hidden shrink-0 md:block"
@@ -127,7 +127,7 @@ export function AppLayout() {
         className="fixed inset-y-0 left-0 hidden border-r border-border bg-muted/40 py-4 md:flex md:flex-col"
         style={{ width: effectiveWidth, transition: sidebarTransition }}
       >
-        <div className={cn("mb-6", isCollapsed ? "flex justify-center px-2" : "px-3")}>
+        <div className={cn("mb-6 flex items-center", isCollapsed ? "h-12 justify-center px-2" : "px-3")}>
           <WorkspaceSwitcher collapsed={isCollapsed} />
         </div>
 
@@ -188,8 +188,8 @@ export function AppLayout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" className="md:hidden" aria-label={t("navigation.mobileMenuLabel")}>
               <Menu className="h-5 w-5" aria-hidden="true" />
@@ -214,7 +214,7 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 px-4 py-5 md:px-8 md:py-8">
+        <main className="flex-1 overflow-y-auto px-4 pb-4 md:px-8 md:pb-5">
           <Outlet />
         </main>
 
