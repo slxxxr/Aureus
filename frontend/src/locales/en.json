@@ -253,8 +253,7 @@
       "empty": "No expenses in this period",
       "incomeTitle": "Income by category",
       "incomeEmpty": "No income in this period",
-      "uncategorized": "No category",
-      "other": "Other"
+      "uncategorized": "No category"
     }
   },
   "auth": {
