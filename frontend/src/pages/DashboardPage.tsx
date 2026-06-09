@@ -64,6 +64,12 @@ function formatAxisDate(iso: string, interval: string): string {
   return `${dd}.${mm}`;
 }
 
+function formatAxisNumber(valueMinor: number): string {
+  return Math.round(valueMinor / 100)
+    .toLocaleString("en-US")
+    .replace(/,/g, " ");
+}
+
 // ─── period filter ──────────────────────────────────────────────────────────────
 
 function PeriodFilter() {
@@ -160,26 +166,29 @@ function CategoryBreakdown({
     return [...head, { key: "__other__", label: t("dashboard.breakdown.other"), currency, amountMinor: restTotal }];
   }, [items, currency, t]);
 
-  const max = rows[0]?.amountMinor ?? 0;
+  const total = rows.reduce((sum, row) => sum + row.amountMinor, 0);
 
   return (
     <div className="space-y-2">
-      {rows.map((row) => (
-        <div key={row.key} className="space-y-1">
-          <div className="flex items-baseline justify-between gap-2 text-sm">
-            <span className="truncate">{row.label ?? t("dashboard.breakdown.uncategorized")}</span>
-            <span className="shrink-0 tabular-nums text-muted-foreground">
-              {formatMoney(row.amountMinor, currency)}
-            </span>
+      {rows.map((row) => {
+        const share = total > 0 ? (row.amountMinor / total) * 100 : 0;
+        return (
+          <div key={row.key} className="space-y-1">
+            <div className="flex items-baseline justify-between gap-2 text-sm">
+              <span className="truncate">{row.label ?? t("dashboard.breakdown.uncategorized")}</span>
+              <span className="shrink-0 tabular-nums text-muted-foreground">
+                {Math.round(share)}% · {formatMoney(row.amountMinor, currency)}
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn("h-full rounded-full", barClass)}
+                style={{ width: `${share}%` }}
+              />
+            </div>
           </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn("h-full rounded-full", barClass)}
-              style={{ width: max > 0 ? `${(row.amountMinor / max) * 100}%` : "0%" }}
-            />
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -257,7 +266,7 @@ function IncomeExpenseChart({
           tickLine={false}
           axisLine={false}
           tick={{ fill: AXIS_COLOR, fontSize: 12 }}
-          tickFormatter={(value: number) => (value / 100).toLocaleString("en-US")}
+          tickFormatter={formatAxisNumber}
         />
         <Tooltip
           cursor={{ fill: GRID_COLOR, opacity: 0.3 }}
