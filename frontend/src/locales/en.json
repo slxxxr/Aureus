@@ -4,6 +4,7 @@
     "tagline": "Personal finance",
     "cancel": "Cancel",
     "delete": "Delete",
+    "selected": "Selected: {{count}}",
     "validation": {
       "amountTooLarge": "Maximum: 1 000 000 000"
     },
@@ -223,6 +224,37 @@
       "categoryRequired": "A category is required when changing the transaction type.",
       "categoryTypeMismatch": "The category type does not match the transaction type.",
       "generic": "Something went wrong. Please try again."
+    }
+  },
+  "dashboard": {
+    "emptyTitle": "No data",
+    "emptyDescription": "Nothing found for the selected filters. Adjust the period or filters, or add transactions.",
+    "allAccounts": "All accounts",
+    "allCategories": "All categories",
+    "period": {
+      "month": "This month",
+      "threeMonths": "3 months",
+      "year": "Year",
+      "all": "All time",
+      "from": "From",
+      "to": "To"
+    },
+    "summary": {
+      "income": "Income",
+      "expenses": "Expenses",
+      "net": "Net"
+    },
+    "chart": {
+      "title": "Income and expenses",
+      "empty": "No data for this period"
+    },
+    "breakdown": {
+      "title": "Expenses by category",
+      "empty": "No expenses in this period",
+      "incomeTitle": "Income by category",
+      "incomeEmpty": "No income in this period",
+      "uncategorized": "No category",
+      "other": "Other"
     }
   },
   "auth": {

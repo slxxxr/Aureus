@@ -60,14 +60,17 @@ public static class TestData
         return account.Id;
     }
 
-    public static async Task<Guid> SeedCategoryAsync(PostgresFixture fixture, Guid workspaceId)
+    public static async Task<Guid> SeedCategoryAsync(
+        PostgresFixture fixture,
+        Guid workspaceId,
+        TransactionType type = TransactionType.Expense)
     {
         var category = new Category
         {
             Id = Guid.NewGuid(),
             WorkspaceId = workspaceId,
             Name = $"cat-{Guid.NewGuid():N}",
-            Type = TransactionType.Expense,
+            Type = type,
             CreatedAt = DateTimeOffset.UtcNow,
         };
         await using var db = fixture.CreateDbContext();
@@ -80,7 +83,11 @@ public static class TestData
         Guid workspaceId,
         Guid accountId,
         Guid categoryId,
-        Guid createdByUserId)
+        Guid createdByUserId,
+        TransactionType type = TransactionType.Expense,
+        long amountMinor = 10_00,
+        string currency = "RUB",
+        DateTimeOffset? occurredAt = null)
     {
         var transaction = new Transaction
         {
@@ -90,14 +97,15 @@ public static class TestData
             CategoryId = categoryId,
             CreatedByUserId = createdByUserId,
             Name = "Transaction",
-            Type = TransactionType.Expense,
-            AmountMinor = 10_00,
-            Currency = "RUB",
-            OccurredAt = DateTimeOffset.UtcNow,
+            Type = type,
+            AmountMinor = amountMinor,
+            Currency = currency,
+            OccurredAt = occurredAt ?? DateTimeOffset.UtcNow,
             CreatedAt = DateTimeOffset.UtcNow,
         };
+        var delta = type == TransactionType.Income ? amountMinor : -amountMinor;
         await using var db = fixture.CreateDbContext();
-        await new TransactionRepository(db, fixture.Mapper).AddAsync(transaction, -10_00, CancellationToken.None);
+        await new TransactionRepository(db, fixture.Mapper).AddAsync(transaction, delta, CancellationToken.None);
         return transaction.Id;
     }
 

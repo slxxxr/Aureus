@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const DROPDOWN_WIDTH = 252;
 
 function toDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -74,7 +75,8 @@ export function DatePicker({
         window.innerHeight - rect.bottom > dropdownHeight
           ? rect.bottom + 4
           : rect.top - dropdownHeight - 4;
-      setPos({ top, left: rect.left });
+      const left = Math.max(8, rect.right - DROPDOWN_WIDTH);
+      setPos({ top, left });
     }
     setOpen((v) => !v);
   };
@@ -116,7 +118,7 @@ export function DatePicker({
         type="button"
         onClick={handleOpen}
         disabled={disabled}
-        className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-9 w-full items-center justify-between gap-2 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span className={cn(!value && "text-muted-foreground")}>
           {value ? formatDisplay(value) : (placeholder ?? t("common.datePicker.placeholder"))}
@@ -128,7 +130,7 @@ export function DatePicker({
         createPortal(
           <div
             ref={dropdownRef}
-            style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999, width: 252 }}
+            style={{ position: "fixed", top: pos.top, left: pos.left, zIndex: 9999, width: DROPDOWN_WIDTH }}
             className="rounded-lg border border-border bg-background p-3 shadow-md"
           >
             <div className="mb-3 flex items-center justify-between">

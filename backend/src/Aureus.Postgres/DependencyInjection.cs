@@ -1,3 +1,4 @@
+using Aureus.Postgres.Implementations.Analytics;
 using Aureus.Postgres.Implementations.Auth;
 using Aureus.Postgres.Implementations.Categories;
 using Aureus.Postgres.Implementations.FinancialAccounts;
@@ -26,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<IFinancialAccountRepository, FinancialAccountRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ITransactionRepository, TransactionRepository>();
+        services.AddScoped<IAnalyticsRepository, AnalyticsRepository>();
 
         return services;
     }
