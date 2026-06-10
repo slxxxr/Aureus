@@ -11,5 +11,5 @@ public sealed record CreateTransactionCommand(
     string Name,
     TransactionType Type,
     long AmountMinor,
-    DateTimeOffset OccurredAt,
+    DateOnly OccurredAt,
     string? Note) : IRequest<Transaction>;

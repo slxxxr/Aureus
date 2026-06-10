@@ -9,5 +9,5 @@ public sealed record UpdateTransactionRequest(
     Guid? CategoryId,
     Guid? FinancialAccountId,
     TransactionType? Type,
-    DateTimeOffset? OccurredAt,
+    DateOnly? OccurredAt,
     string? Note);

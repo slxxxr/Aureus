@@ -1,4 +1,5 @@
 import type { TimeInterval } from "@/features/analytics/analyticsApi";
+import { DAY_MS } from "@/lib/constants";
 
 export type PeriodPreset = "month" | "threeMonths" | "year" | "all";
 
@@ -7,22 +8,23 @@ export type DateRange = {
   to?: string;
 };
 
-const startOfMonth = (date: Date): Date => new Date(date.getFullYear(), date.getMonth(), 1);
+const dateKey = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
 export function presetRange(preset: PeriodPreset, now: Date = new Date()): DateRange {
-  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
+  const tomorrow = dateKey(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1));
 
   switch (preset) {
     case "month":
-      return { from: startOfMonth(now).toISOString(), to: tomorrow };
+      return { from: dateKey(new Date(now.getFullYear(), now.getMonth(), 1)), to: tomorrow };
     case "threeMonths":
       return {
-        from: new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString(),
+        from: dateKey(new Date(now.getFullYear(), now.getMonth() - 2, 1)),
         to: tomorrow,
       };
     case "year":
       return {
-        from: new Date(now.getFullYear(), 0, 1).toISOString(),
+        from: dateKey(new Date(now.getFullYear(), 0, 1)),
         to: tomorrow,
       };
     case "all":
@@ -33,17 +35,15 @@ export function presetRange(preset: PeriodPreset, now: Date = new Date()): DateR
 export function customRange(fromDay: string, toDay: string): DateRange {
   const range: DateRange = {};
   if (fromDay) {
-    range.from = new Date(`${fromDay}T00:00:00`).toISOString();
+    range.from = fromDay;
   }
   if (toDay) {
     const next = new Date(`${toDay}T00:00:00`);
     next.setDate(next.getDate() + 1);
-    range.to = next.toISOString();
+    range.to = dateKey(next);
   }
   return range;
 }
-
-const DAY_MS = 86_400_000;
 
 export function pickInterval(range: DateRange): TimeInterval {
   if (!range.from) {

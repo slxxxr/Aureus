@@ -4,6 +4,7 @@ import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Pencil, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DAY_MS } from "@/lib/constants";
 import { formatMoney } from "@/lib/formatMoney";
 import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import {
@@ -32,14 +33,13 @@ const MAX_AMOUNT = 1_000_000_000;
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
-function getLocalDateKey(dateString: string): string {
-  const d = new Date(dateString);
+function localDateKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function formatDateLabel(dateKey: string, t: TFunction): string {
-  const todayKey = getLocalDateKey(new Date().toISOString());
-  const yesterdayKey = getLocalDateKey(new Date(Date.now() - 86_400_000).toISOString());
+  const todayKey = localDateKey(new Date());
+  const yesterdayKey = localDateKey(new Date(Date.now() - DAY_MS));
   if (dateKey === todayKey) return t("transactions.date.today");
   if (dateKey === yesterdayKey) return t("transactions.date.yesterday");
   const [y, m, d] = dateKey.split("-");
@@ -79,10 +79,7 @@ function CreateTransactionModal({
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [categoryId, setCategoryId] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  });
+  const [date, setDate] = useState(() => localDateKey(new Date()));
   const [note, setNote] = useState("");
 
   const filteredCategories = categories.filter((c) => c.type === type);
@@ -97,14 +94,13 @@ function CreateTransactionModal({
 
   const mutation = useMutation({
     mutationFn: () => {
-      const occurredAt = new Date(date + "T00:00:00").toISOString();
       return createTransaction(workspaceId, {
         financialAccountId: accountId,
         categoryId,
         name: name.trim(),
         type,
         amountMinor: Math.round(parseFloat(amount) * 100),
-        occurredAt,
+        occurredAt: date,
         note: note.trim() || null,
       });
     },
@@ -303,7 +299,7 @@ function EditTransactionModal({
   const [amount, setAmount] = useState((tx.amountMinor / 100).toFixed(2));
   const [accountId, setAccountId] = useState(tx.financialAccountId);
   const [categoryId, setCategoryId] = useState(tx.categoryId);
-  const [date, setDate] = useState(getLocalDateKey(tx.occurredAt));
+  const [date, setDate] = useState(tx.occurredAt);
   const [note, setNote] = useState(tx.note ?? "");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -324,14 +320,13 @@ function EditTransactionModal({
   const updateMutation = useMutation({
     mutationFn: () => {
       const newAmountMinor = Math.round(parseFloat(amount) * 100);
-      const occurredAt = new Date(date + "T00:00:00").toISOString();
       return updateTransaction(workspaceId, tx.id, {
         name: name.trim() !== tx.name ? name.trim() : undefined,
         amountMinor: newAmountMinor !== tx.amountMinor ? newAmountMinor : undefined,
         categoryId: categoryId !== tx.categoryId ? categoryId : undefined,
         financialAccountId: accountId !== tx.financialAccountId ? accountId : undefined,
         type: type !== tx.type ? type : undefined,
-        occurredAt: occurredAt !== new Date(tx.occurredAt).toISOString() ? occurredAt : undefined,
+        occurredAt: date !== tx.occurredAt ? date : undefined,
         note: note.trim() !== (tx.note ?? "") ? (note.trim() || null) : undefined,
       });
     },
@@ -787,7 +782,7 @@ export function TransactionsPage() {
   const groups = useMemo(() => {
     const map = new Map<string, Transaction[]>();
     for (const tx of filtered) {
-      const key = getLocalDateKey(tx.occurredAt);
+      const key = tx.occurredAt;
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(tx);
     }

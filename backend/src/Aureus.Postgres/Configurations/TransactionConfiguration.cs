@@ -26,7 +26,7 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.Property(transaction => transaction.Type).HasColumnName("type").HasMaxLength(TypeMaxLength).IsRequired();
         builder.Property(transaction => transaction.AmountMinor).HasColumnName("amount_minor").IsRequired();
         builder.Property(transaction => transaction.Currency).HasColumnName("currency").HasMaxLength(CurrencyCodeMaxLength).IsRequired();
-        builder.Property(transaction => transaction.OccurredAt).HasColumnName("occurred_at").IsRequired();
+        builder.Property(transaction => transaction.OccurredAt).HasColumnName("occurred_at").HasColumnType("date").IsRequired();
         builder.Property(transaction => transaction.Note).HasColumnName("note").HasMaxLength(NoteMaxLength);
         builder.Property(transaction => transaction.IsDeleted).HasColumnName("is_deleted").IsRequired();
         builder.Property(transaction => transaction.DeletedAt).HasColumnName("deleted_at");

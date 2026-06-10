@@ -4,9 +4,9 @@ namespace Aureus.Api.Contracts.Analytics;
 
 public sealed class AnalyticsFilterRequest
 {
-    public DateTimeOffset? From { get; set; }
+    public DateOnly? From { get; set; }
 
-    public DateTimeOffset? To { get; set; }
+    public DateOnly? To { get; set; }
 
     public Guid[]? AccountIds { get; set; }
 

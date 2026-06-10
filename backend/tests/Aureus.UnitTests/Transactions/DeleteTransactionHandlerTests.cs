@@ -20,7 +20,7 @@ public sealed class DeleteTransactionHandlerTests
         Type = type,
         AmountMinor = amountMinor,
         Currency = "RUB",
-        OccurredAt = DateTimeOffset.UtcNow,
+        OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
         CreatedAt = DateTimeOffset.UtcNow,
     };
 

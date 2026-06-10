@@ -11,5 +11,5 @@ public sealed record UpdateTransactionCommand(
     Guid? CategoryId,
     Guid? FinancialAccountId,
     TransactionType? Type,
-    DateTimeOffset? OccurredAt,
+    DateOnly? OccurredAt,
     string? Note) : IRequest<Transaction>;

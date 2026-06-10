@@ -20,7 +20,7 @@ public sealed class TransactionDb
 
     public string Currency { get; set; } = "RUB";
 
-    public DateTimeOffset OccurredAt { get; set; }
+    public DateOnly OccurredAt { get; set; }
 
     public string? Note { get; set; }
 
