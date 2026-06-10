@@ -327,6 +327,16 @@ function IncomeExpenseChart({
   return (
     <ResponsiveContainer width="100%" height={260}>
       <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+        <defs>
+          <linearGradient id="bar-income" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#359e6d" stopOpacity={0.95} />
+            <stop offset="100%" stopColor="#359e6d" stopOpacity={0.45} />
+          </linearGradient>
+          <linearGradient id="bar-expense" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#d33a3a" stopOpacity={0.95} />
+            <stop offset="100%" stopColor="#d33a3a" stopOpacity={0.45} />
+          </linearGradient>
+        </defs>
         <CartesianGrid vertical={false} stroke={GRID_COLOR} />
         <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: AXIS_COLOR, fontSize: 12 }} />
         <YAxis
@@ -341,8 +351,8 @@ function IncomeExpenseChart({
           isAnimationActive={false}
           content={(props) => <ChartTooltip {...(props as TooltipData)} currency={currency} interval={interval} />}
         />
-        <Bar dataKey="income" fill={INCOME_COLOR} radius={[6, 6, 0, 0]} isAnimationActive={false} />
-        <Bar dataKey="expenses" fill={EXPENSE_COLOR} radius={[6, 6, 0, 0]} isAnimationActive={false} />
+        <Bar dataKey="income" fill="url(#bar-income)" radius={[10, 10, 0, 0]} isAnimationActive={false} />
+        <Bar dataKey="expenses" fill="url(#bar-expense)" radius={[10, 10, 0, 0]} isAnimationActive={false} />
       </BarChart>
     </ResponsiveContainer>
   );
@@ -817,7 +827,7 @@ export function DashboardPage() {
             byCurrency={expenseByCurrency}
             currencies={currencies}
             multiCurrency={multiCurrency}
-            barClass="bg-destructive/70"
+            barClass="bg-red-600/75"
           />
 
           <BreakdownSection
