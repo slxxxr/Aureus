@@ -10,20 +10,20 @@ export type DateRange = {
 const startOfMonth = (date: Date): Date => new Date(date.getFullYear(), date.getMonth(), 1);
 
 export function presetRange(preset: PeriodPreset, now: Date = new Date()): DateRange {
-  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
 
   switch (preset) {
     case "month":
-      return { from: startOfMonth(now).toISOString(), to: nextMonth.toISOString() };
+      return { from: startOfMonth(now).toISOString(), to: tomorrow };
     case "threeMonths":
       return {
         from: new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString(),
-        to: nextMonth.toISOString(),
+        to: tomorrow,
       };
     case "year":
       return {
         from: new Date(now.getFullYear(), 0, 1).toISOString(),
-        to: new Date(now.getFullYear() + 1, 0, 1).toISOString(),
+        to: tomorrow,
       };
     case "all":
       return {};
