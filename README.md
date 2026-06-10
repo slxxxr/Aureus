@@ -19,7 +19,7 @@ Personal finance service. Track income and expenses across accounts and categori
 - **Financial accounts** — multi-currency accounts with running balance
 - **Categories** — income and expense categories
 - **Transactions** — list grouped by date with daily net; filter by account and type
-- **Dashboard analytics** — income/expense/net summary, income-vs-expense chart over time, category breakdowns; filter by period, accounts, and categories; per-currency view
+- **Dashboard analytics** — income/expense/net summary, income-vs-expense chart over time, category breakdowns, and per-category dynamics (small-multiples charts showing each category's spend over time); filter by period, accounts, and categories; per-currency view
 
 ### What's next
 
@@ -45,7 +45,7 @@ Personal finance service. Track income and expenses across accounts and categori
 - **Счета** — мультивалютные счета с актуальным балансом
 - **Категории** — категории доходов и расходов
 - **Транзакции** — список, сгруппированный по датам с дневным нетто; фильтры по счёту и типу
-- **Аналитический дашборд** — сводка доходов/расходов/нетто, график доходов и расходов по времени, разбивка по категориям; фильтры по периоду, счетам и категориям; отдельно по каждой валюте
+- **Аналитический дашборд** — сводка доходов/расходов/нетто, график доходов и расходов по времени, разбивка по категориям и динамика по категориям (отдельный мини-график на каждую категорию — как менялись её расходы во времени); фильтры по периоду, счетам и категориям; отдельно по каждой валюте
 
 ### Что дальше
 
