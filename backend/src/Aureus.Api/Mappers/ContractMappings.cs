@@ -23,5 +23,6 @@ public sealed class ContractMappings : Profile
         CreateMap<CurrencySummary, CurrencySummaryResponse>();
         CreateMap<BreakdownItem, BreakdownItemResponse>();
         CreateMap<TimeSeriesPoint, TimeSeriesPointResponse>();
+        CreateMap<CategoryTimeSeriesPoint, CategoryTimeSeriesPointResponse>();
     }
 }

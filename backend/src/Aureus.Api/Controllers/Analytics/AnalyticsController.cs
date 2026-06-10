@@ -2,6 +2,7 @@ using Aureus.Api.Contracts.Analytics;
 using Aureus.Api.Filters;
 using Aureus.UseCases.Analytics.Common;
 using Aureus.UseCases.Analytics.GetBreakdown;
+using Aureus.UseCases.Analytics.GetCategoryTimeSeries;
 using Aureus.UseCases.Analytics.GetSummary;
 using Aureus.UseCases.Analytics.GetTimeSeries;
 using AutoMapper;
@@ -52,6 +53,20 @@ public sealed class AnalyticsController(ISender sender, IMapper mapper) : ApiCon
             new GetTimeSeriesQuery(ToFilter(workspaceId, request), interval), cancellationToken);
 
         return Ok(mapper.Map<IReadOnlyList<TimeSeriesPointResponse>>(result));
+    }
+
+    [HttpGet("category-timeseries")]
+    [ProducesResponseType(typeof(IReadOnlyList<CategoryTimeSeriesPointResponse>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetCategoryTimeSeriesAsync(
+        Guid workspaceId,
+        [FromQuery] TimeInterval interval,
+        [FromQuery] AnalyticsFilterRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(
+            new GetCategoryTimeSeriesQuery(ToFilter(workspaceId, request), interval), cancellationToken);
+
+        return Ok(mapper.Map<IReadOnlyList<CategoryTimeSeriesPointResponse>>(result));
     }
 
     private static AnalyticsFilter ToFilter(Guid workspaceId, AnalyticsFilterRequest request) =>

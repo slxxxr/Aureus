@@ -25,6 +25,14 @@ export type TimeSeriesPoint = {
   expensesMinor: number;
 };
 
+export type CategoryTimeSeriesPoint = {
+  periodStart: string;
+  currency: string;
+  categoryId: string;
+  label: string | null;
+  amountMinor: number;
+};
+
 export type AnalyticsFilter = {
   from?: string;
   to?: string;
@@ -69,5 +77,15 @@ export function getTimeSeries(
 ): Promise<TimeSeriesPoint[]> {
   return apiFetch<TimeSeriesPoint[]>(
     `/workspaces/${workspaceId}/analytics/timeseries${buildQuery(filter, { interval })}`,
+  );
+}
+
+export function getCategoryTimeSeries(
+  workspaceId: string,
+  interval: TimeInterval,
+  filter: AnalyticsFilter,
+): Promise<CategoryTimeSeriesPoint[]> {
+  return apiFetch<CategoryTimeSeriesPoint[]>(
+    `/workspaces/${workspaceId}/analytics/category-timeseries${buildQuery(filter, { interval })}`,
   );
 }

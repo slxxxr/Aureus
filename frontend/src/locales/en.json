@@ -231,6 +231,7 @@
     "emptyDescription": "Nothing found for the selected filters. Adjust the period or filters, or add transactions.",
     "allAccounts": "All accounts",
     "allCategories": "All categories",
+    "deletedCategories": "Deleted categories",
     "period": {
       "month": "This month",
       "threeMonths": "3 months",
@@ -253,7 +254,13 @@
       "empty": "No expenses in this period",
       "incomeTitle": "Income by category",
       "incomeEmpty": "No income in this period",
-      "uncategorized": "No category"
+      "other": "Other"
+    },
+    "dynamics": {
+      "title": "Category dynamics",
+      "expense": "Expenses",
+      "income": "Income",
+      "empty": "No data for this period"
     }
   },
   "auth": {

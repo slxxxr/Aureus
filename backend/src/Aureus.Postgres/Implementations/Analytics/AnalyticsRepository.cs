@@ -115,6 +115,57 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
             .ToList();
     }
 
+    public async Task<IReadOnlyList<CategoryTimeSeriesPoint>> GetCategoryTimeSeriesAsync(
+        AnalyticsFilter filter, TimeInterval interval, CancellationToken cancellationToken)
+    {
+        // Same day-in-SQL / roll-up-in-memory shape as GetTimeSeriesAsync, with category as an extra key.
+        // Left join keeps transactions whose category was soft-deleted (null label, caller renders a fallback).
+        var daily = await (
+            from transaction in ApplyFilter(dbContext.Transactions, filter)
+            join category in dbContext.Categories
+                on transaction.CategoryId equals category.Id into categoryJoin
+            from category in categoryJoin.DefaultIfEmpty()
+            group transaction by new
+            {
+                transaction.OccurredAt.Year,
+                transaction.OccurredAt.Month,
+                transaction.OccurredAt.Day,
+                transaction.Currency,
+                transaction.CategoryId,
+                Label = category != null ? category.Name : null,
+            }
+            into grouped
+            select new
+            {
+                grouped.Key.Year,
+                grouped.Key.Month,
+                grouped.Key.Day,
+                grouped.Key.Currency,
+                grouped.Key.CategoryId,
+                grouped.Key.Label,
+                AmountMinor = grouped.Sum(transaction => transaction.AmountMinor),
+            })
+            .ToListAsync(cancellationToken);
+
+        return daily
+            .GroupBy(row => new
+            {
+                PeriodStart = BucketStart(new DateTimeOffset(row.Year, row.Month, row.Day, 0, 0, 0, TimeSpan.Zero), interval),
+                row.Currency,
+                row.CategoryId,
+                row.Label,
+            })
+            .Select(group => new CategoryTimeSeriesPoint(
+                group.Key.PeriodStart,
+                group.Key.Currency,
+                group.Key.CategoryId,
+                group.Key.Label,
+                group.Sum(row => row.AmountMinor)))
+            .OrderBy(point => point.PeriodStart)
+            .ThenBy(point => point.Currency)
+            .ToList();
+    }
+
     private static DateTimeOffset BucketStart(DateTimeOffset day, TimeInterval interval) => interval switch
     {
         TimeInterval.Week => day.AddDays(-(((int)day.DayOfWeek + 6) % 7)),

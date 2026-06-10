@@ -12,4 +12,7 @@ public interface IAnalyticsRepository
 
     Task<IReadOnlyList<TimeSeriesPoint>> GetTimeSeriesAsync(
         AnalyticsFilter filter, TimeInterval interval, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<CategoryTimeSeriesPoint>> GetCategoryTimeSeriesAsync(
+        AnalyticsFilter filter, TimeInterval interval, CancellationToken cancellationToken);
 }

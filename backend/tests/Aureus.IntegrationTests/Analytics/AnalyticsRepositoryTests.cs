@@ -236,6 +236,65 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         Assert.Equal(expense, point.ExpensesMinor);
     }
 
+    [Fact]
+    public async Task GetCategoryTimeSeriesAsync_ByMonth_GroupsPerCategoryAndMonth()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryA = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var categoryB = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        const long firstMarchA = 100_00;
+        const long secondMarchA = 50_00;
+        const long marchB = 20_00;
+        const long aprilA = 30_00;
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense, firstMarchA, occurredAt: _march.AddDays(9).AddHours(12));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense, secondMarchA, occurredAt: _march.AddDays(19).AddHours(12));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryB, userId, TransactionType.Expense, marchB, occurredAt: _march.AddDays(9).AddHours(12));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense, aprilA, occurredAt: _march.AddMonths(1).AddDays(4).AddHours(12));
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var series = await new AnalyticsRepository(db)
+            .GetCategoryTimeSeriesAsync(Filter(workspaceId, type: TransactionType.Expense), TimeInterval.Month, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(3, series.Count);
+        var marchAPoint = Assert.Single(series, point => point.PeriodStart == _march && point.CategoryId == categoryA);
+        Assert.Equal(firstMarchA + secondMarchA, marchAPoint.AmountMinor);
+        Assert.NotNull(marchAPoint.Label);
+        Assert.Equal(marchB, Assert.Single(series, point => point.PeriodStart == _march && point.CategoryId == categoryB).AmountMinor);
+        Assert.Equal(aprilA, Assert.Single(series, point => point.PeriodStart == _march.AddMonths(1) && point.CategoryId == categoryA).AmountMinor);
+    }
+
+    [Fact]
+    public async Task GetCategoryTimeSeriesAsync_SoftDeletedCategory_KeepsNullLabel()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        const long amount = 40_00;
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryId, userId, TransactionType.Expense, amount, occurredAt: _march.AddDays(9).AddHours(12));
+
+        await using (var deleteDb = fixture.CreateDbContext())
+        {
+            var category = await TestData.FindCategoryAsync(deleteDb, fixture.Mapper, categoryId, workspaceId);
+            await new CategoryRepository(deleteDb, fixture.Mapper).DeleteAsync(category!, CancellationToken.None);
+        }
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var series = await new AnalyticsRepository(db)
+            .GetCategoryTimeSeriesAsync(Filter(workspaceId, type: TransactionType.Expense), TimeInterval.Month, CancellationToken.None);
+
+        // Assert
+        var point = Assert.Single(series);
+        Assert.Equal(categoryId, point.CategoryId);
+        Assert.Null(point.Label);
+        Assert.Equal(amount, point.AmountMinor);
+    }
+
     private static AnalyticsFilter Filter(
         Guid workspaceId,
         DateTimeOffset? from = null,
