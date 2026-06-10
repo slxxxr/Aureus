@@ -1,5 +1,4 @@
-// Categorical palette for category-keyed charts (dynamics, future pie). Colors are assigned
-// by position in a caller-sorted list, so the largest categories get stable, distinct hues.
+// Per-category palette, assigned by position in a caller-sorted list. Repeats past 50 categories.
 export const CATEGORY_PALETTE = [
   "#2563eb",
   "#dc2626",
@@ -15,9 +14,44 @@ export const CATEGORY_PALETTE = [
   "#ca8a04",
   "#4f46e5",
   "#e11d48",
+  "#3b82f6",
+  "#ef4444",
+  "#22c55e",
+  "#f59e0b",
+  "#8b5cf6",
+  "#06b6d4",
+  "#ec4899",
+  "#84cc16",
+  "#f97316",
+  "#14b8a6",
+  "#a855f7",
+  "#eab308",
+  "#6366f1",
+  "#f43f5e",
+  "#1d4ed8",
+  "#b91c1c",
+  "#15803d",
+  "#b45309",
+  "#6d28d9",
+  "#0e7490",
+  "#be185d",
+  "#4d7c0f",
+  "#c2410c",
+  "#0f766e",
+  "#7e22ce",
+  "#a16207",
+  "#4338ca",
+  "#be123c",
+  "#0ea5e9",
+  "#10b981",
+  "#d946ef",
+  "#f472b6",
+  "#34d399",
+  "#fb923c",
+  "#818cf8",
+  "#2dd4bf",
 ] as const;
 
-// Aggregated soft-deleted categories render as a single neutral series.
 export const DELETED_CATEGORY_COLOR = "#9ca3af";
 
 export function colorForIndex(index: number): string {
