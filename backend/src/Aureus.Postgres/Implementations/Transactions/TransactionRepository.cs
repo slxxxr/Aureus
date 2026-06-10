@@ -16,6 +16,7 @@ public sealed class TransactionRepository(AureusDbContext dbContext, IMapper map
             .AsNoTracking()
             .Where(transaction => transaction.WorkspaceId == workspaceId)
             .OrderByDescending(transaction => transaction.OccurredAt)
+            .ThenByDescending(transaction => transaction.CreatedAt)
             .ToListAsync(cancellationToken);
 
         return mapper.Map<List<Transaction>>(entities);

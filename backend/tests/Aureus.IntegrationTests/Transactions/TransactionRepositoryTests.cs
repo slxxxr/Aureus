@@ -141,6 +141,54 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task GetByWorkspaceIdAsync_SameDay_OrdersByCreatedAtDescending()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        var day = DateOnly.FromDateTime(DateTime.UtcNow);
+        var firstId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: day);
+        var secondId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: day);
+        var thirdId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: day);
+        var fourthId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: day);
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var transactions = await new TransactionRepository(db, fixture.Mapper)
+            .GetByWorkspaceIdAsync(workspaceId, CancellationToken.None);
+
+        // Assert
+        Assert.Equal([fourthId, thirdId, secondId, firstId], transactions.Select(t => t.Id));
+    }
+
+    [Fact]
+    public async Task GetByWorkspaceIdAsync_AcrossTwoDays_OrdersByDayThenCreatedAt()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        var earlierDay = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
+        var laterDay = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        var earlierFirst = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: earlierDay);
+        var laterFirst = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: laterDay);
+        var earlierSecond = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: earlierDay);
+        var laterSecond = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: laterDay);
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var transactions = await new TransactionRepository(db, fixture.Mapper)
+            .GetByWorkspaceIdAsync(workspaceId, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(
+            [laterSecond, laterFirst, earlierSecond, earlierFirst],
+            transactions.Select(t => t.Id));
+    }
+
+    [Fact]
     public async Task UpdateAsync_ValidTransaction_UpdatesFields()
     {
         // Arrange
