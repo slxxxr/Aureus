@@ -25,7 +25,7 @@ public sealed class UpdateTransactionHandlerTests
         Type = type,
         AmountMinor = amountMinor,
         Currency = currency,
-        OccurredAt = DateTimeOffset.UtcNow,
+        OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
         CreatedAt = DateTimeOffset.UtcNow,
     };
 

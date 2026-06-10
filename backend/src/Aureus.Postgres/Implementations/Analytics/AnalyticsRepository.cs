@@ -83,16 +83,12 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
         var daily = await ApplyFilter(dbContext.Transactions, filter)
             .GroupBy(transaction => new
             {
-                transaction.OccurredAt.Year,
-                transaction.OccurredAt.Month,
-                transaction.OccurredAt.Day,
+                transaction.OccurredAt,
                 transaction.Currency,
             })
             .Select(group => new
             {
-                group.Key.Year,
-                group.Key.Month,
-                group.Key.Day,
+                group.Key.OccurredAt,
                 group.Key.Currency,
                 IncomeMinor = group.Sum(transaction => transaction.Type == income ? transaction.AmountMinor : 0L),
                 ExpensesMinor = group.Sum(transaction => transaction.Type == expense ? transaction.AmountMinor : 0L),
@@ -102,7 +98,7 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
         return daily
             .GroupBy(row => new
             {
-                PeriodStart = BucketStart(new DateTimeOffset(row.Year, row.Month, row.Day, 0, 0, 0, TimeSpan.Zero), interval),
+                PeriodStart = BucketStart(row.OccurredAt, interval),
                 row.Currency,
             })
             .Select(group => new TimeSeriesPoint(
@@ -127,9 +123,7 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
             from category in categoryJoin.DefaultIfEmpty()
             group transaction by new
             {
-                transaction.OccurredAt.Year,
-                transaction.OccurredAt.Month,
-                transaction.OccurredAt.Day,
+                transaction.OccurredAt,
                 transaction.Currency,
                 transaction.CategoryId,
                 Label = category != null ? category.Name : null,
@@ -137,9 +131,7 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
             into grouped
             select new
             {
-                grouped.Key.Year,
-                grouped.Key.Month,
-                grouped.Key.Day,
+                grouped.Key.OccurredAt,
                 grouped.Key.Currency,
                 grouped.Key.CategoryId,
                 grouped.Key.Label,
@@ -150,7 +142,7 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
         return daily
             .GroupBy(row => new
             {
-                PeriodStart = BucketStart(new DateTimeOffset(row.Year, row.Month, row.Day, 0, 0, 0, TimeSpan.Zero), interval),
+                PeriodStart = BucketStart(row.OccurredAt, interval),
                 row.Currency,
                 row.CategoryId,
                 row.Label,
@@ -166,10 +158,10 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
             .ToList();
     }
 
-    private static DateTimeOffset BucketStart(DateTimeOffset day, TimeInterval interval) => interval switch
+    private static DateOnly BucketStart(DateOnly day, TimeInterval interval) => interval switch
     {
         TimeInterval.Week => day.AddDays(-(((int)day.DayOfWeek + 6) % 7)),
-        TimeInterval.Month => new DateTimeOffset(day.Year, day.Month, 1, 0, 0, 0, TimeSpan.Zero),
+        TimeInterval.Month => new DateOnly(day.Year, day.Month, 1),
         _ => day,
     };
 

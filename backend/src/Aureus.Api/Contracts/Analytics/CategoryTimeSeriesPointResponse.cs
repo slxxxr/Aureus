@@ -1,7 +1,7 @@
 namespace Aureus.Api.Contracts.Analytics;
 
 public sealed record CategoryTimeSeriesPointResponse(
-    DateTimeOffset PeriodStart,
+    DateOnly PeriodStart,
     string Currency,
     Guid CategoryId,
     string? Label,

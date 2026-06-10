@@ -87,7 +87,7 @@ public static class TestData
         TransactionType type = TransactionType.Expense,
         long amountMinor = 10_00,
         string currency = "RUB",
-        DateTimeOffset? occurredAt = null)
+        DateOnly? occurredAt = null)
     {
         var transaction = new Transaction
         {
@@ -100,7 +100,7 @@ public static class TestData
             Type = type,
             AmountMinor = amountMinor,
             Currency = currency,
-            OccurredAt = occurredAt ?? DateTimeOffset.UtcNow,
+            OccurredAt = occurredAt ?? DateOnly.FromDateTime(DateTime.UtcNow),
             CreatedAt = DateTimeOffset.UtcNow,
         };
         var delta = type == TransactionType.Income ? amountMinor : -amountMinor;

@@ -11,7 +11,7 @@ public sealed record TransactionResponse(
     TransactionType Type,
     long AmountMinor,
     string Currency,
-    DateTimeOffset OccurredAt,
+    DateOnly OccurredAt,
     string? Note,
     DateTimeOffset CreatedAt,
     DateTimeOffset? UpdatedAt);

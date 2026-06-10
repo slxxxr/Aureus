@@ -127,7 +127,7 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
         var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
-        var now = DateTimeOffset.UtcNow;
+        var now = DateOnly.FromDateTime(DateTime.UtcNow);
         var olderId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: now.AddDays(-2));
         var newerId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: now);
 
@@ -275,7 +275,7 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         string name = "Transaction",
         TransactionType type = TransactionType.Expense,
         long amountMinor = 10_00,
-        DateTimeOffset? occurredAt = null) => new()
+        DateOnly? occurredAt = null) => new()
     {
         Id = Guid.NewGuid(),
         WorkspaceId = workspaceId,
@@ -286,7 +286,7 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         Type = type,
         AmountMinor = amountMinor,
         Currency = "RUB",
-        OccurredAt = occurredAt ?? DateTimeOffset.UtcNow,
+        OccurredAt = occurredAt ?? DateOnly.FromDateTime(DateTime.UtcNow),
         CreatedAt = DateTimeOffset.UtcNow,
     };
 
@@ -298,7 +298,7 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         string name = "Transaction",
         TransactionType type = TransactionType.Expense,
         long amountMinor = 10_00,
-        DateTimeOffset? occurredAt = null)
+        DateOnly? occurredAt = null)
     {
         var transaction = NewTransaction(workspaceId, accountId, categoryId, createdByUserId, name, type, amountMinor, occurredAt);
         var balanceDelta = type == TransactionType.Income ? amountMinor : -amountMinor;

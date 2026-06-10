@@ -43,7 +43,7 @@ public sealed class CreateTransactionHandlerTests
         Name: name,
         Type: type,
         AmountMinor: amountMinor,
-        OccurredAt: DateTimeOffset.UtcNow,
+        OccurredAt: DateOnly.FromDateTime(DateTime.UtcNow),
         Note: note);
 
     [Fact]

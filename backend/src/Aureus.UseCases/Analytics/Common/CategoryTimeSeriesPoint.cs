@@ -1,7 +1,7 @@
 namespace Aureus.UseCases.Analytics.Common;
 
 public sealed record CategoryTimeSeriesPoint(
-    DateTimeOffset PeriodStart,
+    DateOnly PeriodStart,
     string Currency,
     Guid CategoryId,
     string? Label,
