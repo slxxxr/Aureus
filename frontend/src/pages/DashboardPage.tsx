@@ -43,8 +43,6 @@ const GRID_COLOR = "hsl(var(--border))";
 const INCOME_TONE = "text-green-600 dark:text-green-400";
 const EXPENSE_TONE = "text-destructive";
 
-const MAX_BREAKDOWN_ROWS = 8;
-
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 function groupByCurrency<T extends { currency: string }>(items: T[]): Map<string, T[]> {
@@ -230,13 +228,10 @@ function CategoryBreakdown({
 }) {
   const { t } = useTranslation();
 
-  const rows = useMemo(() => {
-    const sorted = [...items].sort((a, b) => b.amountMinor - a.amountMinor);
-    if (sorted.length <= MAX_BREAKDOWN_ROWS) return sorted;
-    const head = sorted.slice(0, MAX_BREAKDOWN_ROWS - 1);
-    const restTotal = sorted.slice(MAX_BREAKDOWN_ROWS - 1).reduce((sum, item) => sum + item.amountMinor, 0);
-    return [...head, { key: "__other__", label: t("dashboard.breakdown.other"), currency, amountMinor: restTotal }];
-  }, [items, currency, t]);
+  const rows = useMemo(
+    () => [...items].sort((a, b) => b.amountMinor - a.amountMinor),
+    [items],
+  );
 
   const total = rows.reduce((sum, row) => sum + row.amountMinor, 0);
 
