@@ -4,6 +4,7 @@ import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, Pencil, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DAY_MS } from "@/lib/constants";
 import { formatMoney } from "@/lib/formatMoney";
 import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import {
@@ -38,7 +39,7 @@ function localDateKey(d: Date): string {
 
 function formatDateLabel(dateKey: string, t: TFunction): string {
   const todayKey = localDateKey(new Date());
-  const yesterdayKey = localDateKey(new Date(Date.now() - 86_400_000));
+  const yesterdayKey = localDateKey(new Date(Date.now() - DAY_MS));
   if (dateKey === todayKey) return t("transactions.date.today");
   if (dateKey === yesterdayKey) return t("transactions.date.yesterday");
   const [y, m, d] = dateKey.split("-");
@@ -78,10 +79,7 @@ function CreateTransactionModal({
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [categoryId, setCategoryId] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  });
+  const [date, setDate] = useState(() => localDateKey(new Date()));
   const [note, setNote] = useState("");
 
   const filteredCategories = categories.filter((c) => c.type === type);

@@ -1,4 +1,5 @@
 import type { TimeInterval } from "@/features/analytics/analyticsApi";
+import { DAY_MS } from "@/lib/constants";
 
 export type PeriodPreset = "month" | "threeMonths" | "year" | "all";
 
@@ -43,8 +44,6 @@ export function customRange(fromDay: string, toDay: string): DateRange {
   }
   return range;
 }
-
-const DAY_MS = 86_400_000;
 
 export function pickInterval(range: DateRange): TimeInterval {
   if (!range.from) {
