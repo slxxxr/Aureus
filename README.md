@@ -6,6 +6,19 @@
 
 ---
 
+<details>
+<summary><b>📸 Screenshots</b></summary>
+
+<br>
+
+![Dashboard](docs/images/dashboard.png)
+
+![Category dynamics](docs/images/category-dynamics.png)
+
+</details>
+
+---
+
 <a name="english"></a>
 
 ## English
