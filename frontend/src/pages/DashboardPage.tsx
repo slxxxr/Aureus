@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import { cn } from "@/lib/utils";
+import { DAY_MS } from "@/lib/constants";
 import { formatMoney } from "@/lib/formatMoney";
 import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import {
@@ -60,8 +61,20 @@ function netTone(net: number): string {
   return "text-foreground";
 }
 
-function formatAxisDate(iso: string, interval: string): string {
-  const d = new Date(iso);
+function clampStart(start: Date, from?: string): Date {
+  if (!from) return start;
+  const f = new Date(from);
+  return start.getTime() < f.getTime() ? f : start;
+}
+
+function clampEnd(end: Date, to?: string): Date {
+  if (!to) return end;
+  const last = new Date(new Date(to).getTime() - DAY_MS);
+  return end.getTime() > last.getTime() ? last : end;
+}
+
+function formatAxisDate(iso: string, interval: string, from?: string): string {
+  const d = clampStart(new Date(iso), from);
   const dd = String(d.getUTCDate()).padStart(2, "0");
   const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
   if (interval === "Month") return `${mm}.${String(d.getUTCFullYear()).slice(2)}`;
@@ -74,16 +87,16 @@ function formatFullDate(d: Date): string {
   return `${dd}.${mm}.${d.getUTCFullYear()}`;
 }
 
-function formatBucketRange(iso: string, interval: string): string {
-  const start = new Date(iso);
-  if (interval === "Day") return formatFullDate(start);
+function formatBucketRange(iso: string, interval: string, from?: string, to?: string): string {
+  const origin = new Date(iso);
+  if (interval === "Day") return formatFullDate(origin);
 
   const end =
     interval === "Week"
-      ? new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate() + 6))
-      : new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 0));
+      ? new Date(Date.UTC(origin.getUTCFullYear(), origin.getUTCMonth(), origin.getUTCDate() + 6))
+      : new Date(Date.UTC(origin.getUTCFullYear(), origin.getUTCMonth() + 1, 0));
 
-  return `${formatFullDate(start)} – ${formatFullDate(end)}`;
+  return `${formatFullDate(clampStart(origin, from))} – ${formatFullDate(clampEnd(end, to))}`;
 }
 
 function bucketKey(iso: string): string {
@@ -267,7 +280,7 @@ type TooltipData = {
   payload?: readonly { dataKey?: string | number; value?: number; payload?: { period?: string } }[];
 };
 
-function ChartTooltip({ active, payload, currency, interval }: TooltipData & { currency: string; interval: string }) {
+function ChartTooltip({ active, payload, currency, interval, from, to }: TooltipData & { currency: string; interval: string; from?: string; to?: string }) {
   const { t } = useTranslation();
   if (!active || !payload?.length) return null;
 
@@ -285,7 +298,7 @@ function ChartTooltip({ active, payload, currency, interval }: TooltipData & { c
 
   return (
     <div className="rounded-lg border bg-background p-2.5 text-xs shadow-md" style={{ borderColor: GRID_COLOR }}>
-      <p className="mb-1.5 font-medium text-foreground">{period ? formatBucketRange(period, interval) : ""}</p>
+      <p className="mb-1.5 font-medium text-foreground">{period ? formatBucketRange(period, interval, from, to) : ""}</p>
       <div className="space-y-1">
         {rows.map((row) => (
           <div key={row.label} className="flex items-center justify-between gap-4">
@@ -305,11 +318,15 @@ function IncomeExpenseChart({
   periods,
   currency,
   interval,
+  from,
+  to,
 }: {
   points: TimeSeriesPoint[];
   periods: string[];
   currency: string;
   interval: string;
+  from?: string;
+  to?: string;
 }) {
   const data = useMemo(() => {
     const byKey = new Map(points.map((point) => [bucketKey(point.periodStart), point]));
@@ -317,12 +334,12 @@ function IncomeExpenseChart({
       const point = byKey.get(bucketKey(period));
       return {
         period,
-        label: formatAxisDate(period, interval),
+        label: formatAxisDate(period, interval, from),
         income: point?.incomeMinor ?? 0,
         expenses: point?.expensesMinor ?? 0,
       };
     });
-  }, [points, periods, interval]);
+  }, [points, periods, interval, from]);
 
   return (
     <ResponsiveContainer width="100%" height={260}>
@@ -349,7 +366,7 @@ function IncomeExpenseChart({
         <Tooltip
           cursor={{ fill: GRID_COLOR, opacity: 0.3 }}
           isAnimationActive={false}
-          content={(props) => <ChartTooltip {...(props as TooltipData)} currency={currency} interval={interval} />}
+          content={(props) => <ChartTooltip {...(props as TooltipData)} currency={currency} interval={interval} from={from} to={to} />}
         />
         <Bar dataKey="income" fill="url(#bar-income)" radius={[10, 10, 0, 0]} isAnimationActive={false} />
         <Bar dataKey="expenses" fill="url(#bar-expense)" radius={[10, 10, 0, 0]} isAnimationActive={false} />
@@ -442,14 +459,16 @@ function SmallMultipleTooltip({
   currency,
   interval,
   color,
-}: SmallMultipleTooltipData & { currency: string; interval: string; color: string }) {
+  from,
+  to,
+}: SmallMultipleTooltipData & { currency: string; interval: string; color: string; from?: string; to?: string }) {
   if (!active || !payload?.length) return null;
   const period = payload[0]?.payload?.period;
   const value = Number(payload[0]?.value ?? 0);
 
   return (
     <div className="rounded-lg border bg-background p-2 text-xs shadow-md" style={{ borderColor: GRID_COLOR }}>
-      <p className="mb-1 text-muted-foreground">{period ? formatBucketRange(period, interval) : ""}</p>
+      <p className="mb-1 text-muted-foreground">{period ? formatBucketRange(period, interval, from, to) : ""}</p>
       <span className="flex items-center gap-1.5 font-medium tabular-nums">
         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: color }} aria-hidden="true" />
         {formatMoney(value, currency)}
@@ -465,15 +484,19 @@ function SmallMultiple({
   rows,
   interval,
   currency,
+  from,
+  to,
 }: {
   serie: DynamicsSeries;
   rows: DynamicsRow[];
   interval: string;
   currency: string;
+  from?: string;
+  to?: string;
 }) {
   const data = useMemo(
-    () => rows.map((row) => ({ period: row.period as string, label: formatAxisDate(row.period as string, interval), value: Number(row[serie.key] ?? 0) })),
-    [rows, interval, serie.key],
+    () => rows.map((row) => ({ period: row.period as string, label: formatAxisDate(row.period as string, interval, from), value: Number(row[serie.key] ?? 0) })),
+    [rows, interval, serie.key, from],
   );
   const total = data.reduce((sum, row) => sum + row.value, 0);
   const gradientId = `sm-${serie.key}`;
@@ -519,6 +542,8 @@ function SmallMultiple({
                 currency={currency}
                 interval={interval}
                 color={serie.color}
+                from={from}
+                to={to}
               />
             )}
           />
@@ -608,7 +633,7 @@ function CategoryDynamicsSection({
               )}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {series.map((item) => (
-                  <SmallMultiple key={item.key} serie={item} rows={rows} interval={interval} currency={currency} />
+                  <SmallMultiple key={item.key} serie={item} rows={rows} interval={interval} currency={currency} from={filter.from} to={filter.to} />
                 ))}
               </div>
             </div>
@@ -805,7 +830,7 @@ export function DashboardPage() {
                     <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{currency}</p>
                   )}
                   {points.length > 0 ? (
-                    <IncomeExpenseChart points={points} periods={periods} currency={currency} interval={interval} />
+                    <IncomeExpenseChart points={points} periods={periods} currency={currency} interval={interval} from={filter.from} to={filter.to} />
                   ) : (
                     <p className="py-10 text-center text-sm text-muted-foreground">{t("dashboard.chart.empty")}</p>
                   )}
