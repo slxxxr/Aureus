@@ -26,6 +26,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Aureus.Domain\Aureus.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Aureus.Infrastructure\Aureus.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Aureus.Persistence\Aureus.Persistence.csproj" />
     <ProjectReference Include="..\..\src\Aureus.UseCases\Aureus.UseCases.csproj" />
   </ItemGroup>
 

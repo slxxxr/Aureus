@@ -1,6 +1,7 @@
+using Aureus.Postgres.Implementations;
 using Aureus.Domain.Workspaces;
 using Aureus.IntegrationTests.Common;
-using Aureus.Postgres.Implementations.Workspaces;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Aureus.IntegrationTests.Workspaces;

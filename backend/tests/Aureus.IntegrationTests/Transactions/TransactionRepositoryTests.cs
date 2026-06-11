@@ -1,6 +1,7 @@
+using Aureus.Postgres.Implementations;
 using Aureus.Domain.Transactions;
 using Aureus.IntegrationTests.Common;
-using Aureus.Postgres.Implementations.Transactions;
+
 
 namespace Aureus.IntegrationTests.Transactions;
 

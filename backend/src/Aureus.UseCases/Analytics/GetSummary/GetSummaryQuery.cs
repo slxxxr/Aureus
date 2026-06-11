@@ -1,4 +1,4 @@
-using Aureus.UseCases.Analytics.Common;
+using Aureus.Domain.Analytics;
 using MediatR;
 
 namespace Aureus.UseCases.Analytics.GetSummary;

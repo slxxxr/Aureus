@@ -1,5 +1,5 @@
 using Aureus.Domain.Categories;
-using Aureus.UseCases.Common.Persistence;
+using Aureus.Persistence.Interfaces;
 using MediatR;
 
 namespace Aureus.UseCases.Categories.CreateCategory;

@@ -1,6 +1,6 @@
 using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
-using Aureus.UseCases.Common.Persistence;
+using Aureus.Persistence.Interfaces;
 using Moq;
 
 namespace Aureus.UnitTests.Mocks;

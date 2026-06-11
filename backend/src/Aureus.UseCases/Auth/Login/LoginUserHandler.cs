@@ -1,6 +1,6 @@
 using Aureus.Domain.Users;
-using Aureus.UseCases.Common.Persistence;
-using Aureus.UseCases.Common.Security;
+using Aureus.Infrastructure.Security.Interfaces;
+using Aureus.Persistence.Interfaces;
 using MediatR;
 
 namespace Aureus.UseCases.Auth.Login;
