@@ -83,8 +83,8 @@ export function getTimeSeries(
 export function askInsights(
   workspaceId: string,
   question: string,
-  from: string,
-  to: string,
+  from: string | undefined,
+  to: string | undefined,
   language: string,
 ): Promise<{ answer: string }> {
   return apiFetch<{ answer: string }>(`/workspaces/${workspaceId}/analytics/insights`, {
