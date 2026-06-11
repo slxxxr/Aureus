@@ -21,6 +21,7 @@
     <ProjectReference Include="..\Aureus.Persistence\Aureus.Persistence.csproj" />
     <ProjectReference Include="..\Aureus.Postgres\Aureus.Postgres.csproj" />
     <ProjectReference Include="..\Aureus.UseCases\Aureus.UseCases.csproj" />
+    <ProjectReference Include="..\Aureus.LLM\Aureus.LLM.csproj" />
   </ItemGroup>
 
 </Project>

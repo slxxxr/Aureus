@@ -4,6 +4,7 @@
     <ProjectReference Include="..\Aureus.Domain\Aureus.Domain.csproj" />
     <ProjectReference Include="..\Aureus.Infrastructure\Aureus.Infrastructure.csproj" />
     <ProjectReference Include="..\Aureus.Persistence\Aureus.Persistence.csproj" />
+    <ProjectReference Include="..\Aureus.LLM\Aureus.LLM.csproj" />
   </ItemGroup>
 
   <ItemGroup>

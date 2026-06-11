@@ -15,4 +15,10 @@ public interface IAnalyticsRepository
 
     Task<IReadOnlyList<CategoryTimeSeriesPoint>> GetCategoryTimeSeriesAsync(
         AnalyticsFilter filter, TimeInterval interval, CancellationToken cancellationToken);
+
+    Task<int> GetTransactionCountAsync(
+        AnalyticsFilter filter, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<TransactionContext>> GetTransactionsForContextAsync(
+        AnalyticsFilter filter, int limit, CancellationToken cancellationToken);
 }
