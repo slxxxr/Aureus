@@ -87,7 +87,8 @@ public static class TestData
         TransactionType type = TransactionType.Expense,
         long amountMinor = 10_00,
         string currency = "RUB",
-        DateOnly? occurredAt = null)
+        DateOnly? occurredAt = null,
+        string name = "Transaction")
     {
         var transaction = new Transaction
         {
@@ -96,7 +97,7 @@ public static class TestData
             FinancialAccountId = accountId,
             CategoryId = categoryId,
             CreatedByUserId = createdByUserId,
-            Name = "Transaction",
+            Name = name,
             Type = type,
             AmountMinor = amountMinor,
             Currency = currency,

@@ -1,7 +1,7 @@
 namespace Aureus.Api.Contracts.Analytics;
 
 public sealed record BreakdownItemResponse(
-    Guid Key,
+    string Key,
     string? Label,
     string Currency,
     long AmountMinor);
