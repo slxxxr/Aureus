@@ -26,7 +26,7 @@
   "navigation": {
     "primaryLabel": "Primary navigation",
     "mobileMenuLabel": "Open menu",
-    "dashboard": "Dashboard",
+    "dashboard": "Dashboards",
     "accounts": "Accounts",
     "transactions": "Transactions",
     "categories": "Categories",
@@ -139,7 +139,7 @@
       "title": "New category",
       "nameLabel": "Name",
       "namePlaceholder": "Category name",
-"submit": "Create",
+      "submit": "Create",
       "submitting": "Creating…"
     },
     "editModal": {
@@ -232,6 +232,11 @@
     "allAccounts": "All accounts",
     "allCategories": "All categories",
     "deletedCategories": "Deleted categories",
+    "tabs": {
+      "overview": "Overview",
+      "categories": "Categories",
+      "dynamics": "Dynamics"
+    },
     "period": {
       "month": "This month",
       "threeMonths": "3 months",
@@ -254,7 +259,12 @@
       "empty": "No expenses in this period",
       "incomeTitle": "Income by category",
       "incomeEmpty": "No income in this period",
-      "other": "Other"
+      "other": "Other",
+      "detailEmpty": "No transactions",
+      "expenseByAccount": "Expenses by account",
+      "expenseByAccountEmpty": "No expenses in this period",
+      "incomeByAccount": "Income by account",
+      "incomeByAccountEmpty": "No income in this period"
     },
     "dynamics": {
       "title": "Category dynamics",

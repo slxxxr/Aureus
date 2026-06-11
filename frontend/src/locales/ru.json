@@ -26,7 +26,7 @@
   "navigation": {
     "primaryLabel": "Основная навигация",
     "mobileMenuLabel": "Открыть меню",
-    "dashboard": "Дашборд",
+    "dashboard": "Дашборды",
     "accounts": "Счета",
     "transactions": "Транзакции",
     "categories": "Категории",
@@ -139,7 +139,7 @@
       "title": "Новая категория",
       "nameLabel": "Название",
       "namePlaceholder": "Название категории",
-"submit": "Создать",
+      "submit": "Создать",
       "submitting": "Создание…"
     },
     "editModal": {
@@ -232,6 +232,11 @@
     "allAccounts": "Все счета",
     "allCategories": "Все категории",
     "deletedCategories": "Удалённые категории",
+    "tabs": {
+      "overview": "Обзор",
+      "categories": "Категории",
+      "dynamics": "Динамика"
+    },
     "period": {
       "month": "Этот месяц",
       "threeMonths": "3 месяца",
@@ -254,7 +259,12 @@
       "empty": "Нет расходов за период",
       "incomeTitle": "Доходы по категориям",
       "incomeEmpty": "Нет доходов за период",
-      "other": "Прочее"
+      "other": "Прочее",
+      "detailEmpty": "Нет операций",
+      "expenseByAccount": "Расходы по счетам",
+      "expenseByAccountEmpty": "Нет расходов за период",
+      "incomeByAccount": "Доходы по счетам",
+      "incomeByAccountEmpty": "Нет доходов за период"
     },
     "dynamics": {
       "title": "Динамика по категориям",

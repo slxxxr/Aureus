@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -7,11 +8,15 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DAY_MS } from "@/lib/constants";
 import { formatMoney } from "@/lib/formatMoney";
@@ -33,16 +38,19 @@ import { pickInterval, type PeriodPreset } from "@/features/analytics/period";
 import { useDashboardFilters } from "@/features/analytics/DashboardFiltersContext";
 import { getFinancialAccounts } from "@/features/financial-accounts/financialAccountsApi";
 import { getCategories } from "@/features/categories/categoriesApi";
+import type { TransactionType } from "@/features/transactions/transactionsApi";
 import { DatePicker } from "@/components/ui/date-picker";
 import { MultiSelect, type SelectGroup } from "@/components/ui/custom-select";
 
-const INCOME_COLOR = "#16a34a";
-const EXPENSE_COLOR = "hsl(var(--destructive))";
+const INCOME_COLOR = "#22c55e";
+const EXPENSE_COLOR = "#dc2626";
 const AXIS_COLOR = "hsl(var(--muted-foreground))";
 const GRID_COLOR = "hsl(var(--border))";
 
 const INCOME_TONE = "text-green-600 dark:text-green-400";
 const EXPENSE_TONE = "text-destructive";
+
+type DashboardTab = "overview" | "categories" | "dynamics";
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -230,22 +238,18 @@ function SummaryCards({ summary, showCurrency }: { summary: CurrencySummary; sho
 
 // ─── category breakdown ─────────────────────────────────────────────────────────
 
-function CategoryBreakdown({
+function BreakdownBars({
   items,
   currency,
-  barClass,
+  barColor,
+  fallbackLabel,
 }: {
   items: BreakdownItem[];
   currency: string;
-  barClass: string;
+  barColor: string;
+  fallbackLabel: string;
 }) {
-  const { t } = useTranslation();
-
-  const rows = useMemo(
-    () => [...items].sort((a, b) => b.amountMinor - a.amountMinor),
-    [items],
-  );
-
+  const rows = useMemo(() => [...items].sort((a, b) => b.amountMinor - a.amountMinor), [items]);
   const total = rows.reduce((sum, row) => sum + row.amountMinor, 0);
 
   return (
@@ -255,16 +259,13 @@ function CategoryBreakdown({
         return (
           <div key={row.key} className="space-y-1">
             <div className="flex items-baseline justify-between gap-2 text-sm">
-              <span className="truncate">{row.label ?? t("dashboard.deletedCategories")}</span>
+              <span className="truncate">{row.label ?? fallbackLabel}</span>
               <span className="shrink-0 tabular-nums text-muted-foreground">
                 {Math.round(share)}% · {formatMoney(row.amountMinor, currency)}
               </span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-              <div
-                className={cn("h-full rounded-full", barClass)}
-                style={{ width: `${share}%` }}
-              />
+              <div className="h-full rounded-full" style={{ width: `${share}%`, background: barColor, opacity: 0.75 }} />
             </div>
           </div>
         );
@@ -346,12 +347,12 @@ function IncomeExpenseChart({
       <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
         <defs>
           <linearGradient id="bar-income" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#359e6d" stopOpacity={0.95} />
-            <stop offset="100%" stopColor="#359e6d" stopOpacity={0.45} />
+            <stop offset="0%" stopColor={INCOME_COLOR} stopOpacity={0.95} />
+            <stop offset="100%" stopColor={INCOME_COLOR} stopOpacity={0.45} />
           </linearGradient>
           <linearGradient id="bar-expense" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#d33a3a" stopOpacity={0.95} />
-            <stop offset="100%" stopColor="#d33a3a" stopOpacity={0.45} />
+            <stop offset="0%" stopColor={EXPENSE_COLOR} stopOpacity={0.95} />
+            <stop offset="100%" stopColor={EXPENSE_COLOR} stopOpacity={0.45} />
           </linearGradient>
         </defs>
         <CartesianGrid vertical={false} stroke={GRID_COLOR} />
@@ -600,7 +601,7 @@ function CategoryDynamicsSection({
   ];
 
   return (
-    <Section title={t("dashboard.dynamics.title")}>
+    <Section>
       <div className="mb-3 flex gap-0.5">
         {toggles.map((option) => (
           <button
@@ -646,11 +647,24 @@ function CategoryDynamicsSection({
 
 // ─── section wrappers ─────────────────────────────────────────────────────────
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title?: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-border bg-card p-4">
-      <h2 className="mb-3 text-sm font-semibold">{title}</h2>
+      {title && <h2 className="mb-3 text-sm font-semibold">{title}</h2>}
       {children}
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="h-20 rounded-lg border border-border bg-muted/40" />
+        ))}
+      </div>
+      <div className="h-72 rounded-lg border border-border bg-muted/40" />
     </div>
   );
 }
@@ -661,14 +675,16 @@ function BreakdownSection({
   byCurrency,
   currencies,
   multiCurrency,
-  barClass,
+  barColor,
+  fallbackLabel,
 }: {
   title: string;
   emptyLabel: string;
   byCurrency: Map<string, BreakdownItem[]>;
   currencies: string[];
   multiCurrency: boolean;
-  barClass: string;
+  barColor: string;
+  fallbackLabel: string;
 }) {
   return (
     <Section title={title}>
@@ -679,10 +695,239 @@ function BreakdownSection({
             {multiCurrency && (
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{currency}</p>
             )}
-            {items.length > 0 ? (
-              <CategoryBreakdown items={items} currency={currency} barClass={barClass} />
-            ) : (
+            {items.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">{emptyLabel}</p>
+            ) : (
+              <BreakdownBars items={items} currency={currency} barColor={barColor} fallbackLabel={fallbackLabel} />
+            )}
+          </div>
+        );
+      })}
+    </Section>
+  );
+}
+
+// ─── categories tab ──────────────────────────────────────────────────────────────
+
+function CategoryDonutDetail({
+  items,
+  currency,
+}: {
+  items: BreakdownItem[];
+  currency: string;
+}) {
+  const rows = useMemo(() => [...items].sort((a, b) => b.amountMinor - a.amountMinor), [items]);
+  const total = rows.reduce((s, r) => s + r.amountMinor, 0);
+  const data = rows.map((row, i) => ({ ...row, color: colorForIndex(i) }));
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+
+  return (
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start" onClick={() => setActiveKey(null)}>
+      <div className="relative mx-auto shrink-0 sm:mx-0" style={{ width: 148, height: 148 }} onClick={(e) => e.stopPropagation()}>
+        <PieChart width={148} height={148}>
+          <Pie
+            data={data}
+            dataKey="amountMinor"
+            innerRadius={44}
+            outerRadius={66}
+            paddingAngle={3}
+            isAnimationActive={false}
+            strokeWidth={0}
+            startAngle={90}
+            endAngle={-270}
+            onClick={(entry) => {
+              const key = (entry as { key: string }).key;
+              setActiveKey((prev) => (prev === key ? null : key));
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            {data.map((entry) => (
+              <Cell
+                key={entry.key}
+                fill={entry.color}
+                opacity={activeKey === null || activeKey === entry.key ? 0.9 : 0.25}
+              />
+            ))}
+          </Pie>
+        </PieChart>
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <span className="text-xs font-semibold tabular-nums">{formatMoney(total, currency)}</span>
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1 space-y-2">
+        {data.map((row) => {
+          const share = total > 0 ? (row.amountMinor / total) * 100 : 0;
+          const dimmed = activeKey !== null && activeKey !== row.key;
+          return (
+            <div
+              key={row.key}
+              className={cn("flex items-center gap-2 text-sm transition-opacity", dimmed && "opacity-30")}
+            >
+              <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: row.color }} aria-hidden="true" />
+              <span className="min-w-0 flex-1 truncate text-muted-foreground">{row.label ?? "—"}</span>
+              <span className="shrink-0 tabular-nums text-muted-foreground">{Math.round(share)}%</span>
+              <span className="w-24 shrink-0 text-right tabular-nums font-medium">{formatMoney(row.amountMinor, currency)}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function CategoryAccordionRow({
+  item,
+  total,
+  currency,
+  barColor,
+  type,
+  workspaceId,
+  filter,
+  isOpen,
+  onToggle,
+}: {
+  item: BreakdownItem;
+  total: number;
+  currency: string;
+  barColor: string;
+  type: TransactionType;
+  workspaceId: string;
+  filter: AnalyticsFilter;
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  const { t } = useTranslation();
+  const share = total > 0 ? (item.amountMinor / total) * 100 : 0;
+
+  const { data: names = [], isLoading } = useQuery({
+    queryKey: ["analytics", "breakdown", "Name", workspaceId, type, item.key, currency, filter],
+    queryFn: () => getBreakdown(workspaceId, "Name", { ...filter, categoryIds: [item.key], type }),
+    enabled: isOpen,
+  });
+
+  const nameRows = useMemo(
+    () => names.filter((n) => n.currency === currency).sort((a, b) => b.amountMinor - a.amountMinor),
+    [names, currency],
+  );
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full flex-col gap-1.5 py-2.5 text-left"
+      >
+        <div className="flex items-baseline justify-between gap-2 text-sm">
+          <span className="truncate font-medium">{item.label ?? t("dashboard.deletedCategories")}</span>
+          <span className="flex shrink-0 items-center gap-2 tabular-nums text-muted-foreground">
+            {Math.round(share)}%
+            <span className="font-medium text-foreground">{formatMoney(item.amountMinor, currency)}</span>
+            <ChevronRight
+              className={cn("h-3.5 w-3.5 shrink-0 text-muted-foreground/50 transition-transform duration-200", isOpen && "rotate-90")}
+            />
+          </span>
+        </div>
+        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full" style={{ width: `${share}%`, background: barColor, opacity: 0.75 }} />
+        </div>
+      </button>
+
+      {isOpen && (
+        <div className="pb-4 pt-1">
+          {isLoading ? (
+            <div className="h-24 animate-pulse rounded-lg bg-muted/40" />
+          ) : nameRows.length === 0 ? (
+            <p className="py-3 text-center text-xs text-muted-foreground">{t("dashboard.breakdown.detailEmpty")}</p>
+          ) : (
+            <CategoryDonutDetail items={nameRows} currency={currency} />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CategoriesTab({
+  workspaceId,
+  filter,
+  expenseByCurrency,
+  incomeByCurrency,
+  currencies,
+  multiCurrency,
+}: {
+  workspaceId: string;
+  filter: AnalyticsFilter;
+  expenseByCurrency: Map<string, BreakdownItem[]>;
+  incomeByCurrency: Map<string, BreakdownItem[]>;
+  currencies: string[];
+  multiCurrency: boolean;
+}) {
+  const { t } = useTranslation();
+  const [type, setType] = useState<TransactionType>("Expense");
+  const [openKey, setOpenKey] = useState<string | null>(null);
+
+  const currentByCurrency = type === "Expense" ? expenseByCurrency : incomeByCurrency;
+  const barColor = type === "Expense" ? EXPENSE_COLOR : INCOME_COLOR;
+
+  const toggles: { value: TransactionType; label: string }[] = [
+    { value: "Expense", label: t("dashboard.breakdown.title") },
+    { value: "Income", label: t("dashboard.breakdown.incomeTitle") },
+  ];
+
+  return (
+    <Section>
+      <div className="mb-4 flex gap-0.5">
+        {toggles.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => { setType(opt.value); setOpenKey(null); }}
+            className={cn(
+              "rounded px-2.5 py-1.5 text-sm transition-colors",
+              type === opt.value
+                ? "bg-accent font-medium text-foreground"
+                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      {currencies.map((currency) => {
+        const items = currentByCurrency.get(currency) ?? [];
+        const rows = [...items].sort((a, b) => b.amountMinor - a.amountMinor);
+        const total = rows.reduce((s, r) => s + r.amountMinor, 0);
+
+        return (
+          <div key={currency}>
+            {multiCurrency && (
+              <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{currency}</p>
+            )}
+            {rows.length === 0 ? (
+              <p className="py-10 text-center text-sm text-muted-foreground">
+                {type === "Expense" ? t("dashboard.breakdown.empty") : t("dashboard.breakdown.incomeEmpty")}
+              </p>
+            ) : (
+              <div>
+              {rows.map((item) => (
+                <CategoryAccordionRow
+                  key={item.key}
+                  item={item}
+                  total={total}
+                  currency={currency}
+                  barColor={barColor}
+                  type={type}
+                  workspaceId={workspaceId}
+                  filter={filter}
+                  isOpen={openKey === `${currency}:${item.key}`}
+                  onToggle={() =>
+                    setOpenKey((prev) => (prev === `${currency}:${item.key}` ? null : `${currency}:${item.key}`))
+                  }
+                />
+              ))}
+              </div>
             )}
           </div>
         );
@@ -700,6 +945,13 @@ export function DashboardPage() {
 
   const interval = pickInterval(range);
   const enabled = activeWorkspace !== null;
+
+  const [searchParams] = useSearchParams();
+  const tab = (searchParams.get("tab") ?? "overview") as DashboardTab;
+
+  const overviewEnabled = enabled && tab === "overview";
+  const categoriesEnabled = enabled && tab === "categories";
+  const dynamicsEnabled = enabled && tab === "dynamics";
 
   const filter = useMemo<AnalyticsFilter>(
     () => ({
@@ -742,25 +994,40 @@ export function DashboardPage() {
   const { data: expenseBreakdown = [], isLoading: expenseLoading } = useQuery({
     queryKey: ["analytics", "breakdown", "Expense", activeWorkspace?.id, filter],
     queryFn: () => getBreakdown(activeWorkspace!.id, "Category", { ...filter, type: "Expense" }),
-    enabled,
+    enabled: categoriesEnabled,
   });
 
   const { data: incomeBreakdown = [], isLoading: incomeLoading } = useQuery({
     queryKey: ["analytics", "breakdown", "Income", activeWorkspace?.id, filter],
     queryFn: () => getBreakdown(activeWorkspace!.id, "Category", { ...filter, type: "Income" }),
-    enabled,
+    enabled: categoriesEnabled,
+  });
+
+  const { data: expenseAccountBreakdown = [], isLoading: expenseAccountLoading } = useQuery({
+    queryKey: ["analytics", "breakdown", "Account", "Expense", activeWorkspace?.id, filter],
+    queryFn: () => getBreakdown(activeWorkspace!.id, "Account", { ...filter, type: "Expense" }),
+    enabled: overviewEnabled,
+  });
+
+  const { data: incomeAccountBreakdown = [], isLoading: incomeAccountLoading } = useQuery({
+    queryKey: ["analytics", "breakdown", "Account", "Income", activeWorkspace?.id, filter],
+    queryFn: () => getBreakdown(activeWorkspace!.id, "Account", { ...filter, type: "Income" }),
+    enabled: overviewEnabled,
   });
 
   const { data: series = [], isLoading: seriesLoading } = useQuery({
     queryKey: ["analytics", "timeseries", activeWorkspace?.id, filter, interval],
     queryFn: () => getTimeSeries(activeWorkspace!.id, interval, filter),
-    enabled,
+    enabled: overviewEnabled,
   });
 
-  const isLoading = summaryLoading || expenseLoading || incomeLoading || seriesLoading;
+  const overviewLoading = seriesLoading || expenseAccountLoading || incomeAccountLoading;
+  const categoriesLoading = expenseLoading || incomeLoading;
 
   const expenseByCurrency = useMemo(() => groupByCurrency(expenseBreakdown), [expenseBreakdown]);
   const incomeByCurrency = useMemo(() => groupByCurrency(incomeBreakdown), [incomeBreakdown]);
+  const expenseAccountByCurrency = useMemo(() => groupByCurrency(expenseAccountBreakdown), [expenseAccountBreakdown]);
+  const incomeAccountByCurrency = useMemo(() => groupByCurrency(incomeAccountBreakdown), [incomeAccountBreakdown]);
   const seriesByCurrency = useMemo(() => groupByCurrency(series), [series]);
   const periods = useMemo(
     () => enumerateBuckets(range.from, range.to, interval, series.map((point) => point.periodStart)),
@@ -797,72 +1064,88 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {isLoading && (
-        <div className="animate-pulse space-y-4">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="h-20 rounded-lg border border-border bg-muted/40" />
-            ))}
-          </div>
-          <div className="h-72 rounded-lg border border-border bg-muted/40" />
-        </div>
-      )}
+      {summaryLoading && <DashboardSkeleton />}
 
-      {!isLoading && summary.length === 0 && (
+      {!summaryLoading && summary.length === 0 && (
         <div className="pt-8 text-center">
           <p className="text-sm font-medium">{t("dashboard.emptyTitle")}</p>
           <p className="mt-1 text-sm text-muted-foreground">{t("dashboard.emptyDescription")}</p>
         </div>
       )}
 
-      {!isLoading && summary.length > 0 && (
-        <div className="space-y-6 pr-8">
-          {summary.map((row) => (
-            <SummaryCards key={row.currency} summary={row} showCurrency={multiCurrency} />
-          ))}
+      {!summaryLoading && summary.length > 0 && (
+        <div className="pr-8">
+          {tab === "overview" &&
+            (overviewLoading ? (
+              <DashboardSkeleton />
+            ) : (
+              <div className="space-y-6">
+                {summary.map((row) => (
+                  <SummaryCards key={row.currency} summary={row} showCurrency={multiCurrency} />
+                ))}
 
-          <Section title={t("dashboard.chart.title")}>
-            {currencies.map((currency) => {
-              const points = seriesByCurrency.get(currency) ?? [];
-              return (
-                <div key={currency} className="space-y-1">
-                  {multiCurrency && (
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{currency}</p>
-                  )}
-                  {points.length > 0 ? (
-                    <IncomeExpenseChart points={points} periods={periods} currency={currency} interval={interval} from={filter.from} to={filter.to} />
-                  ) : (
-                    <p className="py-10 text-center text-sm text-muted-foreground">{t("dashboard.chart.empty")}</p>
-                  )}
-                </div>
-              );
-            })}
-          </Section>
+                <Section title={t("dashboard.chart.title")}>
+                  {currencies.map((currency) => {
+                    const points = seriesByCurrency.get(currency) ?? [];
+                    return (
+                      <div key={currency} className="space-y-1">
+                        {multiCurrency && (
+                          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{currency}</p>
+                        )}
+                        {points.length > 0 ? (
+                          <IncomeExpenseChart points={points} periods={periods} currency={currency} interval={interval} from={filter.from} to={filter.to} />
+                        ) : (
+                          <p className="py-10 text-center text-sm text-muted-foreground">{t("dashboard.chart.empty")}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </Section>
 
-          <CategoryDynamicsSection
-            workspaceId={activeWorkspace!.id}
-            filter={filter}
-            interval={interval}
-            enabled={enabled}
-          />
+                <BreakdownSection
+                  title={t("dashboard.breakdown.incomeByAccount")}
+                  emptyLabel={t("dashboard.breakdown.incomeByAccountEmpty")}
+                  byCurrency={incomeAccountByCurrency}
+                  currencies={currencies}
+                  multiCurrency={multiCurrency}
+                  barColor={INCOME_COLOR}
+                  fallbackLabel={t("transactions.unknownAccount")}
+                />
 
-          <BreakdownSection
-            title={t("dashboard.breakdown.title")}
-            emptyLabel={t("dashboard.breakdown.empty")}
-            byCurrency={expenseByCurrency}
-            currencies={currencies}
-            multiCurrency={multiCurrency}
-            barClass="bg-red-600/75"
-          />
+                <BreakdownSection
+                  title={t("dashboard.breakdown.expenseByAccount")}
+                  emptyLabel={t("dashboard.breakdown.expenseByAccountEmpty")}
+                  byCurrency={expenseAccountByCurrency}
+                  currencies={currencies}
+                  multiCurrency={multiCurrency}
+                  barColor={EXPENSE_COLOR}
+                  fallbackLabel={t("transactions.unknownAccount")}
+                />
+              </div>
+            ))}
 
-          <BreakdownSection
-            title={t("dashboard.breakdown.incomeTitle")}
-            emptyLabel={t("dashboard.breakdown.incomeEmpty")}
-            byCurrency={incomeByCurrency}
-            currencies={currencies}
-            multiCurrency={multiCurrency}
-            barClass="bg-green-500/70"
-          />
+          {tab === "categories" &&
+            (categoriesLoading ? (
+              <DashboardSkeleton />
+            ) : (
+              <CategoriesTab
+                workspaceId={activeWorkspace!.id}
+                filter={filter}
+                expenseByCurrency={expenseByCurrency}
+                incomeByCurrency={incomeByCurrency}
+                currencies={currencies}
+                multiCurrency={multiCurrency}
+              />
+            ))}
+
+          {tab === "dynamics" && (
+            <CategoryDynamicsSection
+              workspaceId={activeWorkspace!.id}
+              filter={filter}
+              interval={interval}
+              enabled={dynamicsEnabled}
+            />
+          )}
         </div>
       )}
     </div>
