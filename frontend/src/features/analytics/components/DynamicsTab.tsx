@@ -190,7 +190,7 @@ function SmallMultiple({
             minTickGap={16}
           />
           <YAxis
-            width={44}
+            width={60}
             tickLine={false}
             axisLine={false}
             tick={{ fill: AXIS_COLOR, fontSize: 10 }}

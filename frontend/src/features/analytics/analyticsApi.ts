@@ -80,6 +80,19 @@ export function getTimeSeries(
   );
 }
 
+export function askInsights(
+  workspaceId: string,
+  question: string,
+  from: string,
+  to: string,
+  language: string,
+): Promise<{ answer: string }> {
+  return apiFetch<{ answer: string }>(`/workspaces/${workspaceId}/analytics/insights`, {
+    method: "POST",
+    body: { question, from, to, language },
+  });
+}
+
 export function getCategoryTimeSeries(
   workspaceId: string,
   interval: TimeInterval,

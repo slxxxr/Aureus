@@ -370,6 +370,7 @@ export function OverviewTab({
         barColor={EXPENSE_COLOR}
         fallbackLabel={t("transactions.unknownAccount")}
       />
+
     </div>
   );
 }

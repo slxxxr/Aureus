@@ -113,5 +113,5 @@ export function enumerateBuckets(
 export function formatAxisNumber(valueMinor: number): string {
   return Math.round(valueMinor / 100)
     .toLocaleString("en-US")
-    .replace(/,/g, " ");
+    .replace(/,/g, " ");
 }

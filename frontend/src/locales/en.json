@@ -271,6 +271,12 @@
       "expense": "Expenses",
       "income": "Income",
       "empty": "No data for this period"
+    },
+    "insights": {
+      "title": "Ask AI",
+      "placeholder": "E.g. where do I spend the most? Where can I cut back?",
+      "loading": "Analyzing...",
+      "error": "Could not get a response. Please try again."
     }
   },
   "auth": {
