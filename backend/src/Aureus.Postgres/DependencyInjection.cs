@@ -1,8 +1,6 @@
-using Aureus.Postgres.Implementations;
-
-
 using Aureus.Persistence;
 using Aureus.Persistence.Interfaces;
+using Aureus.Postgres.Implementations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,7 +15,7 @@ public static class DependencyInjection
 
         services.AddDbContext<AureusDbContext>(options =>
         {
-            options.UseNpgsql(connectionString);
+            options.UseNpgsql(connectionString, x => x.MigrationsAssembly("Aureus.Postgres"));
         });
 
         services.AddScoped<IUserRepository, UserRepository>();

@@ -28,7 +28,7 @@ public sealed class PostgresFixture : IAsyncLifetime
     public AureusDbContext CreateDbContext()
     {
         var options = new DbContextOptionsBuilder<AureusDbContext>()
-            .UseNpgsql(_container.GetConnectionString())
+            .UseNpgsql(_container.GetConnectionString(), x => x.MigrationsAssembly("Aureus.Postgres"))
             .Options;
 
         return new AureusDbContext(options);
