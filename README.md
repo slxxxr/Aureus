@@ -32,7 +32,10 @@ Personal finance service. Track income and expenses across accounts and categori
 - **Financial accounts** — multi-currency accounts with running balance
 - **Categories** — income and expense categories
 - **Transactions** — list grouped by date with daily net; filter by account and type
-- **Dashboard analytics** — three-tab view (Overview / Categories / Dynamics) navigated from the sidebar. Overview: income/expense/net summary cards, income-vs-expense bar chart, breakdowns by account. Categories: accordion list with progress bars; expanding a category loads a name-level breakdown rendered as an interactive donut chart. Dynamics: per-category small-multiples area charts. All tabs filter by period, accounts, and categories; per-currency view throughout
+- **Dashboard analytics** — three-tab view navigated from the sidebar; filter by period, accounts, and categories; per-currency view throughout
+  - **Overview** — income/expense/net summary cards, income-vs-expense bar chart, breakdowns by account
+  - **Categories** — accordion list with progress bars; expanding a category loads a name-level breakdown rendered as an interactive donut chart
+  - **Dynamics** — per-category small-multiples area charts showing spend over time
 
 ### What's next
 
@@ -58,7 +61,10 @@ Personal finance service. Track income and expenses across accounts and categori
 - **Счета** — мультивалютные счета с актуальным балансом
 - **Категории** — категории доходов и расходов
 - **Транзакции** — список, сгруппированный по датам с дневным нетто; фильтры по счёту и типу
-- **Аналитический дашборд** — три вкладки (Обзор / Категории / Динамика) с навигацией через сайдбар. Обзор: карточки сводки доходов/расходов/нетто, бар-чарт доходов и расходов, разбивки по счетам. Категории: аккордеон с прогресс-барами; при открытии категории загружается разбивка по названиям транзакций в виде интерактивной donut-диаграммы. Динамика: мини-графики по каждой категории (small multiples). Все вкладки фильтруются по периоду, счетам и категориям; мультивалютный вид
+- **Аналитический дашборд** — три вкладки с навигацией через сайдбар; фильтры по периоду, счетам и категориям; мультивалютный вид
+  - **Обзор** — карточки сводки доходов/расходов/нетто, бар-чарт доходов и расходов, разбивки по счетам
+  - **Категории** — аккордеон с прогресс-барами; при открытии категории загружается разбивка по названиям транзакций в виде интерактивной donut-диаграммы
+  - **Динамика** — мини-графики по каждой категории (small multiples), показывают изменение расходов во времени
 
 ### Что дальше
 
