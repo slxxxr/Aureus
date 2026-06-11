@@ -32,7 +32,7 @@ Personal finance service. Track income and expenses across accounts and categori
 - **Financial accounts** — multi-currency accounts with running balance
 - **Categories** — income and expense categories
 - **Transactions** — list grouped by date with daily net; filter by account and type
-- **Dashboard analytics** — income/expense/net summary, income-vs-expense chart over time, category breakdowns, and per-category dynamics (small-multiples charts showing each category's spend over time); filter by period, accounts, and categories; per-currency view
+- **Dashboard analytics** — three-tab view (Overview / Categories / Dynamics) navigated from the sidebar. Overview: income/expense/net summary cards, income-vs-expense bar chart, breakdowns by account. Categories: accordion list with progress bars; expanding a category loads a name-level breakdown rendered as an interactive donut chart. Dynamics: per-category small-multiples area charts. All tabs filter by period, accounts, and categories; per-currency view throughout
 
 ### What's next
 
@@ -58,7 +58,7 @@ Personal finance service. Track income and expenses across accounts and categori
 - **Счета** — мультивалютные счета с актуальным балансом
 - **Категории** — категории доходов и расходов
 - **Транзакции** — список, сгруппированный по датам с дневным нетто; фильтры по счёту и типу
-- **Аналитический дашборд** — сводка доходов/расходов/нетто, график доходов и расходов по времени, разбивка по категориям и динамика по категориям (отдельный мини-график на каждую категорию — как менялись её расходы во времени); фильтры по периоду, счетам и категориям; отдельно по каждой валюте
+- **Аналитический дашборд** — три вкладки (Обзор / Категории / Динамика) с навигацией через сайдбар. Обзор: карточки сводки доходов/расходов/нетто, бар-чарт доходов и расходов, разбивки по счетам. Категории: аккордеон с прогресс-барами; при открытии категории загружается разбивка по названиям транзакций в виде интерактивной donut-диаграммы. Динамика: мини-графики по каждой категории (small multiples). Все вкладки фильтруются по периоду, счетам и категориям; мультивалютный вид
 
 ### Что дальше
 
