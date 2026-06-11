@@ -365,6 +365,137 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         Assert.Equal(amount, point.AmountMinor);
     }
 
+    [Fact]
+    public async Task GetTransactionCountAsync_WithTransactions_ReturnsCorrectCount()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId);
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var count = await new AnalyticsRepository(db)
+            .GetTransactionCountAsync(Filter(workspaceId), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(3, count);
+    }
+
+    [Fact]
+    public async Task GetTransactionCountAsync_DateFilter_ExcludesTransactionsOutsidePeriod()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, occurredAt: _march.AddDays(5));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, occurredAt: _march.AddMonths(1));
+
+        // Act — half-open [from, to): April transaction excluded
+        await using var db = fixture.CreateDbContext();
+        var count = await new AnalyticsRepository(db)
+            .GetTransactionCountAsync(Filter(workspaceId, from: _march, to: _march.AddMonths(1)), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(1, count);
+    }
+
+    [Fact]
+    public async Task GetTransactionsForContextAsync_ReturnsTransactionsWithCategoryLabel()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        const long amount = 500_00;
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId,
+            TransactionType.Expense, amount, name: "Такси");
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var result = await new AnalyticsRepository(db)
+            .GetTransactionsForContextAsync(Filter(workspaceId), limit: 100, CancellationToken.None);
+
+        // Assert
+        var tx = Assert.Single(result);
+        Assert.Equal("Такси", tx.Name);
+        Assert.Equal(amount, tx.AmountMinor);
+        Assert.Equal(TransactionType.Expense, tx.Type);
+        Assert.NotNull(tx.CategoryLabel);
+        Assert.Equal("RUB", tx.Currency);
+    }
+
+    [Fact]
+    public async Task GetTransactionsForContextAsync_SoftDeletedCategory_ReturnsNullLabel()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryId, userId);
+
+        await using (var deleteDb = fixture.CreateDbContext())
+        {
+            var category = await TestData.FindCategoryAsync(deleteDb, fixture.Mapper, categoryId, workspaceId);
+            await new CategoryRepository(deleteDb, fixture.Mapper).DeleteAsync(category!, CancellationToken.None);
+        }
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var result = await new AnalyticsRepository(db)
+            .GetTransactionsForContextAsync(Filter(workspaceId), limit: 100, CancellationToken.None);
+
+        // Assert
+        Assert.Null(Assert.Single(result).CategoryLabel);
+    }
+
+    [Fact]
+    public async Task GetTransactionsForContextAsync_RespectsLimit()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        for (var i = 0; i < 5; i++)
+        {
+            await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId);
+        }
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var result = await new AnalyticsRepository(db)
+            .GetTransactionsForContextAsync(Filter(workspaceId), limit: 3, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(3, result.Count);
+    }
+
+    [Fact]
+    public async Task GetTransactionsForContextAsync_OrderedChronologically()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var later = _march.AddDays(10);
+        var earlier = _march.AddDays(1);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, occurredAt: later);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, occurredAt: earlier);
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var result = await new AnalyticsRepository(db)
+            .GetTransactionsForContextAsync(Filter(workspaceId), limit: 100, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(earlier, result[0].OccurredAt);
+        Assert.Equal(later, result[1].OccurredAt);
+    }
+
     private static AnalyticsFilter Filter(
         Guid workspaceId,
         DateOnly? from = null,

@@ -10,6 +10,7 @@ import { useDashboardFilters } from "@/features/analytics/DashboardFiltersContex
 import { getFinancialAccounts } from "@/features/financial-accounts/financialAccountsApi";
 import { getCategories } from "@/features/categories/categoriesApi";
 import { DashboardSkeleton } from "@/features/analytics/components/shared";
+import { InsightsCard } from "@/features/analytics/components/InsightsCard";
 import { OverviewTab } from "@/features/analytics/components/OverviewTab";
 import { CategoriesTab } from "@/features/analytics/components/CategoriesTab";
 import { DynamicsTab } from "@/features/analytics/components/DynamicsTab";
@@ -142,6 +143,12 @@ export function DashboardPage() {
           )}
         </div>
       </div>
+
+      {enabled && (
+        <div className="pb-4 pr-8">
+          <InsightsCard workspaceId={activeWorkspace!.id} from={filter.from} to={filter.to} />
+        </div>
+      )}
 
       {summaryLoading && <DashboardSkeleton />}
 

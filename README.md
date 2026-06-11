@@ -36,6 +36,7 @@ Personal finance service. Track income and expenses across accounts and categori
   - **Overview** — income/expense/net summary cards, income-vs-expense bar chart, breakdowns by account
   - **Categories** — accordion list with progress bars; expanding a category loads a name-level breakdown rendered as an interactive donut chart
   - **Dynamics** — per-category small-multiples area charts showing spend over time
+- **Ask AI** — collapsible panel on the dashboard; ask any question about the period in natural language, powered by gemini-3.1-flash-lite; context strategy adapts to transaction volume (full list / category×period matrix / aggregated timeseries)
 
 ### What's next
 
@@ -44,7 +45,6 @@ Personal finance service. Track income and expenses across accounts and categori
 - **CSV import** — bulk transaction import with duplicate detection and pre-import preview
 - **Auto-categorization** — ML model that determines category from transaction name, trained per workspace
 - **Expense forecasting** — 30-day forecast based on time series
-- **LLM insights** — natural language summaries of spending patterns
 
 ---
 
@@ -65,6 +65,7 @@ Personal finance service. Track income and expenses across accounts and categori
   - **Обзор** — карточки сводки доходов/расходов/нетто, бар-чарт доходов и расходов, разбивки по счетам
   - **Категории** — аккордеон с прогресс-барами; при открытии категории загружается разбивка по названиям транзакций в виде интерактивной donut-диаграммы
   - **Динамика** — мини-графики по каждой категории (small multiples), показывают изменение расходов во времени
+- **Спросить ИИ** — коллапсируемая панель на дашборде; задать вопрос о финансах на естественном языке, работает на gemini-3.1-flash-lite; стратегия контекста адаптируется к объёму транзакций (полный список / матрица категория × период / агрегированный таймсериес)
 
 ### Что дальше
 
@@ -73,13 +74,12 @@ Personal finance service. Track income and expenses across accounts and categori
 - **CSV-импорт** — массовая загрузка транзакций с определением дубликатов и предпросмотром
 - **Авто-категоризация** — ML-модель, определяющая категорию по названию, обучается на данных воркспейса
 - **Прогнозирование** — прогноз расходов на 30 дней вперёд на основе временных рядов
-- **LLM-инсайты** — языковая модель генерирует текстовые выводы по аналитике
 
 ---
 
 ## Tech Stack
 
-**Backend** — .NET 8 (C#), Entity Framework Core, PostgreSQL. Auth via JWT.
+**Backend** — .NET 8 (C#), Entity Framework Core, PostgreSQL. Auth via JWT. LLM via Gemini API.
 
 **Frontend** — React + TypeScript (Vite), TanStack Query, Tailwind CSS, react-i18next, Recharts (charts). UI in Russian and English.
 

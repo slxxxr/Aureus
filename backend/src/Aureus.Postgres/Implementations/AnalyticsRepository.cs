@@ -195,6 +195,43 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
             .ToList();
     }
 
+    public Task<int> GetTransactionCountAsync(AnalyticsFilter filter, CancellationToken cancellationToken) =>
+        ApplyFilter(dbContext.Transactions, filter).CountAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<TransactionContext>> GetTransactionsForContextAsync(
+        AnalyticsFilter filter, int limit, CancellationToken cancellationToken)
+    {
+        var income = nameof(TransactionType.Income);
+
+        var rows = await (
+            from transaction in ApplyFilter(dbContext.Transactions, filter)
+            join category in dbContext.Categories
+                on transaction.CategoryId equals category.Id into categoryJoin
+            from category in categoryJoin.DefaultIfEmpty()
+            orderby transaction.OccurredAt, transaction.CreatedAt
+            select new
+            {
+                transaction.OccurredAt,
+                transaction.Name,
+                CategoryLabel = category != null ? category.Name : null,
+                transaction.Type,
+                transaction.AmountMinor,
+                transaction.Currency,
+            })
+            .Take(limit)
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(r => new TransactionContext(
+                r.OccurredAt,
+                r.Name,
+                r.CategoryLabel,
+                r.Type == income ? TransactionType.Income : TransactionType.Expense,
+                r.AmountMinor,
+                r.Currency))
+            .ToList();
+    }
+
     private static DateOnly BucketStart(DateOnly day, TimeInterval interval) => interval switch
     {
         TimeInterval.Week => day.AddDays(-(((int)day.DayOfWeek + 6) % 7)),
