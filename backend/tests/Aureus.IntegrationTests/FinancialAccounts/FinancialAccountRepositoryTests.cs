@@ -1,6 +1,7 @@
+using Aureus.Postgres.Implementations;
 using Aureus.Domain.FinancialAccounts;
 using Aureus.IntegrationTests.Common;
-using Aureus.Postgres.Implementations.FinancialAccounts;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace Aureus.IntegrationTests.FinancialAccounts;

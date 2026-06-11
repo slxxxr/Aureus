@@ -1,6 +1,7 @@
 using System.Text;
 using Aureus.Infrastructure.Security;
-using Aureus.UseCases.Common.Security;
+using Aureus.Infrastructure.Security.Implementations;
+using Aureus.Infrastructure.Security.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

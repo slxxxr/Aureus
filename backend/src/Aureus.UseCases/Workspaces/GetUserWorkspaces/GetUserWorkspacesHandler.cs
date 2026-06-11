@@ -1,4 +1,5 @@
-using Aureus.UseCases.Common.Persistence;
+using Aureus.Domain.Workspaces;
+using Aureus.Persistence.Interfaces;
 using MediatR;
 
 namespace Aureus.UseCases.Workspaces.GetUserWorkspaces;

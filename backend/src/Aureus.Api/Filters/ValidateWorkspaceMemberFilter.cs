@@ -1,5 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
-using Aureus.UseCases.Common.Persistence;
+using Aureus.Persistence.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 

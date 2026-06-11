@@ -1,6 +1,6 @@
+using Aureus.Domain.Workspaces;
 using System.IdentityModel.Tokens.Jwt;
 using Aureus.Api.Filters;
-using Aureus.UseCases.Common.Persistence;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Aureus.Api.Controllers;

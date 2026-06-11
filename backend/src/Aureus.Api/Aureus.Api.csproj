@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Aureus.Infrastructure\Aureus.Infrastructure.csproj" />
+    <ProjectReference Include="..\Aureus.Persistence\Aureus.Persistence.csproj" />
     <ProjectReference Include="..\Aureus.Postgres\Aureus.Postgres.csproj" />
     <ProjectReference Include="..\Aureus.UseCases\Aureus.UseCases.csproj" />
   </ItemGroup>

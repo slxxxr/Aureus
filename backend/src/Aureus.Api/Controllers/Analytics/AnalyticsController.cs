@@ -1,6 +1,6 @@
 using Aureus.Api.Contracts.Analytics;
 using Aureus.Api.Filters;
-using Aureus.UseCases.Analytics.Common;
+using Aureus.Domain.Analytics;
 using Aureus.UseCases.Analytics.GetBreakdown;
 using Aureus.UseCases.Analytics.GetCategoryTimeSeries;
 using Aureus.UseCases.Analytics.GetSummary;

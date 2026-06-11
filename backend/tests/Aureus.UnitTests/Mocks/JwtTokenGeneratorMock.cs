@@ -1,4 +1,4 @@
-using Aureus.UseCases.Common.Security;
+using Aureus.Infrastructure.Security.Interfaces;
 using Moq;
 
 namespace Aureus.UnitTests.Mocks;

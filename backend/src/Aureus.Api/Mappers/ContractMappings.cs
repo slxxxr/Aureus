@@ -1,3 +1,4 @@
+using Aureus.Domain.Workspaces;
 using AutoMapper;
 using Aureus.Api.Contracts.Analytics;
 using Aureus.Api.Contracts.Categories;
@@ -7,8 +8,8 @@ using Aureus.Api.Contracts.Workspaces;
 using Aureus.Domain.Categories;
 using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transactions;
-using Aureus.UseCases.Analytics.Common;
-using Aureus.UseCases.Workspaces.GetUserWorkspaces;
+using Aureus.Domain.Analytics;
+
 
 namespace Aureus.Api.Mappers;
 

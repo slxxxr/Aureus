@@ -1,10 +1,8 @@
-using Aureus.Postgres.Implementations.Analytics;
-using Aureus.Postgres.Implementations.Auth;
-using Aureus.Postgres.Implementations.Categories;
-using Aureus.Postgres.Implementations.FinancialAccounts;
-using Aureus.Postgres.Implementations.Transactions;
-using Aureus.Postgres.Implementations.Workspaces;
-using Aureus.UseCases.Common.Persistence;
+using Aureus.Postgres.Implementations;
+
+
+using Aureus.Persistence;
+using Aureus.Persistence.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

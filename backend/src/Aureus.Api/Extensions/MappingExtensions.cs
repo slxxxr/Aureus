@@ -1,5 +1,5 @@
 using Aureus.Api.Mappers;
-using Aureus.Postgres.Mappers;
+using Aureus.Persistence.Mappers;
 
 namespace Aureus.Api.Extensions;
 

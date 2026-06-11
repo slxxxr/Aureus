@@ -1,5 +1,5 @@
-using Aureus.Postgres;
-using Aureus.Postgres.Mappers;
+using Aureus.Persistence;
+using Aureus.Persistence.Mappers;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

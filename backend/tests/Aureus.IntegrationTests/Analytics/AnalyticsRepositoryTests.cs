@@ -1,8 +1,9 @@
+using Aureus.Postgres.Implementations;
 using Aureus.Domain.Transactions;
 using Aureus.IntegrationTests.Common;
-using Aureus.Postgres.Implementations.Analytics;
-using Aureus.Postgres.Implementations.Categories;
-using Aureus.UseCases.Analytics.Common;
+
+
+using Aureus.Domain.Analytics;
 
 namespace Aureus.IntegrationTests.Analytics;
 

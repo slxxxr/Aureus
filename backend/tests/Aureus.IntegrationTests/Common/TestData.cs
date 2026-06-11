@@ -1,11 +1,12 @@
+using Aureus.Postgres.Implementations;
 using Aureus.Domain.Categories;
 using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transactions;
-using Aureus.Postgres;
-using Aureus.Postgres.Entities;
-using Aureus.Postgres.Implementations.Categories;
-using Aureus.Postgres.Implementations.FinancialAccounts;
-using Aureus.Postgres.Implementations.Transactions;
+using Aureus.Persistence;
+using Aureus.Persistence.Entities;
+
+
+
 using AutoMapper;
 
 namespace Aureus.IntegrationTests.Common;

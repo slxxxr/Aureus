@@ -1,7 +1,7 @@
 using Aureus.Domain.Categories;
 using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transactions;
-using Aureus.UseCases.Common.Persistence;
+using Aureus.Persistence.Interfaces;
 using MediatR;
 
 namespace Aureus.UseCases.Transactions.CreateTransaction;

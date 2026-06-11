@@ -1,5 +1,5 @@
-using Aureus.UseCases.Analytics.Common;
-using Aureus.UseCases.Common.Persistence;
+using Aureus.Domain.Analytics;
+using Aureus.Persistence.Interfaces;
 using MediatR;
 
 namespace Aureus.UseCases.Analytics.GetBreakdown;
