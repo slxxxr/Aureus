@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   BarChart3,
+  ChevronDown,
   CreditCard,
   FolderTree,
   LogOut,
@@ -26,12 +27,22 @@ type NavigationItem = {
 };
 
 const navigation: NavigationItem[] = [
-  { to: "/", labelKey: "navigation.dashboard", icon: BarChart3, end: true },
   { to: "/accounts", labelKey: "navigation.accounts", icon: CreditCard },
   { to: "/transactions", labelKey: "navigation.transactions", icon: ReceiptText },
   { to: "/categories", labelKey: "navigation.categories", icon: FolderTree },
   { to: "/settings", labelKey: "navigation.settings", icon: Settings },
 ];
+
+const mobileNavigation: NavigationItem[] = [
+  { to: "/", labelKey: "navigation.dashboard", icon: BarChart3, end: true },
+  ...navigation,
+];
+
+const dashboardTabs = [
+  { tab: "overview", labelKey: "dashboard.tabs.overview" },
+  { tab: "categories", labelKey: "dashboard.tabs.categories" },
+  { tab: "dynamics", labelKey: "dashboard.tabs.dynamics" },
+] as const;
 
 const pageTitleByPath: Record<string, string> = {
   "/": "pages.dashboard.title",
@@ -47,6 +58,49 @@ const MIN_WIDTH = 180;
 const MAX_WIDTH = 400;
 const COLLAPSED_WIDTH = 56;
 const DEFAULT_WIDTH = 256;
+
+function DashboardNavGroup({ location, t }: { location: ReturnType<typeof useLocation>; t: (key: string) => string }) {
+  const [open, setOpen] = useState(true);
+  const isDashboard = location.pathname === "/";
+  const currentTab = new URLSearchParams(location.search).get("tab") ?? "overview";
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "flex h-9 w-full items-center gap-3 rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+          isDashboard && "text-accent-foreground",
+        )}
+      >
+        <BarChart3 className="h-4 w-4 shrink-0" aria-hidden="true" />
+        <span className="flex-1 text-left">{t("navigation.dashboard")}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 shrink-0 transition-transform duration-200", open && "rotate-180")} aria-hidden="true" />
+      </button>
+      {open && (
+        <div className="ml-6 mt-0.5 space-y-0.5 border-l border-border pl-3">
+          {dashboardTabs.map(({ tab, labelKey }) => {
+            const to = tab === "overview" ? "/" : `/?tab=${tab}`;
+            const isActive = isDashboard && currentTab === tab;
+            return (
+              <Link
+                key={tab}
+                to={to}
+                className={cn(
+                  "flex h-8 items-center rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+                  isActive && "bg-accent text-accent-foreground",
+                )}
+              >
+                {t(labelKey)}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function AppLayout() {
   const { t } = useTranslation();
@@ -135,6 +189,26 @@ export function AppLayout() {
           className={cn("flex-1 space-y-1 overflow-y-auto", isCollapsed ? "px-2" : "px-3")}
           aria-label={t("navigation.primaryLabel")}
         >
+          {/* Dashboard group */}
+          {isCollapsed ? (
+            <NavLink
+              to="/"
+              end
+              title={t("navigation.dashboard")}
+              className={({ isActive }) =>
+                cn(
+                  "flex h-9 items-center justify-center rounded-md px-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+                  isActive && "bg-accent text-accent-foreground",
+                )
+              }
+            >
+              <BarChart3 className="h-4 w-4 shrink-0" aria-hidden="true" />
+            </NavLink>
+          ) : (
+            <DashboardNavGroup location={location} t={t} />
+          )}
+
+          {/* Other navigation items */}
           {navigation.map((item) => (
             <NavLink
               key={item.to}
@@ -222,7 +296,7 @@ export function AppLayout() {
           className="sticky bottom-0 grid grid-cols-5 border-t border-border bg-background md:hidden"
           aria-label={t("navigation.primaryLabel")}
         >
-          {navigation.map((item) => (
+          {mobileNavigation.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

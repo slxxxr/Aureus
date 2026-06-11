@@ -1,7 +1,7 @@
 import { apiFetch } from "@/lib/apiClient";
 import type { TransactionType } from "@/features/transactions/transactionsApi";
 
-export type BreakdownDimension = "Category" | "Account";
+export type BreakdownDimension = "Category" | "Account" | "Name";
 export type TimeInterval = "Day" | "Week" | "Month";
 
 export type CurrencySummary = {

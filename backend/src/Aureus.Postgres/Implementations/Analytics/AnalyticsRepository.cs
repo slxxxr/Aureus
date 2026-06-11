@@ -28,31 +28,50 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
     {
         var filtered = ApplyFilter(dbContext.Transactions, filter);
 
-        // Left joins keep transactions whose category was soft-deleted (its rows survive a category delete);
-        // such groups get a null label and the caller renders a fallback.
-        if (dimension == BreakdownDimension.Category)
+        return dimension switch
         {
-            return await (
-                from transaction in filtered
-                join category in dbContext.Categories
-                    on transaction.CategoryId equals category.Id into categoryJoin
-                from category in categoryJoin.DefaultIfEmpty()
-                group transaction by new
-                {
-                    Key = transaction.CategoryId,
-                    Label = category != null ? category.Name : null,
-                    transaction.Currency,
-                }
-                into grouped
-                select new BreakdownItem(
-                    grouped.Key.Key,
-                    grouped.Key.Label,
-                    grouped.Key.Currency,
-                    grouped.Sum(transaction => transaction.AmountMinor)))
-                .ToListAsync(cancellationToken);
-        }
+            BreakdownDimension.Category => await CategoryBreakdownAsync(filtered, cancellationToken),
+            BreakdownDimension.Account => await AccountBreakdownAsync(filtered, cancellationToken),
+            _ => await NameBreakdownAsync(filtered, cancellationToken),
+        };
+    }
 
-        return await (
+    // Entity keys are stringified after materialization so every dimension shares a string Key — the name
+    // dimension groups by the raw name (already trimmed on write) and has no id to expose. The left join keeps
+    // transactions whose category was soft-deleted (rows survive the delete): null label, caller renders a fallback.
+    private async Task<IReadOnlyList<BreakdownItem>> CategoryBreakdownAsync(
+        IQueryable<TransactionDb> filtered, CancellationToken cancellationToken)
+    {
+        var rows = await (
+            from transaction in filtered
+            join category in dbContext.Categories
+                on transaction.CategoryId equals category.Id into categoryJoin
+            from category in categoryJoin.DefaultIfEmpty()
+            group transaction by new
+            {
+                Key = transaction.CategoryId,
+                Label = category != null ? category.Name : null,
+                transaction.Currency,
+            }
+            into grouped
+            select new
+            {
+                grouped.Key.Key,
+                grouped.Key.Label,
+                grouped.Key.Currency,
+                AmountMinor = grouped.Sum(transaction => transaction.AmountMinor),
+            })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(row => new BreakdownItem(row.Key.ToString(), row.Label, row.Currency, row.AmountMinor))
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<BreakdownItem>> AccountBreakdownAsync(
+        IQueryable<TransactionDb> filtered, CancellationToken cancellationToken)
+    {
+        var rows = await (
             from transaction in filtered
             join account in dbContext.FinancialAccounts
                 on transaction.FinancialAccountId equals account.Id into accountJoin
@@ -64,13 +83,30 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
                 transaction.Currency,
             }
             into grouped
-            select new BreakdownItem(
+            select new
+            {
                 grouped.Key.Key,
                 grouped.Key.Label,
                 grouped.Key.Currency,
+                AmountMinor = grouped.Sum(transaction => transaction.AmountMinor),
+            })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(row => new BreakdownItem(row.Key.ToString(), row.Label, row.Currency, row.AmountMinor))
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<BreakdownItem>> NameBreakdownAsync(
+        IQueryable<TransactionDb> filtered, CancellationToken cancellationToken) =>
+        await filtered
+            .GroupBy(transaction => new { transaction.Name, transaction.Currency })
+            .Select(grouped => new BreakdownItem(
+                grouped.Key.Name,
+                grouped.Key.Name,
+                grouped.Key.Currency,
                 grouped.Sum(transaction => transaction.AmountMinor)))
             .ToListAsync(cancellationToken);
-    }
 
     public async Task<IReadOnlyList<TimeSeriesPoint>> GetTimeSeriesAsync(
         AnalyticsFilter filter, TimeInterval interval, CancellationToken cancellationToken)

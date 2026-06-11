@@ -151,8 +151,8 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
 
         // Assert
         Assert.Equal(2, breakdown.Count);
-        Assert.Equal(firstA + secondA, Assert.Single(breakdown, item => item.Key == categoryA).AmountMinor);
-        Assert.Equal(amountB, Assert.Single(breakdown, item => item.Key == categoryB).AmountMinor);
+        Assert.Equal(firstA + secondA, Assert.Single(breakdown, item => item.Key == categoryA.ToString()).AmountMinor);
+        Assert.Equal(amountB, Assert.Single(breakdown, item => item.Key == categoryB.ToString()).AmountMinor);
     }
 
     [Fact]
@@ -178,9 +178,78 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
 
         // Assert
         var item = Assert.Single(breakdown);
-        Assert.Equal(categoryId, item.Key);
+        Assert.Equal(categoryId.ToString(), item.Key);
         Assert.Null(item.Label);
         Assert.Equal(amount, item.AmountMinor);
+    }
+
+    [Fact]
+    public async Task GetBreakdownAsync_ByName_SumsPerName()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        const long firstTaxi = 300_00;
+        const long secondTaxi = 200_00;
+        const long metro = 50_00;
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, firstTaxi, name: "Такси");
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, secondTaxi, name: "Такси");
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, metro, name: "Метро");
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var breakdown = await new AnalyticsRepository(db)
+            .GetBreakdownAsync(Filter(workspaceId), BreakdownDimension.Name, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(2, breakdown.Count);
+        var taxi = Assert.Single(breakdown, item => item.Key == "Такси");
+        Assert.Equal("Такси", taxi.Label);
+        Assert.Equal(firstTaxi + secondTaxi, taxi.AmountMinor);
+        Assert.Equal(metro, Assert.Single(breakdown, item => item.Key == "Метро").AmountMinor);
+    }
+
+    [Fact]
+    public async Task GetBreakdownAsync_ByName_CaseSensitive_KeepsVariantsSeparate()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, 100_00, name: "Такси");
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, 50_00, name: "такси");
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var breakdown = await new AnalyticsRepository(db)
+            .GetBreakdownAsync(Filter(workspaceId), BreakdownDimension.Name, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(2, breakdown.Count);
+    }
+
+    [Fact]
+    public async Task GetBreakdownAsync_ByName_CategoryFilter_LimitsToCategory()
+    {
+        // Arrange
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
+        var transport = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var food = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        const long taxi = 300_00;
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, transport, userId, TransactionType.Expense, taxi, name: "Такси");
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, food, userId, TransactionType.Expense, 80_00, name: "Кофе");
+
+        // Act — drill-down into a single category
+        await using var db = fixture.CreateDbContext();
+        var breakdown = await new AnalyticsRepository(db)
+            .GetBreakdownAsync(Filter(workspaceId, categoryIds: [transport]), BreakdownDimension.Name, CancellationToken.None);
+
+        // Assert
+        var item = Assert.Single(breakdown);
+        Assert.Equal("Такси", item.Key);
+        Assert.Equal(taxi, item.AmountMinor);
     }
 
     [Fact]
