@@ -15,6 +15,8 @@
 
 ![Categories](docs/images/categories-en.png)
 
+![Category-Dynamics](docs/images/category-dynamics-en.png)
+
 ![Transactions](docs/images/transactions-en.png)
 
 ![Ask AI](docs/images/ask-ai-en.png)
