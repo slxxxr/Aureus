@@ -11,9 +11,13 @@
 
 <br>
 
-![Dashboard](docs/images/dashboard.png)
+![Dashboard](docs/images/dashboard-en.png)
 
-![Category dynamics](docs/images/category-dynamics.png)
+![Categories](docs/images/categories-en.png)
+
+![Transactions](docs/images/transactions-en.png)
+
+![Ask AI](docs/images/ask-ai-en.png)
 
 </details>
 
