@@ -4,6 +4,8 @@
 
 [Tech Stack](#tech-stack) · [Getting started](#getting-started)
 
+**Live: [aureus.life](https://aureus.life)** — not yet optimized for mobile
+
 ---
 
 <details>
@@ -46,6 +48,7 @@ Personal finance service. Track income and expenses across accounts and categori
 
 ### What's next
 
+- **UI polish & mobile** — responsive layout improvements
 - **Budgets** — per-category monthly limits with progress tracking
 - **Export** — transactions to CSV, reports to PDF
 - **CSV import** — bulk transaction import with duplicate detection and pre-import preview
@@ -74,6 +77,7 @@ Personal finance service. Track income and expenses across accounts and categori
 
 ### Что дальше
 
+- **Полировка UI и мобильная версия** — адаптация интерфейса под разные экраны
 - **Бюджеты** — лимиты по категориям на месяц, отслеживание прогресса
 - **Экспорт** — транзакции в CSV, отчёты в PDF
 - **CSV-импорт** — массовая загрузка транзакций с определением дубликатов и предпросмотром
