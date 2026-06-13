@@ -33,7 +33,7 @@ Personal finance service. Track income and expenses across accounts and categori
 
 ### What's done
 
-- **Auth** — registration and login with JWT
+- **Auth** — registration with email verification (3-step: email → OTP code → password) and login with JWT
 - **Workspaces** — independent spaces for different finances: personal, work, family, and more
 - **Financial accounts** — multi-currency accounts with running balance
 - **Categories** — income and expense categories
@@ -49,7 +49,6 @@ Personal finance service. Track income and expenses across accounts and categori
 - **Budgets** — per-category monthly limits with progress tracking
 - **Export** — transactions to CSV, reports to PDF
 - **CSV import** — bulk transaction import with duplicate detection and pre-import preview
-- **Auto-categorization** — ML model that determines category from transaction name, trained per workspace
 - **Expense forecasting** — 30-day forecast based on time series
 
 ---
@@ -62,7 +61,7 @@ Personal finance service. Track income and expenses across accounts and categori
 
 ### Что сделано
 
-- **Авторизация** — регистрация и вход по JWT
+- **Авторизация** — регистрация с подтверждением email (3 шага: email → OTP-код → пароль) и вход по JWT
 - **Рабочие области** — возможность создавать независимые пространства под разные финансы: личные, рабочие, семейные и другие
 - **Счета** — мультивалютные счета с актуальным балансом
 - **Категории** — категории доходов и расходов
@@ -78,7 +77,6 @@ Personal finance service. Track income and expenses across accounts and categori
 - **Бюджеты** — лимиты по категориям на месяц, отслеживание прогресса
 - **Экспорт** — транзакции в CSV, отчёты в PDF
 - **CSV-импорт** — массовая загрузка транзакций с определением дубликатов и предпросмотром
-- **Авто-категоризация** — ML-модель, определяющая категорию по названию, обучается на данных воркспейса
 - **Прогнозирование** — прогноз расходов на 30 дней вперёд на основе временных рядов
 
 ---
