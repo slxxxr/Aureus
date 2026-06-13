@@ -15,6 +15,7 @@ import {
   type Transaction,
   type TransactionType,
 } from "@/features/transactions/transactionsApi";
+import { useNameIndex, type NameEntry } from "@/features/transactions/useNameIndex";
 import { resolveTransactionError } from "@/features/transactions/resolveTransactionError";
 import {
   getFinancialAccounts,
@@ -81,12 +82,28 @@ function CreateTransactionModal({
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => localDateKey(new Date()));
   const [note, setNote] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const { search } = useNameIndex(workspaceId);
+
+  const suggestions = useMemo(
+    () => (showSuggestions && name ? search(name) : []),
+    [name, showSuggestions, search],
+  );
+
+  const applyEntry = (entry: NameEntry) => {
+    setName(entry.name);
+    setType(entry.type);
+    setAccountId(entry.accountId);
+    setCategoryId(entry.categoryId);
+    setAmount((entry.amountMinor / 100).toFixed(2));
+    setShowSuggestions(false);
+  };
 
   const filteredCategories = categories.filter((c) => c.type === type);
 
   const handleTypeChange = (newType: TransactionType) => {
     setType(newType);
-    // Check if the currently selected category is valid for the new type
     if (!categories.some((c) => c.id === categoryId && c.type === newType)) {
       setCategoryId("");
     }
@@ -155,17 +172,41 @@ function CreateTransactionModal({
         {/* name */}
         <div className="space-y-1.5">
           <Label htmlFor="tx-name">{t("transactions.createModal.nameLabel")}</Label>
-          <Input
-            id="tx-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder={t("transactions.createModal.namePlaceholder")}
-            required
-            autoFocus
-            autoComplete="off"
-            maxLength={200}
-            disabled={mutation.isPending}
-          />
+          <div className="relative z-10">
+            <Input
+              id="tx-name"
+              value={name}
+              onChange={(e) => { setName(e.target.value); setShowSuggestions(true); }}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setShowSuggestions(false)}
+              placeholder={t("transactions.createModal.namePlaceholder")}
+              required
+              autoFocus
+              autoComplete="off"
+              maxLength={200}
+              disabled={mutation.isPending}
+            />
+            {suggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-md border border-border bg-background shadow-md">
+                {suggestions.map((s) => {
+                  const catLabel = categories.find((c) => c.id === s.categoryId)?.name;
+                  return (
+                    <button
+                      key={s.name}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); applyEntry(s); }}
+                      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-accent"
+                    >
+                      <span className="truncate font-medium">{s.name}</span>
+                      {catLabel && (
+                        <span className="shrink-0 text-xs text-muted-foreground">{catLabel}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* amount */}
