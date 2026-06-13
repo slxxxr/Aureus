@@ -33,6 +33,17 @@ dotnet_naming_symbols.interfaces.applicable_kinds = interface
 dotnet_naming_style.prefix_i.required_prefix = I
 dotnet_naming_style.prefix_i.capitalization = pascal_case
 
+dotnet_naming_rule.private_static_fields_should_be_s_camel_case.severity = warning
+dotnet_naming_rule.private_static_fields_should_be_s_camel_case.symbols = private_static_fields
+dotnet_naming_rule.private_static_fields_should_be_s_camel_case.style = s_camel_case
+
+dotnet_naming_symbols.private_static_fields.applicable_kinds = field
+dotnet_naming_symbols.private_static_fields.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_fields.required_modifiers = static
+
+dotnet_naming_style.s_camel_case.required_prefix = s_
+dotnet_naming_style.s_camel_case.capitalization = camel_case
+
 dotnet_naming_rule.private_instance_fields_should_be_camel_case_with_underscore.severity = warning
 dotnet_naming_rule.private_instance_fields_should_be_camel_case_with_underscore.symbols = private_instance_fields
 dotnet_naming_rule.private_instance_fields_should_be_camel_case_with_underscore.style = camel_case_with_underscore

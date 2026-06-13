@@ -296,19 +296,45 @@
       "registerLink": "Зарегистрироваться"
     },
     "register": {
-      "title": "Создание аккаунта",
-      "subtitle": "Начните управлять личными финансами",
-      "submit": "Создать аккаунт",
-      "submitting": "Создание…",
-      "passwordPlaceholder": "Придумайте пароль, минимум 8 символов",
       "haveAccount": "Уже есть аккаунт?",
-      "loginLink": "Войти"
+      "loginLink": "Войти",
+      "step1": {
+        "title": "Создание аккаунта",
+        "subtitle": "Введите email, чтобы начать",
+        "submit": "Отправить код",
+        "submitting": "Отправка…"
+      },
+      "step2": {
+        "title": "Подтверждение email",
+        "subtitle": "Введите 6-значный код из письма",
+        "codeSentTo": "Код отправлен на {{email}}",
+        "codeLabel": "Код подтверждения",
+        "codePlaceholder": "000000",
+        "submit": "Подтвердить",
+        "submitting": "Проверка…",
+        "resend": "Отправить ещё раз",
+        "resendCooldown": "Отправить ещё раз ({{seconds}} с)"
+      },
+      "step3": {
+        "title": "Почти готово",
+        "subtitle": "Придумайте пароль для аккаунта",
+        "passwordPlaceholder": "Минимум 8 символов",
+        "submit": "Создать аккаунт",
+        "submitting": "Создание…"
+      }
     },
     "errors": {
       "invalidCredentials": "Неверный email или пароль.",
+      "emailNotConfirmed": "Email не подтверждён. Завершите регистрацию.",
       "invalidEmail": "Введите корректный email.",
       "invalidPassword": "Пароль должен содержать минимум 8 символов.",
       "emailAlreadyExists": "Этот email уже зарегистрирован.",
+      "rateLimited": "Подождите 60 секунд перед повторной отправкой.",
+      "codeNotFound": "Код не найден. Запросите новый.",
+      "codeExpired": "Срок действия кода истёк. Запросите новый.",
+      "invalidCode": "Неверный код. Попробуйте ещё раз.",
+      "tooManyAttempts": "Слишком много попыток. Запросите новый код.",
+      "registrationTokenInvalid": "Сессия регистрации истекла. Начните заново.",
       "generic": "Что-то пошло не так. Попробуйте ещё раз."
     }
   }

@@ -8,5 +8,9 @@ public sealed class LoginException(LoginErrorCode code, string message) : Domain
 
     public override string ErrorCode => Code.ToString();
 
-    public override ErrorType ErrorType => ErrorType.Unauthorized;
+    public override ErrorType ErrorType => Code switch
+    {
+        LoginErrorCode.EmailNotConfirmed => ErrorType.Validation,
+        _ => ErrorType.Unauthorized,
+    };
 }

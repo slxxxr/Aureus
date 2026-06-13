@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
+import { Eye, EyeOff } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { login } from "@/features/auth/authApi";
 import { useAuth } from "@/features/auth/AuthContext";
 import { resolveAuthError } from "@/features/auth/resolveAuthError";
+import { ApiError } from "@/lib/apiClient";
 
 export function LoginPage() {
   const { t } = useTranslation();
@@ -17,6 +19,7 @@ export function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const mutation = useMutation({
     mutationFn: login,
@@ -64,21 +67,45 @@ export function LoginPage() {
 
         <div className="space-y-2">
           <Label htmlFor="password">{t("auth.fields.password")}</Label>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder={t("auth.fields.passwordPlaceholder")}
-            disabled={mutation.isPending}
-          />
+          <div className="relative">
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder={t("auth.fields.passwordPlaceholder")}
+              disabled={mutation.isPending}
+              className="pr-10"
+            />
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Eye className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
         </div>
 
         {mutation.isError && (
           <p className="text-sm text-destructive" role="alert">
             {resolveAuthError(mutation.error, t)}
+            {mutation.error instanceof ApiError &&
+              mutation.error.code === "EmailNotConfirmed" && (
+                <>
+                  {" "}
+                  <Link to="/register" className="underline underline-offset-4">
+                    {t("auth.login.registerLink")}
+                  </Link>
+                </>
+              )}
           </p>
         )}
 

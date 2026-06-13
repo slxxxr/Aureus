@@ -12,7 +12,7 @@ public static class DependencyInjection
 
         services.AddHttpClient<ILlmClient, GeminiClient>((sp, client) =>
         {
-            var opts = configuration.GetSection(GeminiOptions.Section).Get<GeminiOptions>() ?? new();
+            var opts = configuration.GetSection(GeminiOptions.Section).Get<GeminiOptions>() ?? new GeminiOptions();
             client.BaseAddress = new Uri(opts.BaseUrl);
         });
 

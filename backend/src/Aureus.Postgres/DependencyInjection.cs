@@ -19,6 +19,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IEmailVerificationCodeRepository, EmailVerificationCodeRepository>();
         services.AddScoped<IWorkspaceRepository, WorkspaceRepository>();
         services.AddScoped<IFinancialAccountRepository, FinancialAccountRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
