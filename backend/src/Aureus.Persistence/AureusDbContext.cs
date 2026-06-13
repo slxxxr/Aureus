@@ -7,6 +7,8 @@ public sealed class AureusDbContext(DbContextOptions<AureusDbContext> options) :
 {
     public DbSet<UserDb> Users => Set<UserDb>();
 
+    public DbSet<EmailVerificationCodeDb> EmailVerificationCodes => Set<EmailVerificationCodeDb>();
+
     public DbSet<WorkspaceDb> Workspaces => Set<WorkspaceDb>();
 
     public DbSet<WorkspaceMemberDb> WorkspaceMembers => Set<WorkspaceMemberDb>();

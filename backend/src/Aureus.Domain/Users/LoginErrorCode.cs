@@ -2,5 +2,6 @@ namespace Aureus.Domain.Users;
 
 public enum LoginErrorCode
 {
-    InvalidCredentials
+    InvalidCredentials,
+    EmailNotConfirmed,
 }
