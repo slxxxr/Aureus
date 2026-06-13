@@ -5,6 +5,7 @@ using Aureus.Infrastructure;
 using Aureus.LLM;
 using Aureus.Postgres;
 using Aureus.UseCases;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +26,12 @@ builder.Services.AddAuthorizationBuilder()
 builder.Services.AddConfiguredSwagger();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<Aureus.Persistence.AureusDbContext>();
+    db.Database.Migrate();
+}
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
