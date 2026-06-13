@@ -17,4 +17,13 @@ public sealed class JwtTokenGeneratorMock
 
         return this;
     }
+
+    public JwtTokenGeneratorMock WithAnyToken(string token)
+    {
+        _mock
+            .Setup(g => g.Generate(It.IsAny<Guid>(), It.IsAny<string>()))
+            .Returns(token);
+
+        return this;
+    }
 }

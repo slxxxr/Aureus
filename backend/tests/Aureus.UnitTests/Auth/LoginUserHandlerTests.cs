@@ -14,10 +14,11 @@ public sealed class LoginUserHandlerTests
         var user = new User { Id = userId, Email = "user@example.com", PasswordHash = "hashed:password123" };
 
         var userRepository = new UserRepositoryMock().WithUser("user@example.com", user);
+        var codeRepository = new EmailVerificationCodeRepositoryMock();
         var passwordHasher = new PasswordHasherMock().WithVerify("password123", "hashed:password123", true);
         const string accessToken = "jwt.token.value";
         var jwtGenerator = new JwtTokenGeneratorMock().WithToken(userId, "user@example.com", accessToken);
-        var handler = new LoginUserHandler(userRepository.Object, passwordHasher.Object, jwtGenerator.Object);
+        var handler = new LoginUserHandler(userRepository.Object, codeRepository.Object, passwordHasher.Object, jwtGenerator.Object);
 
         // Act
         var result = await handler.Handle(
@@ -33,9 +34,10 @@ public sealed class LoginUserHandlerTests
     {
         // Arrange
         var userRepository = new UserRepositoryMock().WithNoUser("unknown@example.com");
+        var codeRepository = new EmailVerificationCodeRepositoryMock().WithNoPendingCode("unknown@example.com", "Registration");
         var passwordHasher = new PasswordHasherMock();
         var jwtGenerator = new JwtTokenGeneratorMock();
-        var handler = new LoginUserHandler(userRepository.Object, passwordHasher.Object, jwtGenerator.Object);
+        var handler = new LoginUserHandler(userRepository.Object, codeRepository.Object, passwordHasher.Object, jwtGenerator.Object);
 
         // Act
         var exception = await Assert.ThrowsAsync<LoginException>(() =>
@@ -53,9 +55,10 @@ public sealed class LoginUserHandlerTests
         var user = new User { Id = userId, Email = "user@example.com", PasswordHash = "hashed:password123" };
 
         var userRepository = new UserRepositoryMock().WithUser("user@example.com", user);
+        var codeRepository = new EmailVerificationCodeRepositoryMock();
         var passwordHasher = new PasswordHasherMock().WithVerify("wrongpassword", "hashed:password123", false);
         var jwtGenerator = new JwtTokenGeneratorMock();
-        var handler = new LoginUserHandler(userRepository.Object, passwordHasher.Object, jwtGenerator.Object);
+        var handler = new LoginUserHandler(userRepository.Object, codeRepository.Object, passwordHasher.Object, jwtGenerator.Object);
 
         // Act
         var exception = await Assert.ThrowsAsync<LoginException>(() =>
@@ -73,10 +76,11 @@ public sealed class LoginUserHandlerTests
         var user = new User { Id = userId, Email = "user@example.com", PasswordHash = "hashed:password123" };
 
         var userRepository = new UserRepositoryMock().WithUser("user@example.com", user);
+        var codeRepository = new EmailVerificationCodeRepositoryMock();
         var passwordHasher = new PasswordHasherMock().WithVerify("password123", "hashed:password123", true);
         const string accessToken = "jwt.token.value";
         var jwtGenerator = new JwtTokenGeneratorMock().WithToken(userId, "user@example.com", accessToken);
-        var handler = new LoginUserHandler(userRepository.Object, passwordHasher.Object, jwtGenerator.Object);
+        var handler = new LoginUserHandler(userRepository.Object, codeRepository.Object, passwordHasher.Object, jwtGenerator.Object);
 
         // Act
         var result = await handler.Handle(
