@@ -296,19 +296,45 @@
       "registerLink": "Sign up"
     },
     "register": {
-      "title": "Create your account",
-      "subtitle": "Start managing your personal finances",
-      "submit": "Create account",
-      "submitting": "Creating account…",
-      "passwordPlaceholder": "Create a password, at least 8 characters",
       "haveAccount": "Already have an account?",
-      "loginLink": "Sign in"
+      "loginLink": "Sign in",
+      "step1": {
+        "title": "Create your account",
+        "subtitle": "Enter your email to get started",
+        "submit": "Send code",
+        "submitting": "Sending…"
+      },
+      "step2": {
+        "title": "Verify your email",
+        "subtitle": "Enter the 6-digit code from the email",
+        "codeSentTo": "Code sent to {{email}}",
+        "codeLabel": "Verification code",
+        "codePlaceholder": "000000",
+        "submit": "Verify",
+        "submitting": "Verifying…",
+        "resend": "Resend code",
+        "resendCooldown": "Resend code ({{seconds}}s)"
+      },
+      "step3": {
+        "title": "Almost there",
+        "subtitle": "Create a password for your account",
+        "passwordPlaceholder": "At least 8 characters",
+        "submit": "Create account",
+        "submitting": "Creating account…"
+      }
     },
     "errors": {
       "invalidCredentials": "Invalid email or password.",
+      "emailNotConfirmed": "Email not confirmed. Please complete registration.",
       "invalidEmail": "Please enter a valid email address.",
       "invalidPassword": "Password must be at least 8 characters long.",
       "emailAlreadyExists": "This email is already registered.",
+      "rateLimited": "Please wait 60 seconds before requesting another code.",
+      "codeNotFound": "Code not found. Please request a new one.",
+      "codeExpired": "The code has expired. Please request a new one.",
+      "invalidCode": "Invalid code. Please try again.",
+      "tooManyAttempts": "Too many attempts. Please request a new code.",
+      "registrationTokenInvalid": "Registration session expired. Please start over.",
       "generic": "Something went wrong. Please try again."
     }
   }
