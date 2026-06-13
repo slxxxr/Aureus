@@ -1,8 +1,8 @@
 using AutoMapper;
 using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
-using Aureus.Persistence.Entities;
 using Aureus.Persistence;
+using Aureus.Persistence.Entities;
 using Aureus.Persistence.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -41,7 +41,7 @@ public sealed class UserRepository(AureusDbContext dbContext, IMapper mapper) : 
         }
         catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
         {
-            throw new RegistrationException(RegistrationErrorCode.EmailAlreadyExists, "Email is already registered.");
+            throw new EmailVerificationException(EmailVerificationErrorCode.EmailAlreadyConfirmed, "Email is already registered.");
         }
     }
 }
