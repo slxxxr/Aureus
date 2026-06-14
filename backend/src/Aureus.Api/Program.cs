@@ -26,6 +26,7 @@ builder.Services.AddAuthorizationBuilder()
         .RequireAuthenticatedUser()
         .Build());
 builder.Services.AddConfiguredSwagger();
+builder.Services.AddConfiguredRateLimiting();
 
 var app = builder.Build();
 
@@ -44,6 +45,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapControllers();
 
