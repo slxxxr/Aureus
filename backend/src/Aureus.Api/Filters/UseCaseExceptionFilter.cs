@@ -1,4 +1,5 @@
 using Aureus.Domain.Exceptions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -8,6 +9,26 @@ public sealed class UseCaseExceptionFilter : IExceptionFilter
 {
     public void OnException(ExceptionContext context)
     {
+        if (context.Exception is ValidationException validationException)
+        {
+            var errors = validationException.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(e => e.ErrorMessage).ToArray());
+
+            var problem = new ValidationProblemDetails(errors)
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "ValidationFailed",
+                Instance = context.HttpContext.Request.Path
+            };
+
+            context.Result = new ObjectResult(problem) { StatusCode = StatusCodes.Status400BadRequest };
+            context.ExceptionHandled = true;
+            return;
+        }
+
         if (context.Exception is not DomainException exception)
         {
             return;
@@ -22,7 +43,7 @@ public sealed class UseCaseExceptionFilter : IExceptionFilter
             _ => StatusCodes.Status500InternalServerError
         };
 
-        var problem = new ProblemDetails
+        var domainProblem = new ProblemDetails
         {
             Status = statusCode,
             Title = exception.ErrorCode,
@@ -30,7 +51,7 @@ public sealed class UseCaseExceptionFilter : IExceptionFilter
             Instance = context.HttpContext.Request.Path
         };
 
-        context.Result = new ObjectResult(problem) { StatusCode = statusCode };
+        context.Result = new ObjectResult(domainProblem) { StatusCode = statusCode };
         context.ExceptionHandled = true;
     }
 }

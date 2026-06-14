@@ -4,6 +4,7 @@ import { ApiError } from "@/lib/apiClient";
 const codeToTranslationKey: Record<string, string> = {
   NameTaken: "financialAccounts.errors.nameTaken",
   NotFound: "financialAccounts.errors.notFound",
+  ValidationFailed: "common.validation.invalidInput",
 };
 
 export function resolveFinancialAccountError(error: unknown, t: TFunction): string {

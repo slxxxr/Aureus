@@ -6,7 +6,8 @@
     "delete": "Удалить",
     "selected": "Выбрано: {{count}}",
     "validation": {
-      "amountTooLarge": "Максимум: 1 000 000 000"
+      "amountTooLarge": "Максимум: 1 000 000 000",
+      "invalidInput": "Некорректные данные."
     },
     "datePicker": {
       "placeholder": "Выберите дату",

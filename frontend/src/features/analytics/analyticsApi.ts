@@ -85,11 +85,10 @@ export function askInsights(
   question: string,
   from: string | undefined,
   to: string | undefined,
-  language: string,
 ): Promise<{ answer: string }> {
   return apiFetch<{ answer: string }>(`/workspaces/${workspaceId}/analytics/insights`, {
     method: "POST",
-    body: { question, from, to, language },
+    body: { question, from, to },
   });
 }
 

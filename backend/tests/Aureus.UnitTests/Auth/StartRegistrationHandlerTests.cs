@@ -9,6 +9,24 @@ public sealed class StartRegistrationHandlerTests
 {
     private const string Purpose = "Registration";
 
+    [Theory]
+    [InlineData("not-an-email")]
+    [InlineData("missing@tld")]
+    [InlineData("@nodomain.com")]
+    [InlineData("")]
+    public void Validate_InvalidEmail_Fails(string email)
+    {
+        // Arrange
+        var validator = new StartRegistrationCommandValidator();
+
+        // Act
+        var result = validator.Validate(new StartRegistrationCommand(email));
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(StartRegistrationCommand.Email));
+    }
+
     [Fact]
     public async Task Handle_ValidEmail_UpsertCodeAndSendsEmail()
     {
@@ -30,24 +48,6 @@ public sealed class StartRegistrationHandlerTests
         emailSender.VerifySentOnce();
         Assert.Equal(email, emailSender.SentMessage?.To);
         Assert.NotNull(codeRepository.UpsertedRecord?.CodeHash);
-    }
-
-    [Fact]
-    public async Task Handle_InvalidEmail_ThrowsEmailVerificationException()
-    {
-        // Arrange
-        var userRepository = new UserRepositoryMock();
-        var codeRepository = new EmailVerificationCodeRepositoryMock();
-        var emailSender = new EmailSenderMock();
-        var handler = new StartRegistrationHandler(userRepository.Object, codeRepository.Object, emailSender.Object);
-
-        // Act
-        var exception = await Assert.ThrowsAsync<EmailVerificationException>(() =>
-            handler.Handle(new StartRegistrationCommand("not-an-email"), CancellationToken.None));
-
-        // Assert
-        Assert.Equal(EmailVerificationErrorCode.InvalidEmail, exception.Code);
-        emailSender.VerifyNeverSent();
     }
 
     [Fact]

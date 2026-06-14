@@ -1,3 +1,4 @@
+import { InputLimits } from "@/lib/inputLimits";
 import { useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -53,7 +54,7 @@ function CreateWorkspaceModal({ onClose }: { onClose: () => void }) {
             required
             autoFocus
             autoComplete="off"
-            maxLength={120}
+            maxLength={InputLimits.workspaceNameMaxLength}
             disabled={mutation.isPending}
           />
         </div>
@@ -133,7 +134,7 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
             required
             autoFocus
             autoComplete="off"
-            maxLength={120}
+            maxLength={InputLimits.workspaceNameMaxLength}
             disabled={isPending}
           />
         </div>

@@ -4,6 +4,7 @@ import { ApiError } from "@/lib/apiClient";
 const codeToTranslationKey: Record<string, string> = {
   NameTaken: "categories.errors.nameTaken",
   NotFound: "categories.errors.notFound",
+  ValidationFailed: "common.validation.invalidInput",
 };
 
 export function resolveCategoryError(error: unknown, t: TFunction): string {

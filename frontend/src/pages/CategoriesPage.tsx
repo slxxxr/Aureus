@@ -1,3 +1,4 @@
+import { InputLimits } from "@/lib/inputLimits";
 import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -54,7 +55,7 @@ function CreateCategoryModal({
             required
             autoFocus
             autoComplete="off"
-            maxLength={120}
+            maxLength={InputLimits.categoryNameMaxLength}
             disabled={mutation.isPending}
           />
         </div>
@@ -145,7 +146,7 @@ function EditCategoryModal({
             required
             autoFocus
             autoComplete="off"
-            maxLength={120}
+            maxLength={InputLimits.categoryNameMaxLength}
             disabled={isPending}
           />
         </div>

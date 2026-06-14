@@ -1,3 +1,4 @@
+import { InputLimits } from "@/lib/inputLimits";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -58,6 +59,7 @@ export function LoginPage() {
             type="email"
             autoComplete="email"
             required
+            maxLength={InputLimits.emailMaxLength}
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             placeholder={t("auth.fields.emailPlaceholder")}
@@ -73,6 +75,7 @@ export function LoginPage() {
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               required
+              maxLength={InputLimits.passwordMaxLength}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               placeholder={t("auth.fields.passwordPlaceholder")}
