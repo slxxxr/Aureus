@@ -19,6 +19,8 @@ public sealed class AureusDbContext(DbContextOptions<AureusDbContext> options) :
 
     public DbSet<TransactionDb> Transactions => Set<TransactionDb>();
 
+    public DbSet<WorkspaceDailyUsageDb> WorkspaceDailyUsage => Set<WorkspaceDailyUsageDb>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AureusDbContext).Assembly);
