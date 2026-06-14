@@ -16,7 +16,7 @@ public sealed class RegistrationTokenService(
     private const string TokenType = "registration";
     private const string TokenTypeClaim = "token_type";
     private const string PurposeClaim = "purpose";
-    private static readonly TimeSpan s_tokenLifetime = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan TokenLifetime = TimeSpan.FromMinutes(15);
 
     private readonly SymmetricSecurityKey _signingKey =
         new(Encoding.UTF8.GetBytes(jwtOptions.Value.Secret));
@@ -32,7 +32,7 @@ public sealed class RegistrationTokenService(
                 new Claim(PurposeClaim, purpose),
                 new Claim(TokenTypeClaim, TokenType),
             ]),
-            Expires = DateTime.UtcNow.Add(s_tokenLifetime),
+            Expires = DateTime.UtcNow.Add(TokenLifetime),
             SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256),
         };
 
