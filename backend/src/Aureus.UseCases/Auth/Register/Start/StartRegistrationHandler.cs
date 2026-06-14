@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 using Aureus.Domain.Users;
 using Aureus.Infrastructure.Email;
 using Aureus.Infrastructure.Email.Interfaces;
@@ -17,21 +16,12 @@ public sealed class StartRegistrationHandler(
 {
     private const string Purpose = nameof(EmailVerificationPurpose.Registration);
     private const int AttemptsAllowed = 10;
-    private static readonly TimeSpan s_codeLifetime = TimeSpan.FromHours(1);
-    private static readonly TimeSpan s_resendCooldown = TimeSpan.FromSeconds(60);
-
-    private static readonly Regex s_emailRegex = new(
-        @"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    private static readonly TimeSpan CodeLifetime = TimeSpan.FromHours(1);
+    private static readonly TimeSpan ResendCooldown = TimeSpan.FromSeconds(60);
 
     public async Task Handle(StartRegistrationCommand command, CancellationToken cancellationToken)
     {
         var email = (command.Email ?? string.Empty).Trim().ToLowerInvariant();
-
-        if (!s_emailRegex.IsMatch(email))
-        {
-            throw new EmailVerificationException(EmailVerificationErrorCode.InvalidEmail, "Email is invalid.");
-        }
 
         if (await userRepository.EmailExistsAsync(email, cancellationToken))
         {
@@ -42,7 +32,7 @@ public sealed class StartRegistrationHandler(
         var existing = await codeRepository.FindAsync(email, Purpose, cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
-        if (existing is not null && now - existing.SentAt < s_resendCooldown)
+        if (existing is not null && now - existing.SentAt < ResendCooldown)
         {
             throw new EmailVerificationException(EmailVerificationErrorCode.RateLimited,
                 "Please wait before requesting another code.");
@@ -57,7 +47,7 @@ public sealed class StartRegistrationHandler(
             Email = email,
             Purpose = Purpose,
             CodeHash = codeHash,
-            ExpiresAt = now.Add(s_codeLifetime),
+            ExpiresAt = now.Add(CodeLifetime),
             AttemptsLeft = AttemptsAllowed,
             SentAt = now,
             CreatedAt = existing?.CreatedAt ?? now,
