@@ -16,13 +16,25 @@ namespace Aureus.UseCases.Analytics.GetInsights;
 // Timeseries granularity:  ≤31 days → Day  |  ≤92 days → Week  |  >92 days → Month
 public sealed class GetInsightsHandler(
     IAnalyticsRepository analyticsRepository,
+    IWorkspaceDailyUsageRepository dailyUsageRepository,
     ILlmClient llmClient) : IRequestHandler<GetInsightsQuery, string>
 {
     private const int SmallTierMax = 100;
     private const int MediumTierMax = 500;
+    private const int InsightsDailyLimit = 20;
 
     public async Task<string> Handle(GetInsightsQuery query, CancellationToken cancellationToken)
     {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var usageCount = await dailyUsageRepository.IncrementAndGetAsync(
+            query.WorkspaceId, DailyUsageFeature.Insights, today, cancellationToken);
+
+        if (usageCount > InsightsDailyLimit)
+        {
+            throw new AnalyticsException(AnalyticsErrorCode.DailyQuotaExceeded,
+                $"Daily insights limit of {InsightsDailyLimit} requests per workspace exceeded.");
+        }
+
         var filter = new AnalyticsFilter(
             WorkspaceId: query.WorkspaceId,
             From: query.From,
@@ -36,7 +48,16 @@ public sealed class GetInsightsHandler(
 
         var context = await FetchContextAsync(filter, tier, interval, cancellationToken);
         var prompt = InsightsPromptBuilder.Build(query, tier, interval, count, context);
-        return await llmClient.AskAsync(prompt, cancellationToken);
+
+        try
+        {
+            return await llmClient.AskAsync(prompt, cancellationToken);
+        }
+        catch (LlmRateLimitedException)
+        {
+            throw new AnalyticsException(AnalyticsErrorCode.LlmTemporarilyUnavailable,
+                "The AI service is temporarily unavailable. Please try again in a moment.");
+        }
     }
 
     private static TimeInterval SelectInterval(DateOnly? from, DateOnly? to)
@@ -92,7 +113,12 @@ public sealed class GetInsightsHandler(
     }
 }
 
-internal enum Tier { Small, Medium, Large }
+internal enum Tier
+{
+    Small,
+    Medium,
+    Large
+}
 
 internal sealed record FinancialContext(
     IReadOnlyList<CurrencySummary> Summary,
