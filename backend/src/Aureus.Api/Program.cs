@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options => { options.Limits.MaxRequestBodySize = 64 * 1024; });
+
 builder.Services.AddUseCases();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddPostgres(builder.Configuration);
