@@ -1,4 +1,4 @@
-aureus.life, www.aureus.life {
+:80 {
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Frame-Options "DENY"
