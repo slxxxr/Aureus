@@ -14,8 +14,7 @@ public sealed class InsightsPromptBuilderTests
         WorkspaceId: Guid.NewGuid(),
         Question: "Test question",
         From: from ?? new DateOnly(2025, 1, 1),
-        To: to ?? new DateOnly(2025, 1, 31),
-        Language: "Russian");
+        To: to ?? new DateOnly(2025, 1, 31));
 
     private static FinancialContext EmptyContext() => new(
         Summary: [],
@@ -26,7 +25,7 @@ public sealed class InsightsPromptBuilderTests
         TopNames: []);
 
     [Fact]
-    public void Build_IncludesQuestionAndLanguage()
+    public void Build_IncludesQuestion()
     {
         // Arrange
         var query = DefaultQuery();
@@ -36,7 +35,7 @@ public sealed class InsightsPromptBuilderTests
 
         // Assert
         Assert.Contains("Test question", prompt);
-        Assert.Contains("Respond in Russian", prompt);
+        Assert.Contains("Respond in the same language", prompt);
     }
 
     [Fact]

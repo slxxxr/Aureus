@@ -1,3 +1,4 @@
+import { InputLimits } from "@/lib/inputLimits";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation } from "@tanstack/react-query";
@@ -6,11 +7,6 @@ import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { askInsights } from "@/features/analytics/analyticsApi";
 
-const LANGUAGE_MAP: Record<string, string> = {
-  ru: "Russian",
-  en: "English",
-};
-
 interface Props {
   workspaceId: string;
   from?: string;
@@ -18,14 +14,12 @@ interface Props {
 }
 
 export function InsightsCard({ workspaceId, from, to }: Props) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState("");
 
-  const language = LANGUAGE_MAP[i18n.language] ?? "English";
-
   const { mutate, data, isPending, isError } = useMutation({
-    mutationFn: () => askInsights(workspaceId, question.trim(), from, to, language),
+    mutationFn: () => askInsights(workspaceId, question.trim(), from, to),
   });
 
   const canSubmit = question.trim().length > 0 && !isPending;
@@ -67,6 +61,7 @@ export function InsightsCard({ workspaceId, from, to }: Props) {
           <div className="flex gap-2">
             <textarea
               autoComplete="off"
+              maxLength={InputLimits.insightsQuestionMaxLength}
               placeholder={t("dashboard.insights.placeholder")}
               value={question}
               onChange={(e) => setQuestion(e.target.value)}

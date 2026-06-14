@@ -78,7 +78,7 @@ public sealed class AnalyticsController(ISender sender, IMapper mapper) : ApiCon
         CancellationToken cancellationToken)
     {
         var answer = await sender.Send(
-            new GetInsightsQuery(workspaceId, request.Question, request.From, request.To, request.Language ?? "Russian"),
+            new GetInsightsQuery(workspaceId, request.Question, request.From, request.To),
             cancellationToken);
 
         return Ok(new InsightsResponse(answer));

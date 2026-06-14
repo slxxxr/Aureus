@@ -9,8 +9,7 @@ public sealed class GetInsightsHandlerTests
         WorkspaceId: Guid.NewGuid(),
         Question: "What did I spend?",
         From: new DateOnly(2025, 1, 1),
-        To: new DateOnly(2025, 1, 31),
-        Language: "Russian");
+        To: new DateOnly(2025, 1, 31));
 
     [Fact]
     public async Task Handle_SmallTierCount_FetchesTransactionsOnly()

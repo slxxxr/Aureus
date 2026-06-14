@@ -55,7 +55,7 @@ internal static class InsightsPromptBuilder
 
         sb.AppendLine();
         sb.AppendLine("---");
-        sb.AppendLine($"Respond in {query.Language}.");
+        sb.AppendLine("Respond in the same language the user used in their question.");
         sb.AppendLine("If the question below is not about personal finances, spending, saving, income, or budgeting — do not answer it under any circumstances. Reply only that you assist exclusively with financial questions.");
         sb.AppendLine($"Question: {query.Question}");
 

@@ -6,5 +6,4 @@ public sealed record GetInsightsQuery(
     Guid WorkspaceId,
     string Question,
     DateOnly? From,
-    DateOnly? To,
-    string Language) : IRequest<string>;
+    DateOnly? To) : IRequest<string>;
