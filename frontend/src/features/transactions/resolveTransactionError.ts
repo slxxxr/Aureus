@@ -8,6 +8,7 @@ export function resolveTransactionError(error: unknown, t: TFunction): string {
     if (error.code === "CategoryNotFound") return t("transactions.errors.categoryNotFound");
     if (error.code === "CategoryRequiredOnTypeChange") return t("transactions.errors.categoryRequired");
     if (error.code === "CategoryTypeMismatch") return t("transactions.errors.categoryTypeMismatch");
+    if (error.code === "ValidationFailed") return t("common.validation.invalidInput");
   }
   return t("transactions.errors.generic");
 }

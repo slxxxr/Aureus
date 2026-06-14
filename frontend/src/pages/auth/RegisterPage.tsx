@@ -1,3 +1,4 @@
+import { InputLimits } from "@/lib/inputLimits";
 import { useState, useEffect, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -132,6 +133,7 @@ export function RegisterPage() {
               autoComplete="email"
               autoFocus
               required
+              maxLength={InputLimits.emailMaxLength}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder={t("auth.fields.emailPlaceholder")}
@@ -244,6 +246,7 @@ export function RegisterPage() {
               autoFocus
               required
               minLength={MIN_PASSWORD_LENGTH}
+              maxLength={InputLimits.passwordMaxLength}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder={t("auth.register.step3.passwordPlaceholder")}

@@ -6,7 +6,8 @@
     "delete": "Delete",
     "selected": "Selected: {{count}}",
     "validation": {
-      "amountTooLarge": "Maximum: 1 000 000 000"
+      "amountTooLarge": "Maximum: 1 000 000 000",
+      "invalidInput": "Invalid input."
     },
     "datePicker": {
       "placeholder": "Select date",

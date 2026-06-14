@@ -1,3 +1,4 @@
+import { InputLimits } from "@/lib/inputLimits";
 import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -183,7 +184,7 @@ function CreateTransactionModal({
               required
               autoFocus
               autoComplete="off"
-              maxLength={200}
+              maxLength={InputLimits.transactionNameMaxLength}
               disabled={mutation.isPending}
             />
             {suggestions.length > 0 && (
@@ -291,7 +292,7 @@ function CreateTransactionModal({
             onChange={(e) => setNote(e.target.value)}
             placeholder={t("transactions.createModal.notePlaceholder")}
             autoComplete="off"
-            maxLength={500}
+            maxLength={InputLimits.transactionNoteMaxLength}
             disabled={mutation.isPending}
           />
         </div>
@@ -444,7 +445,7 @@ function EditTransactionModal({
             required
             autoFocus
             autoComplete="off"
-            maxLength={200}
+            maxLength={InputLimits.transactionNameMaxLength}
             disabled={isPending}
           />
         </div>
@@ -520,7 +521,7 @@ function EditTransactionModal({
             onChange={(e) => setNote(e.target.value)}
             placeholder={t("transactions.editModal.notePlaceholder")}
             autoComplete="off"
-            maxLength={500}
+            maxLength={InputLimits.transactionNoteMaxLength}
             disabled={isPending}
           />
         </div>

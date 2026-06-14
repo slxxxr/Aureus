@@ -5,6 +5,7 @@ const codeToTranslationKey: Record<string, string> = {
   NameTaken: "workspace.errors.nameTaken",
   NotFound: "workspace.errors.notFound",
   Forbidden: "workspace.errors.forbidden",
+  ValidationFailed: "common.validation.invalidInput",
 };
 
 export function resolveWorkspaceError(error: unknown, t: TFunction): string {

@@ -13,6 +13,7 @@ const codeToTranslationKey: Record<string, string> = {
   InvalidCode: "auth.errors.invalidCode",
   TooManyAttempts: "auth.errors.tooManyAttempts",
   RegistrationTokenInvalid: "auth.errors.registrationTokenInvalid",
+  ValidationFailed: "common.validation.invalidInput",
 };
 
 export function resolveAuthError(error: unknown, t: TFunction): string {
