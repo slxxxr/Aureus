@@ -25,4 +25,11 @@ public sealed class LlmClientMock
             .ReturnsAsync("answer");
         return this;
     }
+
+    public LlmClientMock ThrowingRateLimit()
+    {
+        _mock.Setup(c => c.AskAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new LlmRateLimitedException("Rate limit exceeded."));
+        return this;
+    }
 }

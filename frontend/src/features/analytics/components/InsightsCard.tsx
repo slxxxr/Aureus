@@ -6,6 +6,7 @@ import { Send, Sparkles, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
 import { askInsights } from "@/features/analytics/analyticsApi";
+import { resolveInsightsError } from "@/features/analytics/resolveAnalyticsError";
 
 interface Props {
   workspaceId: string;
@@ -18,7 +19,7 @@ export function InsightsCard({ workspaceId, from, to }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState("");
 
-  const { mutate, data, isPending, isError } = useMutation({
+  const { mutate, data, isPending, error } = useMutation({
     mutationFn: () => askInsights(workspaceId, question.trim(), from, to),
   });
 
@@ -83,8 +84,8 @@ export function InsightsCard({ workspaceId, from, to }: Props) {
             <p className="animate-pulse text-sm text-muted-foreground">{t("dashboard.insights.loading")}</p>
           )}
 
-          {isError && (
-            <p className="text-sm text-destructive">{t("dashboard.insights.error")}</p>
+          {error && (
+            <p className="text-sm text-destructive">{resolveInsightsError(error, t)}</p>
           )}
 
           {data && (

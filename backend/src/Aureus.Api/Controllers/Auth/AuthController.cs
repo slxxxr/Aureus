@@ -1,5 +1,6 @@
 using Aureus.Api.Contracts.Auth.Login;
 using Aureus.Api.Contracts.Auth.Register;
+using Aureus.Api.Extensions;
 using Aureus.UseCases.Auth.Login;
 using Aureus.UseCases.Auth.Register.Complete;
 using Aureus.UseCases.Auth.Register.Start;
@@ -7,6 +8,7 @@ using Aureus.UseCases.Auth.Register.Verify;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Aureus.Api.Controllers.Auth;
 
@@ -15,6 +17,7 @@ namespace Aureus.Api.Controllers.Auth;
 public sealed class AuthController(ISender sender) : ApiControllerBase
 {
     [HttpPost("register/start")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthRegisterStart)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
@@ -57,6 +60,7 @@ public sealed class AuthController(ISender sender) : ApiControllerBase
     }
 
     [HttpPost("login")]
+    [EnableRateLimiting(RateLimitingExtensions.AuthLogin)]
     [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status401Unauthorized)]

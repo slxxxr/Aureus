@@ -277,7 +277,9 @@
       "title": "Ask AI",
       "placeholder": "E.g. where do I spend the most? Where can I cut back?",
       "loading": "Analyzing...",
-      "error": "Could not get a response. Please try again."
+      "error": "Could not get a response. Please try again.",
+      "errorQuotaExceeded": "Daily request limit reached. Please try again tomorrow.",
+      "errorLlmUnavailable": "The AI service is temporarily busy. Please try again in a moment."
     }
   },
   "auth": {

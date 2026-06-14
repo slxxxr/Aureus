@@ -1,3 +1,4 @@
+using Aureus.Domain.Analytics;
 using Aureus.UnitTests.Mocks;
 using Aureus.UseCases.Analytics.GetInsights;
 
@@ -11,14 +12,24 @@ public sealed class GetInsightsHandlerTests
         From: new DateOnly(2025, 1, 1),
         To: new DateOnly(2025, 1, 31));
 
+    private static GetInsightsHandler BuildHandler(
+        AnalyticsRepositoryMock? repository = null,
+        WorkspaceDailyUsageRepositoryMock? dailyUsage = null,
+        LlmClientMock? llm = null)
+    {
+        repository ??= new AnalyticsRepositoryMock().WithCount(10);
+        dailyUsage ??= new WorkspaceDailyUsageRepositoryMock().WithCount(1);
+        llm ??= new LlmClientMock().WithAnswer("ok");
+        return new GetInsightsHandler(repository.Object, dailyUsage.Object, llm.Object);
+    }
+
     [Fact]
     public async Task Handle_SmallTierCount_FetchesTransactionsOnly()
     {
         // Arrange
         const int countInSmallTier = 50;
         var repository = new AnalyticsRepositoryMock().WithCount(countInSmallTier);
-        var llm = new LlmClientMock().WithAnswer("ok");
-        var handler = new GetInsightsHandler(repository.Object, llm.Object);
+        var handler = BuildHandler(repository: repository);
 
         // Act
         await handler.Handle(DefaultQuery(), CancellationToken.None);
@@ -32,11 +43,10 @@ public sealed class GetInsightsHandlerTests
     [Fact]
     public async Task Handle_SmallTierBoundary_FetchesTransactionsOnly()
     {
-        // Arrange — exactly at the upper edge of small tier
+        // Arrange
         const int countAtSmallTierEdge = 100;
         var repository = new AnalyticsRepositoryMock().WithCount(countAtSmallTierEdge);
-        var llm = new LlmClientMock().WithAnswer("ok");
-        var handler = new GetInsightsHandler(repository.Object, llm.Object);
+        var handler = BuildHandler(repository: repository);
 
         // Act
         await handler.Handle(DefaultQuery(), CancellationToken.None);
@@ -52,8 +62,7 @@ public sealed class GetInsightsHandlerTests
         // Arrange
         const int countInMediumTier = 250;
         var repository = new AnalyticsRepositoryMock().WithCount(countInMediumTier);
-        var llm = new LlmClientMock().WithAnswer("ok");
-        var handler = new GetInsightsHandler(repository.Object, llm.Object);
+        var handler = BuildHandler(repository: repository);
 
         // Act
         await handler.Handle(DefaultQuery(), CancellationToken.None);
@@ -67,11 +76,10 @@ public sealed class GetInsightsHandlerTests
     [Fact]
     public async Task Handle_MediumTierBoundary_FetchesTransactionsAndTimeSeries()
     {
-        // Arrange — exactly at the upper edge of medium tier
+        // Arrange
         const int countAtMediumTierEdge = 500;
         var repository = new AnalyticsRepositoryMock().WithCount(countAtMediumTierEdge);
-        var llm = new LlmClientMock().WithAnswer("ok");
-        var handler = new GetInsightsHandler(repository.Object, llm.Object);
+        var handler = BuildHandler(repository: repository);
 
         // Act
         await handler.Handle(DefaultQuery(), CancellationToken.None);
@@ -87,8 +95,7 @@ public sealed class GetInsightsHandlerTests
         // Arrange
         const int countInLargeTier = 501;
         var repository = new AnalyticsRepositoryMock().WithCount(countInLargeTier);
-        var llm = new LlmClientMock().WithAnswer("ok");
-        var handler = new GetInsightsHandler(repository.Object, llm.Object);
+        var handler = BuildHandler(repository: repository);
 
         // Act
         await handler.Handle(DefaultQuery(), CancellationToken.None);
@@ -104,15 +111,43 @@ public sealed class GetInsightsHandlerTests
     {
         // Arrange
         const string expectedAnswer = "Вы потратили 5 000 рублей.";
-        const int anySmallCount = 10;
-        var repository = new AnalyticsRepositoryMock().WithCount(anySmallCount);
         var llm = new LlmClientMock().WithAnswer(expectedAnswer);
-        var handler = new GetInsightsHandler(repository.Object, llm.Object);
+        var handler = BuildHandler(llm: llm);
 
         // Act
         var result = await handler.Handle(DefaultQuery(), CancellationToken.None);
 
         // Assert
         Assert.Equal(expectedAnswer, result);
+    }
+
+    [Fact]
+    public async Task Handle_DailyQuotaExceeded_ThrowsAnalyticsException()
+    {
+        // Arrange
+        var dailyUsage = new WorkspaceDailyUsageRepositoryMock().WithCount(21);
+        var handler = BuildHandler(dailyUsage: dailyUsage);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<AnalyticsException>(() =>
+            handler.Handle(DefaultQuery(), CancellationToken.None));
+
+        // Assert
+        Assert.Equal(AnalyticsErrorCode.DailyQuotaExceeded, exception.Code);
+    }
+
+    [Fact]
+    public async Task Handle_LlmRateLimited_ThrowsAnalyticsException()
+    {
+        // Arrange
+        var llm = new LlmClientMock().ThrowingRateLimit();
+        var handler = BuildHandler(llm: llm);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<AnalyticsException>(() =>
+            handler.Handle(DefaultQuery(), CancellationToken.None));
+
+        // Assert
+        Assert.Equal(AnalyticsErrorCode.LlmTemporarilyUnavailable, exception.Code);
     }
 }
