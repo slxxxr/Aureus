@@ -9,6 +9,7 @@ internal sealed class CreateTransactionCommandValidator : AbstractValidator<Crea
     {
         RuleFor(x => x.Name)
             .NotEmpty()
+            .Must(name => !string.IsNullOrWhiteSpace(name)).WithMessage("'Name' must not be empty.")
             .MaximumLength(InputLimits.TransactionNameMaxLength);
 
         RuleFor(x => x.Note)

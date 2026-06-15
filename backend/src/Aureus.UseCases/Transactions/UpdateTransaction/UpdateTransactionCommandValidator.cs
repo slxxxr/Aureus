@@ -9,6 +9,7 @@ internal sealed class UpdateTransactionCommandValidator : AbstractValidator<Upda
     {
         RuleFor(x => x.Name)
             .NotEmpty()
+            .Must(name => !string.IsNullOrWhiteSpace(name)).WithMessage("'Name' must not be empty.")
             .MaximumLength(InputLimits.TransactionNameMaxLength)
             .When(x => x.Name is not null);
 

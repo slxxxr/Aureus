@@ -9,6 +9,7 @@ internal sealed class UpdateCategoryCommandValidator : AbstractValidator<UpdateC
     {
         RuleFor(x => x.Name)
             .NotEmpty()
+            .Must(name => !string.IsNullOrWhiteSpace(name)).WithMessage("'Name' must not be empty.")
             .MaximumLength(InputLimits.CategoryNameMaxLength);
     }
 }
