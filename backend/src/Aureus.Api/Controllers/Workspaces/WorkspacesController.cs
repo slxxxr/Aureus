@@ -1,4 +1,5 @@
 using Aureus.Api.Contracts.Workspaces;
+using Aureus.Api.Filters;
 using Aureus.Domain.Workspaces;
 using Aureus.UseCases.Workspaces.CreateWorkspace;
 using Aureus.UseCases.Workspaces.DeleteWorkspace;
@@ -34,22 +35,26 @@ public sealed class WorkspacesController(ISender sender, IMapper mapper) : ApiCo
     }
 
     [HttpPatch("{workspaceId:guid}")]
+    [ValidateWorkspaceMember]
+    [RequireWorkspaceRole(WorkspaceRole.Manager)]
     [ProducesResponseType(typeof(WorkspaceResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateAsync(
         Guid workspaceId,
         [FromBody] UpdateWorkspaceRequest request,
         CancellationToken cancellationToken)
     {
-        var workspace = await sender.Send(new UpdateWorkspaceCommand(workspaceId, CurrentUserId, request.Name), cancellationToken);
+        var workspace = await sender.Send(new UpdateWorkspaceCommand(workspaceId, request.Name), cancellationToken);
 
-        return Ok(new WorkspaceResponse(workspace.Id, workspace.Name, nameof(WorkspaceRole.Owner)));
+        return Ok(new WorkspaceResponse(workspace.Id, workspace.Name, CurrentWorkspaceMembership.Role.ToString()));
     }
 
     [HttpDelete("{workspaceId:guid}")]
+    [ValidateWorkspaceMember]
+    [RequireWorkspaceRole(WorkspaceRole.Owner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        await sender.Send(new DeleteWorkspaceCommand(workspaceId, CurrentUserId), cancellationToken);
+        await sender.Send(new DeleteWorkspaceCommand(workspaceId), cancellationToken);
 
         return NoContent();
     }
