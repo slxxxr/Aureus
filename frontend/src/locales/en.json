@@ -57,6 +57,16 @@
       "description": "Workspace, profile, and interface settings will be managed here."
     }
   },
+  "settings": {
+    "profile": {
+      "title": "Profile",
+      "nameLabel": "Name",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Changes saved",
+      "errorGeneric": "Failed to save changes. Please try again."
+    }
+  },
   "placeholder": {
     "statusLabel": "Status",
     "statusValue": "Skeleton ready for the next iteration",
@@ -321,6 +331,8 @@
       "step3": {
         "title": "Almost there",
         "subtitle": "Create a password for your account",
+        "nameLabel": "Name",
+        "namePlaceholder": "Enter your name",
         "passwordPlaceholder": "At least 8 characters",
         "submit": "Create account",
         "submitting": "Creating account…"

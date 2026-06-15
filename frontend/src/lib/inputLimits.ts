@@ -1,5 +1,6 @@
 // Keep in sync with backend: Aureus.UseCases/Validation/InputLimits.cs
 export const InputLimits = {
+  nameMaxLength: 64,
   emailMaxLength: 254,
   passwordMaxLength: 128,
 
