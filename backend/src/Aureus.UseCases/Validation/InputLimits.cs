@@ -4,6 +4,7 @@ internal static class InputLimits
 {
     internal const int EmailMaxLength = 254;
     internal const int PasswordMaxLength = 128;
+    internal const int NameMaxLength = 64;
 
     internal const int WorkspaceNameMaxLength = 120;
     internal const int CategoryNameMaxLength = 120;

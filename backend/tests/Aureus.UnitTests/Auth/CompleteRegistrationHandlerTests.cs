@@ -25,7 +25,7 @@ public sealed class CompleteRegistrationHandlerTests
 
         // Act
         var result = await handler.Handle(
-            new CompleteRegistrationCommand(token, "securepass"), CancellationToken.None);
+            new CompleteRegistrationCommand(token, "Test User", "securepass"), CancellationToken.None);
 
         // Assert
         Assert.Equal(accessToken, result.AccessToken);
@@ -50,7 +50,7 @@ public sealed class CompleteRegistrationHandlerTests
 
         // Act
         var exception = await Assert.ThrowsAsync<EmailVerificationException>(() =>
-            handler.Handle(new CompleteRegistrationCommand(token, "securepass"), CancellationToken.None));
+            handler.Handle(new CompleteRegistrationCommand(token, "Test User", "securepass"), CancellationToken.None));
 
         // Assert
         Assert.Equal(EmailVerificationErrorCode.RegistrationTokenInvalid, exception.Code);
@@ -73,7 +73,7 @@ public sealed class CompleteRegistrationHandlerTests
 
         // Act
         var exception = await Assert.ThrowsAsync<EmailVerificationException>(() =>
-            handler.Handle(new CompleteRegistrationCommand(token, "short"), CancellationToken.None));
+            handler.Handle(new CompleteRegistrationCommand(token, "Test User", "short"), CancellationToken.None));
 
         // Assert
         Assert.Equal(EmailVerificationErrorCode.InvalidPassword, exception.Code);

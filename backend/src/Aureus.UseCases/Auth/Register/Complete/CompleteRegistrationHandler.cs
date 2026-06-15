@@ -29,6 +29,7 @@ public sealed class CompleteRegistrationHandler(
         }
 
         var email = payload.Email;
+        var name = (command.Name ?? string.Empty).Trim();
         var password = command.Password ?? string.Empty;
 
         if (password.Length < MinimumPasswordLength)
@@ -45,6 +46,7 @@ public sealed class CompleteRegistrationHandler(
         {
             Id = userId,
             Email = email,
+            Name = name,
             PasswordHash = passwordHasher.Hash(password),
             CreatedAt = now,
         };
