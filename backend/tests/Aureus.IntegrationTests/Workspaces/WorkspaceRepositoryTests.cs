@@ -197,6 +197,64 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         Assert.Null(transaction);
     }
 
+    [Fact]
+    public async Task DeleteAsync_CascadesToInvitations()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var invitationId = await AddInvitationAsync(workspaceId, ownerId);
+
+        // Act
+        await DeleteWorkspaceAsync(workspaceId);
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var invitation = await new WorkspaceInvitationRepository(assertDb, fixture.Mapper)
+            .FindByIdAsync(invitationId, CancellationToken.None);
+        Assert.Null(invitation);
+    }
+
+    [Fact]
+    public async Task CountActiveMembersAsync_ExcludesSoftDeletedMembers()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var secondUserId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, secondUserId);
+        var removedUserId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, removedUserId);
+        await SoftDeleteMemberAsync(workspaceId, removedUserId);
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var count = await new WorkspaceRepository(db, fixture.Mapper)
+            .CountActiveMembersAsync(workspaceId, CancellationToken.None);
+
+        // Assert — owner + secondUser, removedUser excluded
+        Assert.Equal(2, count);
+    }
+
+    [Fact]
+    public async Task AddMemberAsync_PersistsMembership()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var newUserId = await TestData.SeedUserAsync(fixture);
+
+        // Act
+        await AddMemberAsync(workspaceId, newUserId);
+
+        // Assert
+        await using var db = fixture.CreateDbContext();
+        var membership = await new WorkspaceRepository(db, fixture.Mapper)
+            .FindMembershipAsync(workspaceId, newUserId, CancellationToken.None);
+        Assert.NotNull(membership);
+        Assert.Equal(WorkspaceRole.Member, membership!.Role);
+    }
+
     private static (Workspace Workspace, WorkspaceMember Member) NewWorkspace(Guid ownerId, string name)
     {
         var workspace = new Workspace
@@ -254,5 +312,39 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         var repo = new WorkspaceRepository(db, fixture.Mapper);
         var workspace = await repo.FindByIdAsync(workspaceId, CancellationToken.None);
         await repo.DeleteAsync(workspace!, CancellationToken.None);
+    }
+
+    private async Task<Guid> AddInvitationAsync(Guid workspaceId, Guid invitedByUserId)
+    {
+        var invitation = new WorkspaceInvitation
+        {
+            Id = Guid.NewGuid(),
+            WorkspaceId = workspaceId,
+            Email = $"{Guid.NewGuid():N}@test.local",
+            InvitedByUserId = invitedByUserId,
+            TokenHash = "hash",
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+
+        await using var db = fixture.CreateDbContext();
+        await new WorkspaceInvitationRepository(db, fixture.Mapper).UpsertAsync(invitation, CancellationToken.None);
+
+        return invitation.Id;
+    }
+
+    private async Task AddMemberAsync(Guid workspaceId, Guid userId)
+    {
+        var member = new WorkspaceMember
+        {
+            Id = Guid.NewGuid(),
+            WorkspaceId = workspaceId,
+            UserId = userId,
+            Role = WorkspaceRole.Member,
+            JoinedAt = DateTimeOffset.UtcNow,
+        };
+
+        await using var db = fixture.CreateDbContext();
+        await new WorkspaceRepository(db, fixture.Mapper).AddMemberAsync(member, CancellationToken.None);
     }
 }

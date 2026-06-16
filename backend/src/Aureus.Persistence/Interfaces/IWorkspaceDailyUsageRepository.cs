@@ -2,7 +2,8 @@ namespace Aureus.Persistence.Interfaces;
 
 public enum DailyUsageFeature
 {
-    Insights
+    Insights,
+    WorkspaceInvitations
 }
 
 public interface IWorkspaceDailyUsageRepository

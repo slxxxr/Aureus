@@ -50,9 +50,23 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
         return entity is null ? null : mapper.Map<Workspace>(entity);
     }
 
+    public Task<int> CountActiveMembersAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        return dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspaceId)
+            .CountAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Workspace workspace, WorkspaceMember member, CancellationToken cancellationToken)
     {
         dbContext.Workspaces.Add(mapper.Map<WorkspaceDb>(workspace));
+        dbContext.WorkspaceMembers.Add(mapper.Map<WorkspaceMemberDb>(member));
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task AddMemberAsync(WorkspaceMember member, CancellationToken cancellationToken)
+    {
         dbContext.WorkspaceMembers.Add(mapper.Map<WorkspaceMemberDb>(member));
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -97,6 +111,10 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
             .ExecuteUpdateAsync(s => s
                 .SetProperty(m => m.IsDeleted, true)
                 .SetProperty(m => m.DeletedAt, now), cancellationToken);
+
+        await dbContext.WorkspaceInvitations
+            .Where(i => i.WorkspaceId == workspace.Id)
+            .ExecuteDeleteAsync(cancellationToken);
 
         await dbContext.Workspaces
             .Where(w => w.Id == workspace.Id)

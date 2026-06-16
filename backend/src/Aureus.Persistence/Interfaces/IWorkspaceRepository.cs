@@ -10,7 +10,11 @@ public interface IWorkspaceRepository
 
     Task<Workspace?> FindByIdAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<int> CountActiveMembersAsync(Guid workspaceId, CancellationToken cancellationToken);
+
     Task AddAsync(Workspace workspace, WorkspaceMember member, CancellationToken cancellationToken);
+
+    Task AddMemberAsync(WorkspaceMember member, CancellationToken cancellationToken);
 
     Task UpdateAsync(Workspace workspace, CancellationToken cancellationToken);
 

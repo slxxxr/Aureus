@@ -13,6 +13,8 @@ public sealed class AureusDbContext(DbContextOptions<AureusDbContext> options) :
 
     public DbSet<WorkspaceMemberDb> WorkspaceMembers => Set<WorkspaceMemberDb>();
 
+    public DbSet<WorkspaceInvitationDb> WorkspaceInvitations => Set<WorkspaceInvitationDb>();
+
     public DbSet<FinancialAccountDb> FinancialAccounts => Set<FinancialAccountDb>();
 
     public DbSet<CategoryDb> Categories => Set<CategoryDb>();
