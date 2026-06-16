@@ -10,7 +10,6 @@ public sealed class UpdateWorkspaceHandlerTests
         new()
         {
             Id = Guid.NewGuid(),
-            OwnerUserId = Guid.NewGuid(),
             Name = name,
             CreatedAt = DateTimeOffset.UtcNow.AddDays(-1),
         };

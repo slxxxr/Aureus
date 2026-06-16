@@ -54,7 +54,6 @@ public sealed class CompleteRegistrationHandler(
         var workspace = new Workspace
         {
             Id = workspaceId,
-            OwnerUserId = userId,
             Name = DefaultWorkspaceName,
             CreatedAt = now,
         };

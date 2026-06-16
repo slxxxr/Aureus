@@ -26,7 +26,6 @@ public sealed class CreateWorkspaceHandlerTests
 
         // Assert
         Assert.Equal(command.Name, result.Name);
-        Assert.Equal(userId, result.OwnerUserId);
     }
 
     [Fact]

@@ -12,7 +12,6 @@ public sealed class CreateWorkspaceHandler(IWorkspaceRepository workspaceReposit
         var workspace = new Workspace
         {
             Id = Guid.NewGuid(),
-            OwnerUserId = command.UserId,
             Name = command.Name.Trim(),
             CreatedAt = DateTimeOffset.UtcNow,
         };

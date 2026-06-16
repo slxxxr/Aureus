@@ -4,7 +4,6 @@ using Aureus.Persistence;
 using Aureus.Persistence.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace Aureus.Postgres.Implementations;
 
@@ -56,33 +55,17 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
         dbContext.Workspaces.Add(mapper.Map<WorkspaceDb>(workspace));
         dbContext.WorkspaceMembers.Add(mapper.Map<WorkspaceMemberDb>(member));
 
-        try
-        {
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (Exception ex) when (IsUniqueViolation(ex))
-        {
-            throw new WorkspaceException(WorkspaceErrorCode.NameTaken,
-                $"A workspace named '{workspace.Name}' already exists.");
-        }
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(Workspace workspace, CancellationToken cancellationToken)
     {
-        try
-        {
-            await dbContext.Workspaces
-                .Where(w => w.Id == workspace.Id)
-                .ExecuteUpdateAsync(s => s
-                        .SetProperty(w => w.Name, workspace.Name)
-                        .SetProperty(w => w.UpdatedAt, workspace.UpdatedAt),
-                    cancellationToken);
-        }
-        catch (Exception ex) when (IsUniqueViolation(ex))
-        {
-            throw new WorkspaceException(WorkspaceErrorCode.NameTaken,
-                $"A workspace named '{workspace.Name}' already exists.");
-        }
+        await dbContext.Workspaces
+            .Where(w => w.Id == workspace.Id)
+            .ExecuteUpdateAsync(s => s
+                    .SetProperty(w => w.Name, workspace.Name)
+                    .SetProperty(w => w.UpdatedAt, workspace.UpdatedAt),
+                cancellationToken);
     }
 
     public async Task DeleteAsync(Workspace workspace, CancellationToken cancellationToken)
@@ -123,8 +106,4 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
 
         await transaction.CommitAsync(cancellationToken);
     }
-
-    private static bool IsUniqueViolation(Exception ex) =>
-        ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } ||
-        ex is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } };
 }

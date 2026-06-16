@@ -9,7 +9,6 @@ public sealed class DeleteWorkspaceHandlerTests
     private static Workspace DefaultWorkspace(Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
-        OwnerUserId = Guid.NewGuid(),
         Name = "Personal",
         CreatedAt = DateTimeOffset.UtcNow,
     };

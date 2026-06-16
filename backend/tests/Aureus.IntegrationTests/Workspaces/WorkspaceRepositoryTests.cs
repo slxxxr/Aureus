@@ -36,59 +36,6 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     }
 
     [Fact]
-    public async Task AddAsync_DuplicateOwnerAndName_ThrowsNameTaken()
-    {
-        // Arrange
-        var ownerId = await TestData.SeedUserAsync(fixture);
-        await AddWorkspaceAsync(ownerId, "Personal");
-        var (workspace, member) = NewWorkspace(ownerId, "Personal");
-
-        await using var db = fixture.CreateDbContext();
-        var repository = new WorkspaceRepository(db, fixture.Mapper);
-
-        // Act
-        var exception = await Assert.ThrowsAsync<WorkspaceException>(() =>
-            repository.AddAsync(workspace, member, CancellationToken.None));
-
-        // Assert
-        Assert.Equal(WorkspaceErrorCode.NameTaken, exception.Code);
-    }
-
-    [Fact]
-    public async Task AddAsync_SameNameDifferentOwner_Succeeds()
-    {
-        // Arrange
-        var firstOwner = await TestData.SeedUserAsync(fixture);
-        var secondOwner = await TestData.SeedUserAsync(fixture);
-        await AddWorkspaceAsync(firstOwner, "Personal");
-
-        // Act
-        var secondId = await AddWorkspaceAsync(secondOwner, "Personal");
-
-        // Assert
-        await using var db = fixture.CreateDbContext();
-        var stored = await new WorkspaceRepository(db, fixture.Mapper).FindByIdAsync(secondId, CancellationToken.None);
-        Assert.NotNull(stored);
-    }
-
-    [Fact]
-    public async Task AddAsync_NameReusedAfterSoftDeletedWorkspace_Succeeds()
-    {
-        // Arrange
-        var ownerId = await TestData.SeedUserAsync(fixture);
-        var firstId = await AddWorkspaceAsync(ownerId, "Personal");
-        await SoftDeleteWorkspaceAsync(firstId);
-
-        // Act
-        var secondId = await AddWorkspaceAsync(ownerId, "Personal");
-
-        // Assert
-        await using var db = fixture.CreateDbContext();
-        var stored = await new WorkspaceRepository(db, fixture.Mapper).FindByIdAsync(secondId, CancellationToken.None);
-        Assert.NotNull(stored);
-    }
-
-    [Fact]
     public async Task FindByIdAsync_SoftDeletedWorkspace_ReturnsNull()
     {
         // Arrange
@@ -144,27 +91,6 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         var stored = await new WorkspaceRepository(assertDb, fixture.Mapper)
             .FindByIdAsync(workspaceId, CancellationToken.None);
         Assert.Equal("Business", stored!.Name);
-    }
-
-    [Fact]
-    public async Task UpdateAsync_DuplicateName_ThrowsNameTaken()
-    {
-        // Arrange
-        var ownerId = await TestData.SeedUserAsync(fixture);
-        await AddWorkspaceAsync(ownerId, "Personal");
-        var secondId = await AddWorkspaceAsync(ownerId, "Business");
-
-        await using var db = fixture.CreateDbContext();
-        var repo = new WorkspaceRepository(db, fixture.Mapper);
-        var workspace = await repo.FindByIdAsync(secondId, CancellationToken.None);
-        workspace!.Name = "Personal";
-
-        // Act
-        var exception = await Assert.ThrowsAsync<WorkspaceException>(() =>
-            repo.UpdateAsync(workspace, CancellationToken.None));
-
-        // Assert
-        Assert.Equal(WorkspaceErrorCode.NameTaken, exception.Code);
     }
 
     [Fact]
@@ -276,7 +202,6 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         var workspace = new Workspace
         {
             Id = Guid.NewGuid(),
-            OwnerUserId = ownerId,
             Name = name,
             CreatedAt = DateTimeOffset.UtcNow,
         };
