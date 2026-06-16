@@ -146,14 +146,18 @@ function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onCl
         )}
 
         <div className="flex items-center justify-between pt-1">
-          <button
-            type="button"
-            onClick={() => setConfirmingDelete(true)}
-            disabled={isPending}
-            className="text-sm text-destructive hover:underline disabled:opacity-50"
-          >
-            {t("workspace.editModal.deleteWorkspace")}
-          </button>
+          {workspace.role === "Owner" ? (
+            <button
+              type="button"
+              onClick={() => setConfirmingDelete(true)}
+              disabled={isPending}
+              className="text-sm text-destructive hover:underline disabled:opacity-50"
+            >
+              {t("workspace.editModal.deleteWorkspace")}
+            </button>
+          ) : (
+            <span />
+          )}
           <div className="flex gap-2">
             <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
               {t("common.cancel")}
@@ -209,7 +213,7 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
               >
                 <span className="flex-1 truncate text-left">{truncateName(workspace.name)}</span>
               </button>
-              {workspace.role === "Owner" && (
+              {(workspace.role === "Owner" || workspace.role === "Manager") && (
                 <button
                   type="button"
                   onClick={() => openEdit(workspace)}
@@ -300,7 +304,7 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
           </button>
 
           {/* Pencil left of chevron — sibling button, not nested */}
-          {activeWorkspace?.role === "Owner" && (
+          {(activeWorkspace?.role === "Owner" || activeWorkspace?.role === "Manager") && (
             <button
               type="button"
               onClick={() => openEdit(activeWorkspace)}

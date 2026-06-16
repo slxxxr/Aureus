@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/apiClient";
 
 export type UserProfile = {
+  id: string;
   email: string;
   name: string;
 };

@@ -23,6 +23,7 @@ import {
   type FinancialAccount,
 } from "@/features/financial-accounts/financialAccountsApi";
 import { getCategories, type Category } from "@/features/categories/categoriesApi";
+import { getProfile } from "@/features/profile/profileApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -562,11 +563,13 @@ function TransactionRow({
   categoryMap,
   accountMap,
   onEdit,
+  canEdit,
 }: {
   tx: Transaction;
   categoryMap: Map<string, Category>;
   accountMap: Map<string, FinancialAccount>;
   onEdit: () => void;
+  canEdit: boolean;
 }) {
   const { t } = useTranslation();
   const isIncome = tx.type === "Income";
@@ -616,13 +619,15 @@ function TransactionRow({
       </div>
 
       {/* edit pencil */}
-      <button
-        onClick={onEdit}
-        className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        aria-label={t("transactions.editModal.title")}
-      >
-        <Pencil className="h-3.5 w-3.5" />
-      </button>
+      {canEdit && (
+        <button
+          onClick={onEdit}
+          className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          aria-label={t("transactions.editModal.title")}
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+      )}
     </div>
   );
 }
@@ -635,12 +640,14 @@ function DateGroup({
   categoryMap,
   accountMap,
   onEdit,
+  canEdit,
 }: {
   dateKey: string;
   items: Transaction[];
   categoryMap: Map<string, Category>;
   accountMap: Map<string, FinancialAccount>;
   onEdit: (tx: Transaction) => void;
+  canEdit: (tx: Transaction) => boolean;
 }) {
   const { t } = useTranslation();
   const net = getDailyNet(items);
@@ -663,6 +670,7 @@ function DateGroup({
             categoryMap={categoryMap}
             accountMap={accountMap}
             onEdit={() => onEdit(tx)}
+            canEdit={canEdit(tx)}
           />
         ))}
       </div>
@@ -799,6 +807,15 @@ export function TransactionsPage() {
     staleTime: 30_000,
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ["profile"],
+    queryFn: getProfile,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const canEdit = (tx: Transaction) =>
+    activeWorkspace?.role !== "Member" || tx.createdByUserId === profile?.id;
+
   const isLoading = txLoading || accLoading || catLoading;
 
   const categoryMap = useMemo(
@@ -901,6 +918,7 @@ export function TransactionsPage() {
                 categoryMap={categoryMap}
                 accountMap={accountMap}
                 onEdit={setEditing}
+                canEdit={canEdit}
               />
             ))}
           </div>
