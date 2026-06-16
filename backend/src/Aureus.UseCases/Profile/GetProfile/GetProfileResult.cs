@@ -1,3 +1,3 @@
 namespace Aureus.UseCases.Profile.GetProfile;
 
-public sealed record GetProfileResult(string Email, string Name);
+public sealed record GetProfileResult(Guid Id, string Email, string Name);

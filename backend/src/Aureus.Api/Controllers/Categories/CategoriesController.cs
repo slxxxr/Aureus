@@ -1,5 +1,6 @@
 using Aureus.Api.Contracts.Categories;
 using Aureus.Api.Filters;
+using Aureus.Domain.Workspaces;
 using Aureus.UseCases.Categories.CreateCategory;
 using Aureus.UseCases.Categories.DeleteCategory;
 using Aureus.UseCases.Categories.GetCategories;
@@ -24,6 +25,7 @@ public sealed class CategoriesController(ISender sender, IMapper mapper) : ApiCo
     }
 
     [HttpPost]
+    [RequireWorkspaceRole(WorkspaceRole.Manager)]
     [ProducesResponseType(typeof(CategoryResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateAsync(
         Guid workspaceId,
@@ -38,6 +40,7 @@ public sealed class CategoriesController(ISender sender, IMapper mapper) : ApiCo
     }
 
     [HttpPatch("{categoryId:guid}")]
+    [RequireWorkspaceRole(WorkspaceRole.Manager)]
     [ProducesResponseType(typeof(CategoryResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateAsync(
         Guid workspaceId,
@@ -53,6 +56,7 @@ public sealed class CategoriesController(ISender sender, IMapper mapper) : ApiCo
     }
 
     [HttpDelete("{categoryId:guid}")]
+    [RequireWorkspaceRole(WorkspaceRole.Manager)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteAsync(
         Guid workspaceId,

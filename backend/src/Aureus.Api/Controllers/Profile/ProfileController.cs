@@ -14,7 +14,7 @@ public sealed class ProfileController(ISender sender) : ApiControllerBase
     public async Task<IActionResult> GetProfileAsync(CancellationToken cancellationToken)
     {
         var result = await sender.Send(new GetProfileQuery(CurrentUserId), cancellationToken);
-        return Ok(new UserProfileResponse(result.Email, result.Name));
+        return Ok(new UserProfileResponse(result.Id, result.Email, result.Name));
     }
 
     [HttpPatch]

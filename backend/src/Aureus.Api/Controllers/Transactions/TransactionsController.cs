@@ -57,6 +57,8 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
         var command = new UpdateTransactionCommand(
             transactionId,
             workspaceId,
+            CurrentUserId,
+            CurrentWorkspaceMembership.Role,
             request.Name,
             request.AmountMinor,
             request.CategoryId,
@@ -77,7 +79,7 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
         Guid transactionId,
         CancellationToken cancellationToken)
     {
-        await sender.Send(new DeleteTransactionCommand(transactionId, workspaceId), cancellationToken);
+        await sender.Send(new DeleteTransactionCommand(transactionId, workspaceId, CurrentUserId, CurrentWorkspaceMembership.Role), cancellationToken);
 
         return NoContent();
     }

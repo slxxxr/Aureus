@@ -11,6 +11,6 @@ public sealed class GetProfileHandler(IUserRepository userRepository)
         var user = await userRepository.FindByIdAsync(query.UserId, cancellationToken)
             ?? throw new InvalidOperationException($"Authenticated user {query.UserId} not found in database.");
 
-        return new GetProfileResult(user.Email, user.Name);
+        return new GetProfileResult(user.Id, user.Email, user.Name);
     }
 }
