@@ -1,19 +1,16 @@
-import { InputLimits } from "@/lib/inputLimits";
-import { useRef, useState, type FormEvent } from "react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronDown, Landmark, Pencil, Plus } from "lucide-react";
+import { Check, ChevronDown, Landmark, Plus, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import { useClickOutside } from "@/hooks/useClickOutside";
 import {
   createWorkspace,
-  deleteWorkspace,
-  updateWorkspace,
   type Workspace,
 } from "@/features/workspaces/workspacesApi";
 import { resolveWorkspaceError } from "@/features/workspaces/resolveWorkspaceError";
+import { WorkspaceSettingsModal } from "@/components/WorkspaceSettingsModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -78,103 +75,6 @@ function CreateWorkspaceModal({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ─── edit modal ───────────────────────────────────────────────────────────────
-
-function EditWorkspaceModal({ workspace, onClose }: { workspace: Workspace; onClose: () => void }) {
-  const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const [name, setName] = useState(workspace.name);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["workspaces"] });
-
-  const updateMutation = useMutation({
-    mutationFn: () => updateWorkspace(workspace.id, { name: name.trim() }),
-    onSuccess: () => { void invalidate(); onClose(); },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => deleteWorkspace(workspace.id),
-    onSuccess: () => { void invalidate(); onClose(); },
-  });
-
-  const isPending = updateMutation.isPending || deleteMutation.isPending;
-
-  if (confirmingDelete) {
-    return (
-      <Modal onBackdropClick={() => setConfirmingDelete(false)}>
-        <h2 className="mb-2 text-base font-semibold">{t("workspace.deleteConfirm.title")}</h2>
-        <p className="mb-5 text-sm text-muted-foreground">{t("workspace.deleteConfirm.description")}</p>
-        <div className="flex justify-end gap-2">
-          <Button variant="secondary" onClick={() => setConfirmingDelete(false)} disabled={deleteMutation.isPending}>
-            {t("common.cancel")}
-          </Button>
-          <Button
-            disabled={deleteMutation.isPending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            onClick={() => deleteMutation.mutate()}
-          >
-            {t("common.delete")}
-          </Button>
-        </div>
-      </Modal>
-    );
-  }
-
-  return (
-    <Modal onBackdropClick={onClose}>
-      <h2 className="mb-5 text-base font-semibold">{t("workspace.editModal.title")}</h2>
-      <form onSubmit={(e: FormEvent) => { e.preventDefault(); updateMutation.mutate(); }} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="edit-workspace-name">{t("workspace.editModal.nameLabel")}</Label>
-          <Input
-            id="edit-workspace-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoFocus
-            autoComplete="off"
-            maxLength={InputLimits.workspaceNameMaxLength}
-            disabled={isPending}
-          />
-        </div>
-
-        {updateMutation.isError && (
-          <p className="text-sm text-destructive" role="alert">
-            {resolveWorkspaceError(updateMutation.error, t as TFunction)}
-          </p>
-        )}
-
-        <div className="flex items-center justify-between pt-1">
-          {workspace.role === "Owner" ? (
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(true)}
-              disabled={isPending}
-              className="text-sm text-destructive hover:underline disabled:opacity-50"
-            >
-              {t("workspace.editModal.deleteWorkspace")}
-            </button>
-          ) : (
-            <span />
-          )}
-          <div className="flex gap-2">
-            <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
-              {t("common.cancel")}
-            </Button>
-            <Button
-              type="submit"
-              disabled={isPending || !name.trim() || name.trim() === workspace.name}
-            >
-              {updateMutation.isPending ? t("workspace.editModal.saving") : t("workspace.editModal.save")}
-            </Button>
-          </div>
-        </div>
-      </form>
-    </Modal>
-  );
-}
-
 // ─── workspace switcher ───────────────────────────────────────────────────────
 
 export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }) {
@@ -182,13 +82,13 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
   const { workspaces, activeWorkspace, setActiveWorkspace } = useWorkspace();
   const [open, setOpen] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
-  const [editingWorkspace, setEditingWorkspace] = useState<Workspace | null>(null);
+  const [settingsWorkspace, setSettingsWorkspace] = useState<Workspace | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   useClickOutside(ref, () => setOpen(false));
 
-  const openEdit = (workspace: Workspace) => {
-    setEditingWorkspace(workspace);
+  const openSettings = (workspace: Workspace) => {
+    setSettingsWorkspace(workspace);
     setOpen(false);
   };
 
@@ -213,16 +113,14 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
               >
                 <span className="flex-1 truncate text-left">{truncateName(workspace.name)}</span>
               </button>
-              {(workspace.role === "Owner" || workspace.role === "Manager") && (
-                <button
-                  type="button"
-                  onClick={() => openEdit(workspace)}
-                  className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  aria-label={t("workspace.editModal.title")}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => openSettings(workspace)}
+                className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                aria-label={t("workspaceSettings.title")}
+              >
+                <Settings className="h-3.5 w-3.5" />
+              </button>
               <div className="px-2">
                 <Check
                   className={cn("h-4 w-4 shrink-0 text-muted-foreground", workspace.id !== activeWorkspace?.id && "invisible")}
@@ -249,8 +147,8 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
   const modals = (
     <>
       {showCreate && <CreateWorkspaceModal onClose={() => setShowCreate(false)} />}
-      {editingWorkspace && (
-        <EditWorkspaceModal workspace={editingWorkspace} onClose={() => setEditingWorkspace(null)} />
+      {settingsWorkspace && (
+        <WorkspaceSettingsModal workspace={settingsWorkspace} onClose={() => setEditingWorkspace(null)} />
       )}
     </>
   );
@@ -304,14 +202,14 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
           </button>
 
           {/* Pencil left of chevron — sibling button, not nested */}
-          {(activeWorkspace?.role === "Owner" || activeWorkspace?.role === "Manager") && (
+          {activeWorkspace !== null && (
             <button
               type="button"
-              onClick={() => openEdit(activeWorkspace)}
+              onClick={() => openSettings(activeWorkspace)}
               className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              aria-label={t("workspace.editModal.title")}
+              aria-label={t("workspaceSettings.title")}
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <Settings className="h-3.5 w-3.5" />
             </button>
           )}
 
