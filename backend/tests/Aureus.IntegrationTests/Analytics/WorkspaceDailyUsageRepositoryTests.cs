@@ -90,4 +90,54 @@ public sealed class WorkspaceDailyUsageRepositoryTests(PostgresFixture fixture)
         // Assert
         Assert.Equal(1, countB);
     }
+
+    [Fact]
+    public async Task GetCountAsync_NoUsageYet_ReturnsZero()
+    {
+        // Arrange
+        var (workspaceId, _) = await TestData.SeedWorkspaceAsync(fixture);
+        await using var db = fixture.CreateDbContext();
+        var repository = new WorkspaceDailyUsageRepository(db);
+
+        // Act
+        var count = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(0, count);
+    }
+
+    [Fact]
+    public async Task GetCountAsync_AfterIncrements_ReturnsCountWithoutIncrementing()
+    {
+        // Arrange
+        var (workspaceId, _) = await TestData.SeedWorkspaceAsync(fixture);
+        await using var db = fixture.CreateDbContext();
+        var repository = new WorkspaceDailyUsageRepository(db);
+        await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
+        await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
+
+        // Act
+        var firstRead = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
+        var secondRead = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(2, firstRead);
+        Assert.Equal(2, secondRead);
+    }
+
+    [Fact]
+    public async Task GetCountAsync_PreviousDayUsage_ReturnsZero()
+    {
+        // Arrange
+        var (workspaceId, _) = await TestData.SeedWorkspaceAsync(fixture);
+        await using var db = fixture.CreateDbContext();
+        var repository = new WorkspaceDailyUsageRepository(db);
+        await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
+
+        // Act
+        var count = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Tomorrow, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(0, count);
+    }
 }

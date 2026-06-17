@@ -17,7 +17,6 @@ public sealed class WorkspaceInvitationRepositoryTests(PostgresFixture fixture)
             WorkspaceId = workspaceId,
             Email = email ?? $"{Guid.NewGuid():N}@test.local",
             InvitedByUserId = invitedByUserId,
-            TokenHash = "hash",
             ExpiresAt = expiresAt ?? Now.AddDays(7),
             CreatedAt = Now,
         };
@@ -55,7 +54,6 @@ public sealed class WorkspaceInvitationRepositoryTests(PostgresFixture fixture)
         await repository.UpsertAsync(original, CancellationToken.None);
 
         var resend = NewInvitation(workspaceId, ownerId, email: email, expiresAt: Now.AddDays(14));
-        resend.TokenHash = "new-hash";
 
         // Act
         await repository.UpsertAsync(resend, CancellationToken.None);
@@ -63,7 +61,6 @@ public sealed class WorkspaceInvitationRepositoryTests(PostgresFixture fixture)
         // Assert
         var stored = await repository.FindPendingAsync(workspaceId, email, CancellationToken.None);
         Assert.Equal(original.Id, stored!.Id);
-        Assert.Equal("new-hash", stored.TokenHash);
         Assert.Equal(Now.AddDays(14), stored.ExpiresAt);
     }
 

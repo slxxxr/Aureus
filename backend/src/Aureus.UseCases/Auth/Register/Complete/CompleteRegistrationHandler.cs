@@ -11,7 +11,9 @@ public sealed class CompleteRegistrationHandler(
     IRegistrationTokenService tokenService,
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
-    IJwtTokenGenerator jwtTokenGenerator) : IRequestHandler<CompleteRegistrationCommand, CompleteRegistrationResult>
+    IJwtTokenGenerator jwtTokenGenerator,
+    IWorkspaceInvitationRepository invitationRepository,
+    IWorkspaceRepository workspaceRepository) : IRequestHandler<CompleteRegistrationCommand, CompleteRegistrationResult>
 {
     private const int MinimumPasswordLength = 8;
     private const string DefaultWorkspaceName = "Personal";
@@ -69,7 +71,36 @@ public sealed class CompleteRegistrationHandler(
 
         await userRepository.AddAsync(user, workspace, workspaceMember, cancellationToken);
 
+        await AcceptPendingInvitationsAsync(userId, email, now, cancellationToken);
+
         var accessToken = jwtTokenGenerator.Generate(userId, email);
         return new CompleteRegistrationResult(accessToken);
+    }
+
+    private async Task AcceptPendingInvitationsAsync(
+        Guid userId, string email, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var pendingInvitations = await invitationRepository.GetPendingForEmailAsync(email, now, cancellationToken);
+
+        foreach (var invitation in pendingInvitations)
+        {
+            var activeMembers = await workspaceRepository.CountActiveMembersAsync(invitation.WorkspaceId, cancellationToken);
+
+            if (activeMembers >= WorkspaceLimits.MaxMembers)
+            {
+                continue;
+            }
+
+            var member = new WorkspaceMember
+            {
+                Id = Guid.NewGuid(),
+                WorkspaceId = invitation.WorkspaceId,
+                UserId = userId,
+                Role = WorkspaceRole.Member,
+                JoinedAt = now,
+            };
+
+            await invitationRepository.AcceptAsync(invitation.Id, member, cancellationToken);
+        }
     }
 }

@@ -23,6 +23,7 @@ public static class DependencyInjection
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<ResendOptions>(configuration.GetSection(ResendOptions.SectionName));
+        services.Configure<AppOptions>(configuration.GetSection(AppOptions.SectionName));
 
         services.AddResend(opts =>
         {

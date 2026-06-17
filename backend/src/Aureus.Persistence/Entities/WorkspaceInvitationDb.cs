@@ -10,8 +10,6 @@ public sealed class WorkspaceInvitationDb
 
     public Guid InvitedByUserId { get; set; }
 
-    public string TokenHash { get; set; } = string.Empty;
-
     public DateTimeOffset ExpiresAt { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }

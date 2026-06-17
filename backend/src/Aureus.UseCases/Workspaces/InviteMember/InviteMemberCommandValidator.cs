@@ -1,11 +1,11 @@
 using FluentValidation;
 using Aureus.UseCases.Validation;
 
-namespace Aureus.UseCases.Auth.Register.Start;
+namespace Aureus.UseCases.Workspaces.InviteMember;
 
-internal sealed class StartRegistrationCommandValidator : AbstractValidator<StartRegistrationCommand>
+internal sealed class InviteMemberCommandValidator : AbstractValidator<InviteMemberCommand>
 {
-    public StartRegistrationCommandValidator()
+    public InviteMemberCommandValidator()
     {
         RuleFor(x => x.Email)
             .NotEmpty()

@@ -53,6 +53,15 @@ public sealed class UserRepositoryMock
         return this;
     }
 
+    public UserRepositoryMock WithUserById(Guid id, User user)
+    {
+        _mock
+            .Setup(db => db.FindByIdAsync(id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        return this;
+    }
+
     public UserRepositoryMock CapturingRegistration()
     {
         _mock

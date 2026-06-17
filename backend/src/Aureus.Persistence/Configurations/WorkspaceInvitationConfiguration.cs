@@ -7,7 +7,6 @@ namespace Aureus.Persistence.Configurations;
 public sealed class WorkspaceInvitationConfiguration : IEntityTypeConfiguration<WorkspaceInvitationDb>
 {
     private const int MaxEmailLength = 254;
-    private const int MaxTokenHashLength = 64; // SHA-256 hex
 
     public void Configure(EntityTypeBuilder<WorkspaceInvitationDb> builder)
     {
@@ -19,7 +18,6 @@ public sealed class WorkspaceInvitationConfiguration : IEntityTypeConfiguration<
         builder.Property(invitation => invitation.WorkspaceId).HasColumnName("workspace_id").IsRequired();
         builder.Property(invitation => invitation.Email).HasColumnName("email").HasMaxLength(MaxEmailLength).IsRequired();
         builder.Property(invitation => invitation.InvitedByUserId).HasColumnName("invited_by_user_id").IsRequired();
-        builder.Property(invitation => invitation.TokenHash).HasColumnName("token_hash").HasMaxLength(MaxTokenHashLength).IsRequired();
         builder.Property(invitation => invitation.ExpiresAt).HasColumnName("expires_at").IsRequired();
         builder.Property(invitation => invitation.CreatedAt).HasColumnName("created_at").IsRequired();
 

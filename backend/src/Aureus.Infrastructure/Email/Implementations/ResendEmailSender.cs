@@ -13,7 +13,7 @@ public sealed class ResendEmailSender(Resend.IResend resend, IOptions<ResendOpti
     {
         var resendMessage = new ResendMessage
         {
-            From = _options.FromAddress,
+            From = $"{_options.FromName} <{_options.FromAddress}>",
             To = [message.To],
             Subject = message.Subject,
             HtmlBody = message.HtmlBody,

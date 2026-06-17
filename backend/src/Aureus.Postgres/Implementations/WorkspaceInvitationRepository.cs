@@ -70,8 +70,8 @@ public sealed class WorkspaceInvitationRepository(AureusDbContext dbContext, IMa
         }
         else
         {
-            existing.TokenHash = invitation.TokenHash;
             existing.ExpiresAt = invitation.ExpiresAt;
+            existing.InvitedByUserId = invitation.InvitedByUserId;
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -82,5 +82,19 @@ public sealed class WorkspaceInvitationRepository(AureusDbContext dbContext, IMa
         return dbContext.WorkspaceInvitations
             .Where(i => i.Id == id)
             .ExecuteDeleteAsync(cancellationToken);
+    }
+
+    public async Task AcceptAsync(Guid invitationId, WorkspaceMember newMember, CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await dbContext.WorkspaceInvitations
+            .Where(i => i.Id == invitationId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        dbContext.WorkspaceMembers.Add(mapper.Map<WorkspaceMemberDb>(newMember));
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 }

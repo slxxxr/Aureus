@@ -19,4 +19,6 @@ public interface IWorkspaceInvitationRepository
     Task UpsertAsync(WorkspaceInvitation invitation, CancellationToken cancellationToken);
 
     Task DeleteAsync(Guid id, CancellationToken cancellationToken);
+
+    Task AcceptAsync(Guid invitationId, WorkspaceMember newMember, CancellationToken cancellationToken);
 }
