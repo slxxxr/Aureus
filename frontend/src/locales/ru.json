@@ -295,6 +295,7 @@
     "membersCount_one": "{{count}} участник",
     "membersCount_few": "{{count}} участника",
     "membersCount_many": "{{count}} участников",
+    "membersCount_other": "{{count}} участника",
     "removeConfirm": {
       "title": "Исключить участника?",
       "description": "{{name}} потеряет доступ к пространству."
@@ -326,6 +327,7 @@
     "pendingCount_one": "{{count}} ожидает",
     "pendingCount_few": "{{count}} ожидают",
     "pendingCount_many": "{{count}} ожидают",
+    "pendingCount_other": "{{count}} ожидают",
     "noInvitations": "Нет входящих приглашений",
     "expires": "до {{date}}",
     "accept": "Принять",

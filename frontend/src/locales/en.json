@@ -86,13 +86,6 @@
       "submit": "Create",
       "submitting": "Creating…"
     },
-    "editModal": {
-      "title": "Edit workspace",
-      "nameLabel": "Name",
-      "save": "Save",
-      "saving": "Saving…",
-      "deleteWorkspace": "Delete workspace"
-    },
     "deleteConfirm": {
       "title": "Delete workspace?",
       "description": "All accounts, categories, and transactions in this workspace will also be deleted. This action cannot be undone."
@@ -300,6 +293,8 @@
     },
     "you": "you",
     "membersCount_one": "{{count}} member",
+    "membersCount_few": "{{count}} members",
+    "membersCount_many": "{{count}} members",
     "membersCount_other": "{{count}} members",
     "removeConfirm": {
       "title": "Remove member?",
@@ -330,6 +325,8 @@
   "invitations": {
     "title": "Invitations",
     "pendingCount_one": "{{count}} pending",
+    "pendingCount_few": "{{count}} pending",
+    "pendingCount_many": "{{count}} pending",
     "pendingCount_other": "{{count}} pending",
     "noInvitations": "No incoming invitations",
     "expires": "until {{date}}",

@@ -1,6 +1,8 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { InputLimits } from "@/lib/inputLimits";
 import { Check, ChevronDown, Landmark, Plus, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
@@ -148,7 +150,7 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
     <>
       {showCreate && <CreateWorkspaceModal onClose={() => setShowCreate(false)} />}
       {settingsWorkspace && (
-        <WorkspaceSettingsModal workspace={settingsWorkspace} onClose={() => setEditingWorkspace(null)} />
+        <WorkspaceSettingsModal workspace={settingsWorkspace} onClose={() => setSettingsWorkspace(null)} />
       )}
     </>
   );
