@@ -217,6 +217,29 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task DeleteMemberAsync_MakesMemberInvisible()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var memberId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, memberId);
+
+        // Act
+        await using (var db = fixture.CreateDbContext())
+        {
+            await new WorkspaceRepository(db, fixture.Mapper)
+                .DeleteMemberAsync(workspaceId, memberId, CancellationToken.None);
+        }
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var membership = await new WorkspaceRepository(assertDb, fixture.Mapper)
+            .FindMembershipAsync(workspaceId, memberId, CancellationToken.None);
+        Assert.Null(membership);
+    }
+
+    [Fact]
     public async Task CountActiveMembersAsync_ExcludesSoftDeletedMembers()
     {
         // Arrange

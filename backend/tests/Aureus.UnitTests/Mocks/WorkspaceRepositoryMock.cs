@@ -102,4 +102,19 @@ public sealed class WorkspaceRepositoryMock
 
         return this;
     }
+
+    public WorkspaceRepositoryMock CapturingDeleteMember()
+    {
+        _mock
+            .Setup(r => r.DeleteMemberAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
+
+        return this;
+    }
+
+    public void VerifyDeleteMemberCalledOnce(Guid workspaceId, Guid userId) =>
+        _mock.Verify(r => r.DeleteMemberAsync(workspaceId, userId, It.IsAny<CancellationToken>()), Times.Once);
+
+    public void VerifyDeleteMemberNotCalled() =>
+        _mock.Verify(r => r.DeleteMemberAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
 }

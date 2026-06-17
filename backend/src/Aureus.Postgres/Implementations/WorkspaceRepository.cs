@@ -65,6 +65,17 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task DeleteMemberAsync(Guid workspaceId, Guid userId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        await dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspaceId && m.UserId == userId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(m => m.IsDeleted, true)
+                .SetProperty(m => m.DeletedAt, now), cancellationToken);
+    }
+
     public async Task UpdateAsync(Workspace workspace, CancellationToken cancellationToken)
     {
         await dbContext.Workspaces
