@@ -32,6 +32,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     queryFn: getWorkspaces,
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000,
+    refetchInterval: 30_000,
   });
 
   useEffect(() => {

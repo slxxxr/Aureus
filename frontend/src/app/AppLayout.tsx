@@ -16,6 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
+import { NotificationsPopover } from "@/components/NotificationsPopover";
 import { useAuth } from "@/features/auth/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -275,6 +276,7 @@ export function AppLayout() {
           </div>
 
           <div className="flex items-center gap-2">
+            <NotificationsPopover />
             <LanguageToggle />
             <Button
               variant="ghost"
