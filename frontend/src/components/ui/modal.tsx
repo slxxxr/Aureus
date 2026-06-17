@@ -1,8 +1,22 @@
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
-export function Modal({ children, onBackdropClick }: { children: ReactNode; onBackdropClick: () => void }) {
+const sizeClass = {
+  sm: "max-w-sm",
+  md: "max-w-md",
+} as const;
+
+export function Modal({
+  children,
+  onBackdropClick,
+  size = "sm",
+}: {
+  children: ReactNode;
+  onBackdropClick: () => void;
+  size?: keyof typeof sizeClass;
+}) {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") onBackdropClick();
@@ -19,7 +33,7 @@ export function Modal({ children, onBackdropClick }: { children: ReactNode; onBa
       <div
         role="dialog"
         aria-modal="true"
-        className="w-full max-w-sm rounded-lg border border-border bg-background p-6 shadow-lg"
+        className={cn("w-full rounded-lg border border-border bg-background p-6 shadow-lg", sizeClass[size])}
       >
         {children}
       </div>

@@ -200,7 +200,7 @@ export function MultiSelect({
         type="button"
         onClick={() => !disabled && setOpen((v) => !v)}
         disabled={disabled}
-        className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-2 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
       >
         <span className="truncate text-left">{triggerLabel}</span>
         <ChevronDown
