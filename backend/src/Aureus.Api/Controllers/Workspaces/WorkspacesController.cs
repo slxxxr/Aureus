@@ -35,7 +35,6 @@ public sealed class WorkspacesController(ISender sender, IMapper mapper) : ApiCo
     }
 
     [HttpPatch("{workspaceId:guid}")]
-    [ValidateWorkspaceMember]
     [RequireWorkspaceRole(WorkspaceRole.Manager)]
     [ProducesResponseType(typeof(WorkspaceResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateAsync(
@@ -49,7 +48,6 @@ public sealed class WorkspacesController(ISender sender, IMapper mapper) : ApiCo
     }
 
     [HttpDelete("{workspaceId:guid}")]
-    [ValidateWorkspaceMember]
     [RequireWorkspaceRole(WorkspaceRole.Owner)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteAsync(Guid workspaceId, CancellationToken cancellationToken)

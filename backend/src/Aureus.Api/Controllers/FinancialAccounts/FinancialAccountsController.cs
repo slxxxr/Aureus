@@ -11,11 +11,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Aureus.Api.Controllers.FinancialAccounts;
 
-[ValidateWorkspaceMember]
 [Route("api/workspaces/{workspaceId:guid}/financial-accounts")]
 public sealed class FinancialAccountsController(ISender sender, IMapper mapper) : ApiControllerBase
 {
     [HttpGet]
+    [RequireWorkspaceRole(WorkspaceRole.Member)]
     [ProducesResponseType(typeof(IReadOnlyList<FinancialAccountResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAsync(Guid workspaceId, CancellationToken cancellationToken)
     {

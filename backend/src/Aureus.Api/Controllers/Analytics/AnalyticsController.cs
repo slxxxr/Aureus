@@ -1,6 +1,7 @@
 using Aureus.Api.Contracts.Analytics;
 using Aureus.Api.Filters;
 using Aureus.Domain.Analytics;
+using Aureus.Domain.Workspaces;
 using Aureus.UseCases.Analytics.GetBreakdown;
 using Aureus.UseCases.Analytics.GetCategoryTimeSeries;
 using Aureus.UseCases.Analytics.GetInsights;
@@ -12,7 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Aureus.Api.Controllers.Analytics;
 
-[ValidateWorkspaceMember]
+[RequireWorkspaceRole(WorkspaceRole.Member)]
 [Route("api/workspaces/{workspaceId:guid}/analytics")]
 public sealed class AnalyticsController(ISender sender, IMapper mapper) : ApiControllerBase
 {

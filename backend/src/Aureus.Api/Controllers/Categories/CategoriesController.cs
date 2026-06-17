@@ -11,11 +11,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Aureus.Api.Controllers.Categories;
 
-[ValidateWorkspaceMember]
 [Route("api/workspaces/{workspaceId:guid}/categories")]
 public sealed class CategoriesController(ISender sender, IMapper mapper) : ApiControllerBase
 {
     [HttpGet]
+    [RequireWorkspaceRole(WorkspaceRole.Member)]
     [ProducesResponseType(typeof(IReadOnlyList<CategoryResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
