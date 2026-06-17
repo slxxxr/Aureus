@@ -75,4 +75,31 @@ public sealed class WorkspaceRepositoryMock
 
     public void VerifyDeleteNotCalled() =>
         _mock.Verify(r => r.DeleteAsync(It.IsAny<Workspace>(), It.IsAny<CancellationToken>()), Times.Never);
+
+    public WorkspaceRepositoryMock WithActiveMemberCount(Guid workspaceId, int count)
+    {
+        _mock
+            .Setup(r => r.CountActiveMembersAsync(workspaceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(count);
+
+        return this;
+    }
+
+    public WorkspaceRepositoryMock WithMembership(Guid workspaceId, Guid userId, WorkspaceRole role)
+    {
+        _mock
+            .Setup(r => r.FindMembershipAsync(workspaceId, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new WorkspaceMembership(workspaceId, userId, role));
+
+        return this;
+    }
+
+    public WorkspaceRepositoryMock WithNoMembership(Guid workspaceId, Guid userId)
+    {
+        _mock
+            .Setup(r => r.FindMembershipAsync(workspaceId, userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((WorkspaceMembership?)null);
+
+        return this;
+    }
 }

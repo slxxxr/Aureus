@@ -1,6 +1,7 @@
 using Aureus.Postgres.Implementations;
 using Aureus.Domain.Workspaces;
 using Aureus.IntegrationTests.Common;
+using Aureus.Persistence.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -236,25 +237,6 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         Assert.Equal(2, count);
     }
 
-    [Fact]
-    public async Task AddMemberAsync_PersistsMembership()
-    {
-        // Arrange
-        var ownerId = await TestData.SeedUserAsync(fixture);
-        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
-        var newUserId = await TestData.SeedUserAsync(fixture);
-
-        // Act
-        await AddMemberAsync(workspaceId, newUserId);
-
-        // Assert
-        await using var db = fixture.CreateDbContext();
-        var membership = await new WorkspaceRepository(db, fixture.Mapper)
-            .FindMembershipAsync(workspaceId, newUserId, CancellationToken.None);
-        Assert.NotNull(membership);
-        Assert.Equal(WorkspaceRole.Member, membership!.Role);
-    }
-
     private static (Workspace Workspace, WorkspaceMember Member) NewWorkspace(Guid ownerId, string name)
     {
         var workspace = new Workspace
@@ -322,7 +304,6 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
             WorkspaceId = workspaceId,
             Email = $"{Guid.NewGuid():N}@test.local",
             InvitedByUserId = invitedByUserId,
-            TokenHash = "hash",
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
             CreatedAt = DateTimeOffset.UtcNow,
         };
@@ -335,16 +316,15 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
 
     private async Task AddMemberAsync(Guid workspaceId, Guid userId)
     {
-        var member = new WorkspaceMember
+        await using var db = fixture.CreateDbContext();
+        db.WorkspaceMembers.Add(new WorkspaceMemberDb
         {
             Id = Guid.NewGuid(),
             WorkspaceId = workspaceId,
             UserId = userId,
-            Role = WorkspaceRole.Member,
+            Role = nameof(WorkspaceRole.Member),
             JoinedAt = DateTimeOffset.UtcNow,
-        };
-
-        await using var db = fixture.CreateDbContext();
-        await new WorkspaceRepository(db, fixture.Mapper).AddMemberAsync(member, CancellationToken.None);
+        });
+        await db.SaveChangesAsync();
     }
 }

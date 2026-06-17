@@ -65,13 +65,6 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task AddMemberAsync(WorkspaceMember member, CancellationToken cancellationToken)
-    {
-        dbContext.WorkspaceMembers.Add(mapper.Map<WorkspaceMemberDb>(member));
-
-        await dbContext.SaveChangesAsync(cancellationToken);
-    }
-
     public async Task UpdateAsync(Workspace workspace, CancellationToken cancellationToken)
     {
         await dbContext.Workspaces
