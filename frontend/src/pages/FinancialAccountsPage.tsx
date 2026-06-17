@@ -274,14 +274,16 @@ function EditAccountModal({
         )}
 
         <div className="flex items-center justify-between pt-1">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setConfirmingDelete(true)}
             disabled={isPending}
-            className="text-sm text-destructive hover:underline disabled:opacity-50"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             {t("financialAccounts.editModal.deleteAccount")}
-          </button>
+          </Button>
           <div className="flex gap-2">
             <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
               {t("common.cancel")}

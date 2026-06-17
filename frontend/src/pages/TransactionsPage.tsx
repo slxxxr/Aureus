@@ -534,14 +534,16 @@ function EditTransactionModal({
         )}
 
         <div className="flex items-center justify-between pt-1">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setConfirmingDelete(true)}
             disabled={isPending}
-            className="text-sm text-destructive hover:underline disabled:opacity-50"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             {t("transactions.editModal.deleteTransaction")}
-          </button>
+          </Button>
           <div className="flex gap-2">
             <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
               {t("common.cancel")}
@@ -618,16 +620,19 @@ function TransactionRow({
         </p>
       </div>
 
-      {/* edit pencil */}
-      {canEdit && (
-        <button
-          onClick={onEdit}
-          className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          aria-label={t("transactions.editModal.title")}
-        >
-          <Pencil className="h-3.5 w-3.5" />
-        </button>
-      )}
+      {/* edit pencil — always rendered to keep alignment stable */}
+      <button
+        onClick={canEdit ? onEdit : undefined}
+        tabIndex={canEdit ? 0 : -1}
+        aria-hidden={!canEdit}
+        className={cn(
+          "shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+          canEdit ? "group-hover:opacity-100 cursor-pointer" : "pointer-events-none",
+        )}
+        aria-label={t("transactions.editModal.title")}
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </button>
     </div>
   );
 }
