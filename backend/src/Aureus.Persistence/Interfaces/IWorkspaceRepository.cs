@@ -14,7 +14,13 @@ public interface IWorkspaceRepository
 
     Task AddAsync(Workspace workspace, WorkspaceMember member, CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<WorkspaceMemberDetail>> GetMembersAsync(Guid workspaceId, CancellationToken cancellationToken);
+
     Task DeleteMemberAsync(Guid workspaceId, Guid userId, CancellationToken cancellationToken);
+
+    Task UpdateMemberRoleAsync(Guid workspaceId, Guid userId, WorkspaceRole newRole, CancellationToken cancellationToken);
+
+    Task TransferOwnershipAsync(Guid workspaceId, Guid fromUserId, Guid toUserId, CancellationToken cancellationToken);
 
     Task UpdateAsync(Workspace workspace, CancellationToken cancellationToken);
 

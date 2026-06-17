@@ -27,5 +27,6 @@ public sealed class ContractMappings : Profile
         CreateMap<BreakdownItem, BreakdownItemResponse>();
         CreateMap<TimeSeriesPoint, TimeSeriesPointResponse>();
         CreateMap<CategoryTimeSeriesPoint, CategoryTimeSeriesPointResponse>();
+        CreateMap<WorkspaceMemberDetail, WorkspaceMemberResponse>();
     }
 }

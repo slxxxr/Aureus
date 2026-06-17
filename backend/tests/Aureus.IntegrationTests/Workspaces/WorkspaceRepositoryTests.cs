@@ -217,6 +217,77 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
     }
 
     [Fact]
+    public async Task GetMembersAsync_ReturnsActiveMembers()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var memberId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, memberId);
+        var removedId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, removedId);
+        await SoftDeleteMemberAsync(workspaceId, removedId);
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var members = await new WorkspaceRepository(db, fixture.Mapper)
+            .GetMembersAsync(workspaceId, CancellationToken.None);
+
+        // Assert — owner + memberId only; removedId excluded
+        Assert.Equal(2, members.Count);
+        Assert.Contains(members, m => m.UserId == ownerId && m.Role == WorkspaceRole.Owner);
+        Assert.Contains(members, m => m.UserId == memberId && m.Role == WorkspaceRole.Member);
+    }
+
+    [Fact]
+    public async Task UpdateMemberRoleAsync_ChangesRole()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var memberId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, memberId);
+
+        // Act
+        await using (var db = fixture.CreateDbContext())
+        {
+            await new WorkspaceRepository(db, fixture.Mapper)
+                .UpdateMemberRoleAsync(workspaceId, memberId, WorkspaceRole.Manager, CancellationToken.None);
+        }
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var membership = await new WorkspaceRepository(assertDb, fixture.Mapper)
+            .FindMembershipAsync(workspaceId, memberId, CancellationToken.None);
+        Assert.Equal(WorkspaceRole.Manager, membership!.Role);
+    }
+
+    [Fact]
+    public async Task TransferOwnershipAsync_SwapsRolesAtomically()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var memberId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, memberId);
+
+        // Act
+        await using (var db = fixture.CreateDbContext())
+        {
+            await new WorkspaceRepository(db, fixture.Mapper)
+                .TransferOwnershipAsync(workspaceId, ownerId, memberId, CancellationToken.None);
+        }
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var repo = new WorkspaceRepository(assertDb, fixture.Mapper);
+        var newOwner = await repo.FindMembershipAsync(workspaceId, memberId, CancellationToken.None);
+        var formerOwner = await repo.FindMembershipAsync(workspaceId, ownerId, CancellationToken.None);
+        Assert.Equal(WorkspaceRole.Owner, newOwner!.Role);
+        Assert.Equal(WorkspaceRole.Manager, formerOwner!.Role);
+    }
+
+    [Fact]
     public async Task DeleteMemberAsync_MakesMemberInvisible()
     {
         // Arrange

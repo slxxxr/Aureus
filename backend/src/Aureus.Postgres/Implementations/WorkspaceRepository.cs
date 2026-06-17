@@ -65,6 +65,25 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<WorkspaceMemberDetail>> GetMembersAsync(
+        Guid workspaceId, CancellationToken cancellationToken)
+    {
+        var rows = await dbContext.WorkspaceMembers
+            .AsNoTracking()
+            .Where(m => m.WorkspaceId == workspaceId)
+            .Join(dbContext.Users,
+                m => m.UserId,
+                u => u.Id,
+                (m, u) => new { m.UserId, m.Role, m.JoinedAt, u.Name, u.Email })
+            .OrderBy(x => x.JoinedAt)
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(x => new WorkspaceMemberDetail(
+                x.UserId, x.Name, x.Email, Enum.Parse<WorkspaceRole>(x.Role), x.JoinedAt))
+            .ToList();
+    }
+
     public async Task DeleteMemberAsync(Guid workspaceId, Guid userId, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
@@ -74,6 +93,30 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
             .ExecuteUpdateAsync(s => s
                 .SetProperty(m => m.IsDeleted, true)
                 .SetProperty(m => m.DeletedAt, now), cancellationToken);
+    }
+
+    public async Task UpdateMemberRoleAsync(
+        Guid workspaceId, Guid userId, WorkspaceRole newRole, CancellationToken cancellationToken)
+    {
+        await dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspaceId && m.UserId == userId)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Role, newRole.ToString()), cancellationToken);
+    }
+
+    public async Task TransferOwnershipAsync(
+        Guid workspaceId, Guid fromUserId, Guid toUserId, CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspaceId && m.UserId == fromUserId)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Role, nameof(WorkspaceRole.Manager)), cancellationToken);
+
+        await dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspaceId && m.UserId == toUserId)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Role, nameof(WorkspaceRole.Owner)), cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(Workspace workspace, CancellationToken cancellationToken)

@@ -6,4 +6,6 @@ public enum WorkspaceMemberErrorCode
     CannotRemoveOwner = 2,
     InsufficientRole = 3,
     CannotLeaveAsOwner = 4,
+    CannotTargetSelf = 5,
+    CannotChangeOwnerRole = 6,
 }
