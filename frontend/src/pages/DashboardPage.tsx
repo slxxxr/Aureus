@@ -41,7 +41,7 @@ function PeriodFilter() {
             type="button"
             onClick={() => selectPreset(option.value)}
             className={cn(
-              "rounded px-2.5 py-1.5 text-sm transition-colors",
+              "h-9 rounded px-2.5 text-sm transition-colors",
               preset === option.value
                 ? "bg-accent font-medium text-foreground"
                 : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",

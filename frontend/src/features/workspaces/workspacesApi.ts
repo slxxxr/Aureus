@@ -1,6 +1,6 @@
 import { apiFetch } from "@/lib/apiClient";
 
-export type WorkspaceRole = "Owner" | "Member";
+export type WorkspaceRole = "Owner" | "Manager" | "Member";
 
 export type Workspace = {
   id: string;

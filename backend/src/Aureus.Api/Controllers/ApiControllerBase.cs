@@ -21,7 +21,7 @@ public abstract class ApiControllerBase : ControllerBase
     }
 
     protected WorkspaceMembership CurrentWorkspaceMembership =>
-        HttpContext.Items[ValidateWorkspaceMemberFilter.MembershipItemKey] as WorkspaceMembership
+        HttpContext.Items[RequireWorkspaceRoleFilter.MembershipItemKey] as WorkspaceMembership
         ?? throw new InvalidOperationException(
-            $"{nameof(CurrentWorkspaceMembership)} is only available on endpoints decorated with [{nameof(ValidateWorkspaceMemberAttribute)}].");
+            $"{nameof(CurrentWorkspaceMembership)} is only available on endpoints decorated with [{nameof(RequireWorkspaceRoleAttribute)}].");
 }

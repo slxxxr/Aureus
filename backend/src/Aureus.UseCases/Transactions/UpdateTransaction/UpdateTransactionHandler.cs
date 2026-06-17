@@ -1,5 +1,6 @@
 using Aureus.Domain.Categories;
 using Aureus.Domain.Transactions;
+using Aureus.Domain.Workspaces;
 using Aureus.Persistence.Interfaces;
 using MediatR;
 
@@ -21,6 +22,14 @@ public sealed class UpdateTransactionHandler(
             throw new TransactionException(
                 TransactionErrorCode.NotFound,
                 $"Transaction {command.TransactionId} not found.");
+        }
+
+        if (command.RequestingUserRole < WorkspaceRole.Manager &&
+            transaction.CreatedByUserId != command.RequestingUserId)
+        {
+            throw new TransactionException(
+                TransactionErrorCode.Forbidden,
+                "Members can only edit their own transactions.");
         }
 
         var oldAccountId = transaction.FinancialAccountId;

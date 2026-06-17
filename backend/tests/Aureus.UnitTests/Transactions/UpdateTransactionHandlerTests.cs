@@ -1,6 +1,7 @@
 using Aureus.Domain.Categories;
 using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transactions;
+using Aureus.Domain.Workspaces;
 using Aureus.UnitTests.Mocks;
 using Aureus.UseCases.Transactions.UpdateTransaction;
 
@@ -12,6 +13,7 @@ public sealed class UpdateTransactionHandlerTests
         Guid? id = null,
         Guid? workspaceId = null,
         Guid? accountId = null,
+        Guid? createdByUserId = null,
         TransactionType type = TransactionType.Expense,
         long amountMinor = 100_00,
         string currency = "RUB") => new()
@@ -20,7 +22,7 @@ public sealed class UpdateTransactionHandlerTests
         WorkspaceId = workspaceId ?? Guid.NewGuid(),
         FinancialAccountId = accountId ?? Guid.NewGuid(),
         CategoryId = Guid.NewGuid(),
-        CreatedByUserId = Guid.NewGuid(),
+        CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
         Name = "Bought bread",
         Type = type,
         AmountMinor = amountMinor,
@@ -63,6 +65,19 @@ public sealed class UpdateTransactionHandlerTests
             (categoryRepo ?? new CategoryRepositoryMock()).Object,
             (accountRepo ?? new FinancialAccountRepositoryMock()).Object);
 
+    private static UpdateTransactionCommand OwnerCommand(
+        Guid transactionId,
+        Guid workspaceId,
+        string? name = null,
+        long? amountMinor = null,
+        Guid? categoryId = null,
+        Guid? financialAccountId = null,
+        TransactionType? type = null,
+        DateOnly? occurredAt = null,
+        string? note = null) =>
+        new(transactionId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner,
+            name, amountMinor, categoryId, financialAccountId, type, occurredAt, note);
+
     [Fact]
     public async Task Handle_TransactionNotFound_ThrowsNotFound()
     {
@@ -74,9 +89,7 @@ public sealed class UpdateTransactionHandlerTests
 
         // Act
         var exception = await Assert.ThrowsAsync<TransactionException>(() =>
-            handler.Handle(
-                new UpdateTransactionCommand(transactionId, workspaceId, null, null, null, null, null, null, null),
-                CancellationToken.None));
+            handler.Handle(OwnerCommand(transactionId, workspaceId), CancellationToken.None));
 
         // Assert
         Assert.Equal(TransactionErrorCode.NotFound, exception.Code);
@@ -98,7 +111,7 @@ public sealed class UpdateTransactionHandlerTests
         // Act
         var exception = await Assert.ThrowsAsync<CategoryException>(() =>
             handler.Handle(
-                new UpdateTransactionCommand(transaction.Id, workspaceId, null, null, newCategoryId, null, null, null, null),
+                OwnerCommand(transaction.Id, workspaceId, categoryId: newCategoryId),
                 CancellationToken.None));
 
         // Assert
@@ -121,7 +134,7 @@ public sealed class UpdateTransactionHandlerTests
 
         // Act
         await handler.Handle(
-            new UpdateTransactionCommand(transaction.Id, workspaceId, null, newAmount, null, null, null, null, null),
+            OwnerCommand(transaction.Id, workspaceId, amountMinor: newAmount),
             CancellationToken.None);
 
         // Assert
@@ -140,9 +153,7 @@ public sealed class UpdateTransactionHandlerTests
         var handler = BuildHandler(transactionRepo);
 
         // Act
-        await handler.Handle(
-            new UpdateTransactionCommand(transaction.Id, workspaceId, null, null, null, null, null, null, null),
-            CancellationToken.None);
+        await handler.Handle(OwnerCommand(transaction.Id, workspaceId), CancellationToken.None);
 
         // Assert
         Assert.Equal(0, transactionRepo.UpdatedBalanceDelta);
@@ -161,7 +172,7 @@ public sealed class UpdateTransactionHandlerTests
 
         // Act
         var result = await handler.Handle(
-            new UpdateTransactionCommand(transaction.Id, workspaceId, "  Dinner  ", null, null, null, null, null, "  at cafe  "),
+            OwnerCommand(transaction.Id, workspaceId, name: "  Dinner  ", note: "  at cafe  "),
             CancellationToken.None);
 
         // Assert
@@ -184,9 +195,7 @@ public sealed class UpdateTransactionHandlerTests
         var handler = BuildHandler(transactionRepo);
 
         // Act
-        var result = await handler.Handle(
-            new UpdateTransactionCommand(transaction.Id, workspaceId, null, null, null, null, null, null, null),
-            CancellationToken.None);
+        var result = await handler.Handle(OwnerCommand(transaction.Id, workspaceId), CancellationToken.None);
 
         // Assert
         Assert.Equal(originalName, result.Name);
@@ -208,7 +217,7 @@ public sealed class UpdateTransactionHandlerTests
         // Act
         var exception = await Assert.ThrowsAsync<TransactionException>(() =>
             handler.Handle(
-                new UpdateTransactionCommand(transaction.Id, workspaceId, null, null, null, null, TransactionType.Income, null, null),
+                OwnerCommand(transaction.Id, workspaceId, type: TransactionType.Income),
                 CancellationToken.None));
 
         // Assert
@@ -231,7 +240,7 @@ public sealed class UpdateTransactionHandlerTests
         // Act — new type is Income but category is Expense
         var exception = await Assert.ThrowsAsync<TransactionException>(() =>
             handler.Handle(
-                new UpdateTransactionCommand(transaction.Id, workspaceId, null, null, expenseCategory.Id, null, TransactionType.Income, null, null),
+                OwnerCommand(transaction.Id, workspaceId, categoryId: expenseCategory.Id, type: TransactionType.Income),
                 CancellationToken.None));
 
         // Assert
@@ -257,7 +266,7 @@ public sealed class UpdateTransactionHandlerTests
 
         // Act
         await handler.Handle(
-            new UpdateTransactionCommand(transaction.Id, workspaceId, null, null, newCategory.Id, null, newType, null, null),
+            OwnerCommand(transaction.Id, workspaceId, categoryId: newCategory.Id, type: newType),
             CancellationToken.None);
 
         // Assert
@@ -280,7 +289,7 @@ public sealed class UpdateTransactionHandlerTests
         // Act
         var exception = await Assert.ThrowsAsync<TransactionException>(() =>
             handler.Handle(
-                new UpdateTransactionCommand(transaction.Id, workspaceId, null, null, null, newAccountId, null, null, null),
+                OwnerCommand(transaction.Id, workspaceId, financialAccountId: newAccountId),
                 CancellationToken.None));
 
         // Assert
@@ -303,7 +312,7 @@ public sealed class UpdateTransactionHandlerTests
 
         // Act
         var result = await handler.Handle(
-            new UpdateTransactionCommand(transaction.Id, workspaceId, null, null, null, newAccount.Id, null, null, null),
+            OwnerCommand(transaction.Id, workspaceId, financialAccountId: newAccount.Id),
             CancellationToken.None);
 
         // Assert
@@ -328,12 +337,81 @@ public sealed class UpdateTransactionHandlerTests
 
         // Act
         await handler.Handle(
-            new UpdateTransactionCommand(transaction.Id, workspaceId, null, null, null, newAccount.Id, null, null, null),
+            OwnerCommand(transaction.Id, workspaceId, financialAccountId: newAccount.Id),
             CancellationToken.None);
 
         // Assert
         Assert.Equal(oldAccountId, transactionRepo.UpdatedOldAccountId);
         Assert.Equal(100_00, transactionRepo.UpdatedOldAccountDelta);
         Assert.Equal(-100_00, transactionRepo.UpdatedNewAccountDelta);
+    }
+
+    [Fact]
+    public async Task Handle_MemberEditsOtherUserTransaction_ThrowsForbidden()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var memberId = Guid.NewGuid();
+        var transaction = DefaultTransaction(workspaceId: workspaceId, createdByUserId: ownerId);
+        var transactionRepo = new TransactionRepositoryMock()
+            .WithTransaction(transaction.Id, workspaceId, transaction);
+        var handler = BuildHandler(transactionRepo);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<TransactionException>(() =>
+            handler.Handle(
+                new UpdateTransactionCommand(
+                    transaction.Id, workspaceId, memberId, WorkspaceRole.Member,
+                    "New name", null, null, null, null, null, null),
+                CancellationToken.None));
+
+        // Assert
+        Assert.Equal(TransactionErrorCode.Forbidden, exception.Code);
+    }
+
+    [Fact]
+    public async Task Handle_MemberEditsOwnTransaction_Succeeds()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var memberId = Guid.NewGuid();
+        var transaction = DefaultTransaction(workspaceId: workspaceId, createdByUserId: memberId);
+        var transactionRepo = new TransactionRepositoryMock()
+            .WithTransaction(transaction.Id, workspaceId, transaction)
+            .CapturingUpdate();
+        var handler = BuildHandler(transactionRepo);
+
+        // Act
+        var result = await handler.Handle(
+            new UpdateTransactionCommand(
+                transaction.Id, workspaceId, memberId, WorkspaceRole.Member,
+                "New name", null, null, null, null, null, null),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal("New name", result.Name);
+    }
+
+    [Fact]
+    public async Task Handle_ManagerEditsOtherUserTransaction_Succeeds()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var transaction = DefaultTransaction(workspaceId: workspaceId, createdByUserId: Guid.NewGuid());
+        var transactionRepo = new TransactionRepositoryMock()
+            .WithTransaction(transaction.Id, workspaceId, transaction)
+            .CapturingUpdate();
+        var handler = BuildHandler(transactionRepo);
+
+        // Act
+        var result = await handler.Handle(
+            new UpdateTransactionCommand(
+                transaction.Id, workspaceId, Guid.NewGuid(), WorkspaceRole.Manager,
+                "New name", null, null, null, null, null, null),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal("New name", result.Name);
     }
 }

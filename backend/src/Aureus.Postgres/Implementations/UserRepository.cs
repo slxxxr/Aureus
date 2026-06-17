@@ -16,6 +16,15 @@ public sealed class UserRepository(AureusDbContext dbContext, IMapper mapper) : 
         return dbContext.Users.AnyAsync(user => user.Email == email, cancellationToken);
     }
 
+    public async Task<User?> FindByIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var userDb = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(user => user.Id == userId, cancellationToken);
+
+        return userDb is null ? null : mapper.Map<User>(userDb);
+    }
+
     public async Task<User?> FindByEmailAsync(string email, CancellationToken cancellationToken)
     {
         var userDb = await dbContext.Users
@@ -23,6 +32,14 @@ public sealed class UserRepository(AureusDbContext dbContext, IMapper mapper) : 
             .FirstOrDefaultAsync(user => user.Email == email, cancellationToken);
 
         return userDb is null ? null : mapper.Map<User>(userDb);
+    }
+
+    public async Task UpdateProfileAsync(User user, CancellationToken cancellationToken)
+    {
+        await dbContext.Users
+            .Where(u => u.Id == user.Id)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(u => u.Name, user.Name), cancellationToken);
     }
 
     public async Task AddAsync(

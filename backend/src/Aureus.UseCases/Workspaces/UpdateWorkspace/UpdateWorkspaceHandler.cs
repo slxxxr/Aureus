@@ -16,11 +16,6 @@ public sealed class UpdateWorkspaceHandler(IWorkspaceRepository workspaceReposit
             throw new WorkspaceException(WorkspaceErrorCode.NotFound, "Workspace not found.");
         }
 
-        if (workspace.OwnerUserId != command.UserId)
-        {
-            throw new WorkspaceException(WorkspaceErrorCode.Forbidden, "Only the workspace owner can edit it.");
-        }
-
         if (command.Name is not null)
         {
             workspace.Name = command.Name.Trim();

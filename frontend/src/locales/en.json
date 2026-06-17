@@ -57,6 +57,16 @@
       "description": "Workspace, profile, and interface settings will be managed here."
     }
   },
+  "settings": {
+    "profile": {
+      "title": "Profile",
+      "nameLabel": "Name",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Changes saved",
+      "errorGeneric": "Failed to save changes. Please try again."
+    }
+  },
   "placeholder": {
     "statusLabel": "Status",
     "statusValue": "Skeleton ready for the next iteration",
@@ -75,13 +85,6 @@
       "namePlaceholder": "Workspace name",
       "submit": "Create",
       "submitting": "Creating…"
-    },
-    "editModal": {
-      "title": "Edit workspace",
-      "nameLabel": "Name",
-      "save": "Save",
-      "saving": "Saving…",
-      "deleteWorkspace": "Delete workspace"
     },
     "deleteConfirm": {
       "title": "Delete workspace?",
@@ -282,6 +285,90 @@
       "errorLlmUnavailable": "The AI service is temporarily busy. Please try again in a moment."
     }
   },
+  "workspaceMembers": {
+    "roles": {
+      "Owner": "Owner",
+      "Manager": "Manager",
+      "Member": "Member"
+    },
+    "you": "you",
+    "membersCount_one": "{{count}} member",
+    "membersCount_few": "{{count}} members",
+    "membersCount_many": "{{count}} members",
+    "membersCount_other": "{{count}} members",
+    "removeConfirm": {
+      "title": "Remove member?",
+      "description": "{{name}} will lose access to this workspace."
+    },
+    "leaveConfirm": {
+      "title": "Leave workspace?",
+      "description": "You will lose access to this workspace. You'll need a new invitation to rejoin."
+    },
+    "transferModal": {
+      "title": "Transfer ownership",
+      "description": "Select a member to transfer the Owner role to. You will become a Manager.",
+      "selectPlaceholder": "Select a member",
+      "submit": "Transfer",
+      "submitting": "Transferring…"
+    },
+    "leave": "Leave",
+    "errors": {
+      "memberNotFound": "Member not found.",
+      "cannotRemoveOwner": "The workspace owner cannot be removed.",
+      "insufficientRole": "You don't have permission to do this.",
+      "cannotLeaveAsOwner": "Transfer ownership to another member before leaving.",
+      "cannotTargetSelf": "You cannot apply this action to yourself.",
+      "cannotChangeOwnerRole": "The owner's role cannot be changed through this interface.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "invitations": {
+    "title": "Invitations",
+    "pendingCount_one": "{{count}} pending",
+    "pendingCount_few": "{{count}} pending",
+    "pendingCount_many": "{{count}} pending",
+    "pendingCount_other": "{{count}} pending",
+    "noInvitations": "No incoming invitations",
+    "expires": "until {{date}}",
+    "accept": "Accept",
+    "decline": "Decline",
+    "revoke": "Revoke",
+    "inviteForm": {
+      "label": "Invite by email",
+      "placeholder": "email@example.com",
+      "submit": "Invite",
+      "submitting": "Sending…",
+      "success": "Invitation sent"
+    },
+    "pendingLabel": "Awaiting acceptance",
+    "noPending": "No pending invitations",
+    "errors": {
+      "notFound": "Invitation not found or has expired.",
+      "alreadyMember": "This user is already a member of the workspace.",
+      "workspaceFull": "The workspace has reached its maximum number of members.",
+      "dailyQuotaExceeded": "Daily invitation limit reached. Please try again tomorrow.",
+      "forbidden": "You don't have permission to do this.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "noItems": "No notifications"
+  },
+  "workspaceSettings": {
+    "title": "Workspace settings",
+    "tabs": {
+      "general": "General",
+      "members": "Members",
+      "invitations": "Invitations"
+    },
+    "general": {
+      "nameLabel": "Name",
+      "save": "Save",
+      "saving": "Saving…",
+      "deleteWorkspace": "Delete workspace"
+    }
+  },
   "auth": {
     "signOut": "Sign out",
     "fields": {
@@ -321,6 +408,8 @@
       "step3": {
         "title": "Almost there",
         "subtitle": "Create a password for your account",
+        "nameLabel": "Name",
+        "namePlaceholder": "Enter your name",
         "passwordPlaceholder": "At least 8 characters",
         "submit": "Create account",
         "submitting": "Creating account…"

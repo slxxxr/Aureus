@@ -20,6 +20,8 @@ public sealed class DatabaseMappings : Profile
             .ForMember(
                 destination => destination.Role,
                 options => options.MapFrom(source => source.Role.ToString()));
+        CreateMap<WorkspaceInvitation, WorkspaceInvitationDb>();
+        CreateMap<WorkspaceInvitationDb, WorkspaceInvitation>();
         CreateMap<FinancialAccount, FinancialAccountDb>();
         CreateMap<FinancialAccountDb, FinancialAccount>();
         CreateMap<Category, CategoryDb>()

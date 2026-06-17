@@ -35,7 +35,6 @@ public static class TestData
         var workspace = new WorkspaceDb
         {
             Id = Guid.NewGuid(),
-            OwnerUserId = ownerId,
             Name = $"ws-{Guid.NewGuid():N}",
             CreatedAt = DateTimeOffset.UtcNow,
         };

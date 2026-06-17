@@ -1,11 +1,13 @@
 using System.IdentityModel.Tokens.Jwt;
+using Aureus.Domain.Workspaces;
 using Aureus.Persistence.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Aureus.Api.Filters;
 
-public sealed class ValidateWorkspaceMemberFilter(IWorkspaceRepository workspaceRepository) : IAsyncActionFilter
+public sealed class RequireWorkspaceRoleFilter(WorkspaceRole minimumRole, IWorkspaceRepository workspaceRepository)
+    : IAsyncActionFilter
 {
     private const string WorkspaceIdRouteKey = "workspaceId";
 
@@ -29,9 +31,7 @@ public sealed class ValidateWorkspaceMemberFilter(IWorkspaceRepository workspace
         }
 
         var membership = await workspaceRepository.FindMembershipAsync(
-            workspaceId,
-            userId,
-            context.HttpContext.RequestAborted);
+            workspaceId, userId, context.HttpContext.RequestAborted);
 
         if (membership is null)
         {
@@ -40,6 +40,12 @@ public sealed class ValidateWorkspaceMemberFilter(IWorkspaceRepository workspace
         }
 
         context.HttpContext.Items[MembershipItemKey] = membership;
+
+        if (membership.Role < minimumRole)
+        {
+            context.Result = new ForbidResult();
+            return;
+        }
 
         await next();
     }

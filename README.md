@@ -36,7 +36,7 @@ Personal finance service. Track income and expenses across accounts and categori
 ### What's done
 
 - **Auth** — registration with email verification (3-step: email → OTP code → password) and login with JWT
-- **Workspaces** — independent spaces for different finances: personal, work, family, and more
+- **Workspaces** — independent spaces for different finances (personal, work, family); invite members by email, three roles (Owner / Manager / Member), manage members, transfer ownership; notifications bell for incoming invitations
 - **Financial accounts** — multi-currency accounts with running balance
 - **Categories** — income and expense categories
 - **Transactions** — list grouped by date with daily net; filter by account and type
@@ -65,7 +65,7 @@ Personal finance service. Track income and expenses across accounts and categori
 ### Что сделано
 
 - **Авторизация** — регистрация с подтверждением email (3 шага: email → OTP-код → пароль) и вход по JWT
-- **Рабочие области** — возможность создавать независимые пространства под разные финансы: личные, рабочие, семейные и другие
+- **Рабочие области** — независимые пространства под разные финансы (личные, рабочие, семейные); приглашение участников по email, три роли (Owner / Manager / Member), управление составом, передача владения; колокольчик уведомлений о входящих приглашениях
 - **Счета** — мультивалютные счета с актуальным балансом
 - **Категории** — категории доходов и расходов
 - **Транзакции** — список, сгруппированный по датам с дневным нетто; фильтры по счёту и типу

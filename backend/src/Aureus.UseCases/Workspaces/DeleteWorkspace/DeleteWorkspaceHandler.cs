@@ -16,11 +16,6 @@ public sealed class DeleteWorkspaceHandler(IWorkspaceRepository workspaceReposit
             throw new WorkspaceException(WorkspaceErrorCode.NotFound, "Workspace not found.");
         }
 
-        if (workspace.OwnerUserId != command.UserId)
-        {
-            throw new WorkspaceException(WorkspaceErrorCode.Forbidden, "Only the workspace owner can delete it.");
-        }
-
         await workspaceRepository.DeleteAsync(workspace, cancellationToken);
     }
 }

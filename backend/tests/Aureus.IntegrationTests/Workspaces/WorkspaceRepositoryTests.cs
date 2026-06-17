@@ -1,6 +1,7 @@
 using Aureus.Postgres.Implementations;
 using Aureus.Domain.Workspaces;
 using Aureus.IntegrationTests.Common;
+using Aureus.Persistence.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -33,59 +34,6 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         var membership = await repository.FindMembershipAsync(workspace.Id, ownerId, CancellationToken.None);
         Assert.NotNull(membership);
         Assert.Equal(member.Role, membership!.Role);
-    }
-
-    [Fact]
-    public async Task AddAsync_DuplicateOwnerAndName_ThrowsNameTaken()
-    {
-        // Arrange
-        var ownerId = await TestData.SeedUserAsync(fixture);
-        await AddWorkspaceAsync(ownerId, "Personal");
-        var (workspace, member) = NewWorkspace(ownerId, "Personal");
-
-        await using var db = fixture.CreateDbContext();
-        var repository = new WorkspaceRepository(db, fixture.Mapper);
-
-        // Act
-        var exception = await Assert.ThrowsAsync<WorkspaceException>(() =>
-            repository.AddAsync(workspace, member, CancellationToken.None));
-
-        // Assert
-        Assert.Equal(WorkspaceErrorCode.NameTaken, exception.Code);
-    }
-
-    [Fact]
-    public async Task AddAsync_SameNameDifferentOwner_Succeeds()
-    {
-        // Arrange
-        var firstOwner = await TestData.SeedUserAsync(fixture);
-        var secondOwner = await TestData.SeedUserAsync(fixture);
-        await AddWorkspaceAsync(firstOwner, "Personal");
-
-        // Act
-        var secondId = await AddWorkspaceAsync(secondOwner, "Personal");
-
-        // Assert
-        await using var db = fixture.CreateDbContext();
-        var stored = await new WorkspaceRepository(db, fixture.Mapper).FindByIdAsync(secondId, CancellationToken.None);
-        Assert.NotNull(stored);
-    }
-
-    [Fact]
-    public async Task AddAsync_NameReusedAfterSoftDeletedWorkspace_Succeeds()
-    {
-        // Arrange
-        var ownerId = await TestData.SeedUserAsync(fixture);
-        var firstId = await AddWorkspaceAsync(ownerId, "Personal");
-        await SoftDeleteWorkspaceAsync(firstId);
-
-        // Act
-        var secondId = await AddWorkspaceAsync(ownerId, "Personal");
-
-        // Assert
-        await using var db = fixture.CreateDbContext();
-        var stored = await new WorkspaceRepository(db, fixture.Mapper).FindByIdAsync(secondId, CancellationToken.None);
-        Assert.NotNull(stored);
     }
 
     [Fact]
@@ -144,27 +92,6 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         var stored = await new WorkspaceRepository(assertDb, fixture.Mapper)
             .FindByIdAsync(workspaceId, CancellationToken.None);
         Assert.Equal("Business", stored!.Name);
-    }
-
-    [Fact]
-    public async Task UpdateAsync_DuplicateName_ThrowsNameTaken()
-    {
-        // Arrange
-        var ownerId = await TestData.SeedUserAsync(fixture);
-        await AddWorkspaceAsync(ownerId, "Personal");
-        var secondId = await AddWorkspaceAsync(ownerId, "Business");
-
-        await using var db = fixture.CreateDbContext();
-        var repo = new WorkspaceRepository(db, fixture.Mapper);
-        var workspace = await repo.FindByIdAsync(secondId, CancellationToken.None);
-        workspace!.Name = "Personal";
-
-        // Act
-        var exception = await Assert.ThrowsAsync<WorkspaceException>(() =>
-            repo.UpdateAsync(workspace, CancellationToken.None));
-
-        // Assert
-        Assert.Equal(WorkspaceErrorCode.NameTaken, exception.Code);
     }
 
     [Fact]
@@ -271,12 +198,144 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         Assert.Null(transaction);
     }
 
+    [Fact]
+    public async Task DeleteAsync_CascadesToInvitations()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var invitationId = await AddInvitationAsync(workspaceId, ownerId);
+
+        // Act
+        await DeleteWorkspaceAsync(workspaceId);
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var invitation = await new WorkspaceInvitationRepository(assertDb, fixture.Mapper)
+            .FindByIdAsync(invitationId, CancellationToken.None);
+        Assert.Null(invitation);
+    }
+
+    [Fact]
+    public async Task GetMembersAsync_ReturnsActiveMembers()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var memberId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, memberId);
+        var removedId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, removedId);
+        await SoftDeleteMemberAsync(workspaceId, removedId);
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var members = await new WorkspaceRepository(db, fixture.Mapper)
+            .GetMembersAsync(workspaceId, CancellationToken.None);
+
+        // Assert — owner + memberId only; removedId excluded
+        Assert.Equal(2, members.Count);
+        Assert.Contains(members, m => m.UserId == ownerId && m.Role == WorkspaceRole.Owner);
+        Assert.Contains(members, m => m.UserId == memberId && m.Role == WorkspaceRole.Member);
+    }
+
+    [Fact]
+    public async Task UpdateMemberRoleAsync_ChangesRole()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var memberId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, memberId);
+
+        // Act
+        await using (var db = fixture.CreateDbContext())
+        {
+            await new WorkspaceRepository(db, fixture.Mapper)
+                .UpdateMemberRoleAsync(workspaceId, memberId, WorkspaceRole.Manager, CancellationToken.None);
+        }
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var membership = await new WorkspaceRepository(assertDb, fixture.Mapper)
+            .FindMembershipAsync(workspaceId, memberId, CancellationToken.None);
+        Assert.Equal(WorkspaceRole.Manager, membership!.Role);
+    }
+
+    [Fact]
+    public async Task TransferOwnershipAsync_SwapsRolesAtomically()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var memberId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, memberId);
+
+        // Act
+        await using (var db = fixture.CreateDbContext())
+        {
+            await new WorkspaceRepository(db, fixture.Mapper)
+                .TransferOwnershipAsync(workspaceId, ownerId, memberId, CancellationToken.None);
+        }
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var repo = new WorkspaceRepository(assertDb, fixture.Mapper);
+        var newOwner = await repo.FindMembershipAsync(workspaceId, memberId, CancellationToken.None);
+        var formerOwner = await repo.FindMembershipAsync(workspaceId, ownerId, CancellationToken.None);
+        Assert.Equal(WorkspaceRole.Owner, newOwner!.Role);
+        Assert.Equal(WorkspaceRole.Manager, formerOwner!.Role);
+    }
+
+    [Fact]
+    public async Task DeleteMemberAsync_MakesMemberInvisible()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var memberId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, memberId);
+
+        // Act
+        await using (var db = fixture.CreateDbContext())
+        {
+            await new WorkspaceRepository(db, fixture.Mapper)
+                .DeleteMemberAsync(workspaceId, memberId, CancellationToken.None);
+        }
+
+        // Assert
+        await using var assertDb = fixture.CreateDbContext();
+        var membership = await new WorkspaceRepository(assertDb, fixture.Mapper)
+            .FindMembershipAsync(workspaceId, memberId, CancellationToken.None);
+        Assert.Null(membership);
+    }
+
+    [Fact]
+    public async Task CountActiveMembersAsync_ExcludesSoftDeletedMembers()
+    {
+        // Arrange
+        var ownerId = await TestData.SeedUserAsync(fixture);
+        var workspaceId = await AddWorkspaceAsync(ownerId, "Personal");
+        var secondUserId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, secondUserId);
+        var removedUserId = await TestData.SeedUserAsync(fixture);
+        await AddMemberAsync(workspaceId, removedUserId);
+        await SoftDeleteMemberAsync(workspaceId, removedUserId);
+
+        // Act
+        await using var db = fixture.CreateDbContext();
+        var count = await new WorkspaceRepository(db, fixture.Mapper)
+            .CountActiveMembersAsync(workspaceId, CancellationToken.None);
+
+        // Assert — owner + secondUser, removedUser excluded
+        Assert.Equal(2, count);
+    }
+
     private static (Workspace Workspace, WorkspaceMember Member) NewWorkspace(Guid ownerId, string name)
     {
         var workspace = new Workspace
         {
             Id = Guid.NewGuid(),
-            OwnerUserId = ownerId,
             Name = name,
             CreatedAt = DateTimeOffset.UtcNow,
         };
@@ -329,5 +388,37 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         var repo = new WorkspaceRepository(db, fixture.Mapper);
         var workspace = await repo.FindByIdAsync(workspaceId, CancellationToken.None);
         await repo.DeleteAsync(workspace!, CancellationToken.None);
+    }
+
+    private async Task<Guid> AddInvitationAsync(Guid workspaceId, Guid invitedByUserId)
+    {
+        var invitation = new WorkspaceInvitation
+        {
+            Id = Guid.NewGuid(),
+            WorkspaceId = workspaceId,
+            Email = $"{Guid.NewGuid():N}@test.local",
+            InvitedByUserId = invitedByUserId,
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
+            CreatedAt = DateTimeOffset.UtcNow,
+        };
+
+        await using var db = fixture.CreateDbContext();
+        await new WorkspaceInvitationRepository(db, fixture.Mapper).UpsertAsync(invitation, CancellationToken.None);
+
+        return invitation.Id;
+    }
+
+    private async Task AddMemberAsync(Guid workspaceId, Guid userId)
+    {
+        await using var db = fixture.CreateDbContext();
+        db.WorkspaceMembers.Add(new WorkspaceMemberDb
+        {
+            Id = Guid.NewGuid(),
+            WorkspaceId = workspaceId,
+            UserId = userId,
+            Role = nameof(WorkspaceRole.Member),
+            JoinedAt = DateTimeOffset.UtcNow,
+        });
+        await db.SaveChangesAsync();
     }
 }

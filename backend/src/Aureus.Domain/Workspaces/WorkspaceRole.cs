@@ -1,7 +1,9 @@
 namespace Aureus.Domain.Workspaces;
 
+// Values encode privilege level: higher = more permissions. RequireWorkspaceRoleFilter relies on this ordering.
 public enum WorkspaceRole
 {
-    Owner = 1,
-    Member = 2
+    Member = 1,
+    Manager = 2,
+    Owner = 3
 }

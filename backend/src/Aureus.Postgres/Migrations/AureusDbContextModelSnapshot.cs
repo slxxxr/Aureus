@@ -275,6 +275,12 @@ namespace Aureus.Postgres.Migrations
                         .HasColumnType("character varying(254)")
                         .HasColumnName("email");
 
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("name");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(512)
@@ -342,21 +348,54 @@ namespace Aureus.Postgres.Migrations
                         .HasColumnType("character varying(120)")
                         .HasColumnName("name");
 
-                    b.Property<Guid>("OwnerUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("owner_user_id");
-
                     b.Property<DateTimeOffset?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OwnerUserId", "Name")
-                        .IsUnique()
-                        .HasFilter("\"is_deleted\" = false");
-
                     b.ToTable("workspaces", (string)null);
+                });
+
+            modelBuilder.Entity("Aureus.Persistence.Entities.WorkspaceInvitationDb", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("email");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid>("InvitedByUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("invited_by_user_id");
+
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("workspace_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email");
+
+                    b.HasIndex("InvitedByUserId");
+
+                    b.HasIndex("WorkspaceId", "Email")
+                        .IsUnique();
+
+                    b.ToTable("workspace_invitations", (string)null);
                 });
 
             modelBuilder.Entity("Aureus.Persistence.Entities.WorkspaceMemberDb", b =>
@@ -448,11 +487,17 @@ namespace Aureus.Postgres.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Aureus.Persistence.Entities.WorkspaceDb", b =>
+            modelBuilder.Entity("Aureus.Persistence.Entities.WorkspaceInvitationDb", b =>
                 {
                     b.HasOne("Aureus.Persistence.Entities.UserDb", null)
                         .WithMany()
-                        .HasForeignKey("OwnerUserId")
+                        .HasForeignKey("InvitedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Aureus.Persistence.Entities.WorkspaceDb", null)
+                        .WithMany()
+                        .HasForeignKey("WorkspaceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

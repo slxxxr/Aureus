@@ -24,6 +24,7 @@ export type VerifyEmailCodeResponse = {
 
 export type CompleteRegistrationRequest = {
   registrationToken: string;
+  name: string;
   password: string;
 };
 

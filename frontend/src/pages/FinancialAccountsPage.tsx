@@ -274,14 +274,16 @@ function EditAccountModal({
         )}
 
         <div className="flex items-center justify-between pt-1">
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={() => setConfirmingDelete(true)}
             disabled={isPending}
-            className="text-sm text-destructive hover:underline disabled:opacity-50"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             {t("financialAccounts.editModal.deleteAccount")}
-          </button>
+          </Button>
           <div className="flex gap-2">
             <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
               {t("common.cancel")}
@@ -298,7 +300,15 @@ function EditAccountModal({
 
 // ─── account card ─────────────────────────────────────────────────────────────
 
-function AccountCard({ account, workspaceId }: { account: FinancialAccount; workspaceId: string }) {
+function AccountCard({
+  account,
+  workspaceId,
+  canManage,
+}: {
+  account: FinancialAccount;
+  workspaceId: string;
+  canManage: boolean;
+}) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
 
@@ -309,13 +319,15 @@ function AccountCard({ account, workspaceId }: { account: FinancialAccount; work
           <p className="truncate text-sm font-medium text-foreground" title={account.name}>
             {account.name}
           </p>
-          <button
-            onClick={() => setEditing(true)}
-            className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            aria-label={t("financialAccounts.editModal.title")}
-          >
-            <Pencil className="h-3.5 w-3.5" />
-          </button>
+          {canManage && (
+            <button
+              onClick={() => setEditing(true)}
+              className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              aria-label={t("financialAccounts.editModal.title")}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
 
         <p className="text-2xl font-semibold tabular-nums">
@@ -340,6 +352,7 @@ export function FinancialAccountsPage() {
   const { t } = useTranslation();
   const { activeWorkspace } = useWorkspace();
   const [showCreate, setShowCreate] = useState(false);
+  const canManage = activeWorkspace?.role !== "Member";
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ["financial-accounts", activeWorkspace?.id],
@@ -351,10 +364,12 @@ export function FinancialAccountsPage() {
   return (
     <div>
       <div className="mb-3 flex justify-end pt-9">
-        <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="gap-1.5">
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("financialAccounts.addAccount")}
-        </Button>
+        {canManage && (
+          <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+            {t("financialAccounts.addAccount")}
+          </Button>
+        )}
       </div>
 
       {isLoading && (
@@ -376,7 +391,12 @@ export function FinancialAccountsPage() {
       {!isLoading && accounts && accounts.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {accounts.map((account) => (
-            <AccountCard key={account.id} account={account} workspaceId={activeWorkspace!.id} />
+            <AccountCard
+              key={account.id}
+              account={account}
+              workspaceId={activeWorkspace!.id}
+              canManage={canManage}
+            />
           ))}
         </div>
       )}

@@ -15,7 +15,6 @@ public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<WorkspaceD
         builder.HasKey(workspace => workspace.Id);
 
         builder.Property(workspace => workspace.Id).HasColumnName("id");
-        builder.Property(workspace => workspace.OwnerUserId).HasColumnName("owner_user_id").IsRequired();
         builder.Property(workspace => workspace.Name).HasColumnName("name").HasMaxLength(NameMaxLength).IsRequired();
         builder.Property(workspace => workspace.CreatedAt).HasColumnName("created_at").IsRequired();
         builder.Property(workspace => workspace.UpdatedAt).HasColumnName("updated_at");
@@ -23,14 +22,5 @@ public sealed class WorkspaceConfiguration : IEntityTypeConfiguration<WorkspaceD
         builder.Property(workspace => workspace.DeletedAt).HasColumnName("deleted_at");
 
         builder.HasQueryFilter(workspace => !workspace.IsDeleted);
-
-        builder.HasOne<UserDb>()
-            .WithMany()
-            .HasForeignKey(workspace => workspace.OwnerUserId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasIndex(workspace => new { workspace.OwnerUserId, workspace.Name })
-            .IsUnique()
-            .HasFilter("\"is_deleted\" = false");
     }
 }

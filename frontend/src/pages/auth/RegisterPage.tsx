@@ -29,6 +29,7 @@ export function RegisterPage() {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [registrationToken, setRegistrationToken] = useState("");
@@ -112,7 +113,7 @@ export function RegisterPage() {
 
   const handlePasswordSubmit = (event: FormEvent) => {
     event.preventDefault();
-    completeMutation.mutate({ registrationToken, password });
+    completeMutation.mutate({ registrationToken, name: name.trim(), password });
   };
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -237,13 +238,28 @@ export function RegisterPage() {
     >
       <form onSubmit={handlePasswordSubmit} className="space-y-4" noValidate>
         <div className="space-y-2">
+          <Label htmlFor="name">{t("auth.register.step3.nameLabel")}</Label>
+          <Input
+            id="name"
+            type="text"
+            autoComplete="off"
+            autoFocus
+            required
+            maxLength={InputLimits.nameMaxLength}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={t("auth.register.step3.namePlaceholder")}
+            disabled={completeMutation.isPending}
+          />
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="password">{t("auth.fields.password")}</Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
-              autoFocus
               required
               minLength={MIN_PASSWORD_LENGTH}
               maxLength={InputLimits.passwordMaxLength}
@@ -277,7 +293,7 @@ export function RegisterPage() {
         <Button
           type="submit"
           className="w-full"
-          disabled={completeMutation.isPending || password.length < MIN_PASSWORD_LENGTH}
+          disabled={completeMutation.isPending || !name.trim() || password.length < MIN_PASSWORD_LENGTH}
         >
           {completeMutation.isPending
             ? t("auth.register.step3.submitting")

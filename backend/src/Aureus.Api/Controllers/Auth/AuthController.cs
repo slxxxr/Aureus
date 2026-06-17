@@ -53,7 +53,7 @@ public sealed class AuthController(ISender sender) : ApiControllerBase
         CancellationToken cancellationToken)
     {
         var result = await sender.Send(
-            new CompleteRegistrationCommand(request.RegistrationToken, request.Password),
+            new CompleteRegistrationCommand(request.RegistrationToken, request.Name, request.Password),
             cancellationToken);
 
         return StatusCode(StatusCodes.Status201Created, new CompleteRegistrationResponse(result.AccessToken));

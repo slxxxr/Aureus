@@ -4,7 +4,6 @@ using Aureus.Persistence;
 using Aureus.Persistence.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 
 namespace Aureus.Postgres.Implementations;
 
@@ -51,38 +50,83 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
         return entity is null ? null : mapper.Map<Workspace>(entity);
     }
 
+    public Task<int> CountActiveMembersAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        return dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspaceId)
+            .CountAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Workspace workspace, WorkspaceMember member, CancellationToken cancellationToken)
     {
         dbContext.Workspaces.Add(mapper.Map<WorkspaceDb>(workspace));
         dbContext.WorkspaceMembers.Add(mapper.Map<WorkspaceMemberDb>(member));
 
-        try
-        {
-            await dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (Exception ex) when (IsUniqueViolation(ex))
-        {
-            throw new WorkspaceException(WorkspaceErrorCode.NameTaken,
-                $"A workspace named '{workspace.Name}' already exists.");
-        }
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<WorkspaceMemberDetail>> GetMembersAsync(
+        Guid workspaceId, CancellationToken cancellationToken)
+    {
+        var rows = await dbContext.WorkspaceMembers
+            .AsNoTracking()
+            .Where(m => m.WorkspaceId == workspaceId)
+            .Join(dbContext.Users,
+                m => m.UserId,
+                u => u.Id,
+                (m, u) => new { m.UserId, m.Role, m.JoinedAt, u.Name, u.Email })
+            .OrderBy(x => x.JoinedAt)
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(x => new WorkspaceMemberDetail(
+                x.UserId, x.Name, x.Email, Enum.Parse<WorkspaceRole>(x.Role), x.JoinedAt))
+            .ToList();
+    }
+
+    public async Task DeleteMemberAsync(Guid workspaceId, Guid userId, CancellationToken cancellationToken)
+    {
+        var now = DateTimeOffset.UtcNow;
+
+        await dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspaceId && m.UserId == userId)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(m => m.IsDeleted, true)
+                .SetProperty(m => m.DeletedAt, now), cancellationToken);
+    }
+
+    public async Task UpdateMemberRoleAsync(
+        Guid workspaceId, Guid userId, WorkspaceRole newRole, CancellationToken cancellationToken)
+    {
+        await dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspaceId && m.UserId == userId)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Role, newRole.ToString()), cancellationToken);
+    }
+
+    public async Task TransferOwnershipAsync(
+        Guid workspaceId, Guid fromUserId, Guid toUserId, CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        await dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspaceId && m.UserId == fromUserId)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Role, nameof(WorkspaceRole.Manager)), cancellationToken);
+
+        await dbContext.WorkspaceMembers
+            .Where(m => m.WorkspaceId == workspaceId && m.UserId == toUserId)
+            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Role, nameof(WorkspaceRole.Owner)), cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
     }
 
     public async Task UpdateAsync(Workspace workspace, CancellationToken cancellationToken)
     {
-        try
-        {
-            await dbContext.Workspaces
-                .Where(w => w.Id == workspace.Id)
-                .ExecuteUpdateAsync(s => s
-                        .SetProperty(w => w.Name, workspace.Name)
-                        .SetProperty(w => w.UpdatedAt, workspace.UpdatedAt),
-                    cancellationToken);
-        }
-        catch (Exception ex) when (IsUniqueViolation(ex))
-        {
-            throw new WorkspaceException(WorkspaceErrorCode.NameTaken,
-                $"A workspace named '{workspace.Name}' already exists.");
-        }
+        await dbContext.Workspaces
+            .Where(w => w.Id == workspace.Id)
+            .ExecuteUpdateAsync(s => s
+                    .SetProperty(w => w.Name, workspace.Name)
+                    .SetProperty(w => w.UpdatedAt, workspace.UpdatedAt),
+                cancellationToken);
     }
 
     public async Task DeleteAsync(Workspace workspace, CancellationToken cancellationToken)
@@ -115,6 +159,10 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
                 .SetProperty(m => m.IsDeleted, true)
                 .SetProperty(m => m.DeletedAt, now), cancellationToken);
 
+        await dbContext.WorkspaceInvitations
+            .Where(i => i.WorkspaceId == workspace.Id)
+            .ExecuteDeleteAsync(cancellationToken);
+
         await dbContext.Workspaces
             .Where(w => w.Id == workspace.Id)
             .ExecuteUpdateAsync(s => s
@@ -123,8 +171,4 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
 
         await transaction.CommitAsync(cancellationToken);
     }
-
-    private static bool IsUniqueViolation(Exception ex) =>
-        ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } ||
-        ex is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } };
 }

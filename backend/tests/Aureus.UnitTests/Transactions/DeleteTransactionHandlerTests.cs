@@ -1,4 +1,5 @@
 using Aureus.Domain.Transactions;
+using Aureus.Domain.Workspaces;
 using Aureus.UnitTests.Mocks;
 using Aureus.UseCases.Transactions.DeleteTransaction;
 
@@ -9,6 +10,7 @@ public sealed class DeleteTransactionHandlerTests
     private static Transaction DefaultTransaction(
         Guid? id = null,
         Guid? workspaceId = null,
+        Guid? createdByUserId = null,
         TransactionType type = TransactionType.Expense,
         long amountMinor = 100_00) => new()
     {
@@ -16,13 +18,16 @@ public sealed class DeleteTransactionHandlerTests
         WorkspaceId = workspaceId ?? Guid.NewGuid(),
         FinancialAccountId = Guid.NewGuid(),
         CategoryId = Guid.NewGuid(),
-        CreatedByUserId = Guid.NewGuid(),
+        CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
         Type = type,
         AmountMinor = amountMinor,
         Currency = "RUB",
         OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
         CreatedAt = DateTimeOffset.UtcNow,
     };
+
+    private static DeleteTransactionCommand OwnerCommand(Guid transactionId, Guid workspaceId) =>
+        new(transactionId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner);
 
     [Fact]
     public async Task Handle_TransactionNotFound_ThrowsNotFound()
@@ -35,7 +40,7 @@ public sealed class DeleteTransactionHandlerTests
 
         // Act
         var exception = await Assert.ThrowsAsync<TransactionException>(() =>
-            handler.Handle(new DeleteTransactionCommand(transactionId, workspaceId), CancellationToken.None));
+            handler.Handle(OwnerCommand(transactionId, workspaceId), CancellationToken.None));
 
         // Assert
         Assert.Equal(TransactionErrorCode.NotFound, exception.Code);
@@ -52,7 +57,7 @@ public sealed class DeleteTransactionHandlerTests
 
         // Act
         await Assert.ThrowsAsync<TransactionException>(() =>
-            handler.Handle(new DeleteTransactionCommand(transactionId, workspaceId), CancellationToken.None));
+            handler.Handle(OwnerCommand(transactionId, workspaceId), CancellationToken.None));
 
         // Assert
         transactionRepo.VerifyDeleteNotCalled();
@@ -67,18 +72,81 @@ public sealed class DeleteTransactionHandlerTests
         // Arrange
         var workspaceId = Guid.NewGuid();
         var transaction = DefaultTransaction(workspaceId: workspaceId, type: type, amountMinor: amountMinor);
-
         var transactionRepo = new TransactionRepositoryMock()
             .WithTransaction(transaction.Id, workspaceId, transaction)
             .CapturingDelete();
         var handler = new DeleteTransactionHandler(transactionRepo.Object);
 
         // Act
-        await handler.Handle(new DeleteTransactionCommand(transaction.Id, workspaceId), CancellationToken.None);
+        await handler.Handle(OwnerCommand(transaction.Id, workspaceId), CancellationToken.None);
 
         // Assert
         Assert.Equal(expectedDelta, transactionRepo.DeletedBalanceDelta);
         transactionRepo.VerifyDeleteCalledOnce();
         Assert.Equal(transaction.Id, transactionRepo.DeletedTransaction?.Id);
+    }
+
+    [Fact]
+    public async Task Handle_MemberDeletesOtherUserTransaction_ThrowsForbidden()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var memberId = Guid.NewGuid();
+        var transaction = DefaultTransaction(workspaceId: workspaceId, createdByUserId: ownerId);
+        var transactionRepo = new TransactionRepositoryMock()
+            .WithTransaction(transaction.Id, workspaceId, transaction);
+        var handler = new DeleteTransactionHandler(transactionRepo.Object);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<TransactionException>(() =>
+            handler.Handle(
+                new DeleteTransactionCommand(transaction.Id, workspaceId, memberId, WorkspaceRole.Member),
+                CancellationToken.None));
+
+        // Assert
+        Assert.Equal(TransactionErrorCode.Forbidden, exception.Code);
+        transactionRepo.VerifyDeleteNotCalled();
+    }
+
+    [Fact]
+    public async Task Handle_MemberDeletesOwnTransaction_Succeeds()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var memberId = Guid.NewGuid();
+        var transaction = DefaultTransaction(workspaceId: workspaceId, createdByUserId: memberId);
+        var transactionRepo = new TransactionRepositoryMock()
+            .WithTransaction(transaction.Id, workspaceId, transaction)
+            .CapturingDelete();
+        var handler = new DeleteTransactionHandler(transactionRepo.Object);
+
+        // Act
+        await handler.Handle(
+            new DeleteTransactionCommand(transaction.Id, workspaceId, memberId, WorkspaceRole.Member),
+            CancellationToken.None);
+
+        // Assert
+        transactionRepo.VerifyDeleteCalledOnce();
+    }
+
+    [Fact]
+    public async Task Handle_ManagerDeletesOtherUserTransaction_Succeeds()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var transaction = DefaultTransaction(workspaceId: workspaceId, createdByUserId: Guid.NewGuid());
+        var transactionRepo = new TransactionRepositoryMock()
+            .WithTransaction(transaction.Id, workspaceId, transaction)
+            .CapturingDelete();
+        var handler = new DeleteTransactionHandler(transactionRepo.Object);
+
+        // Act
+        await handler.Handle(
+            new DeleteTransactionCommand(transaction.Id, workspaceId, Guid.NewGuid(), WorkspaceRole.Manager),
+            CancellationToken.None);
+
+        // Assert
+        transactionRepo.VerifyDeleteCalledOnce();
     }
 }

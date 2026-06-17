@@ -11,6 +11,7 @@ public sealed class TransactionException(TransactionErrorCode code, string messa
     public override ErrorType ErrorType => Code switch
     {
         TransactionErrorCode.NotFound => ErrorType.NotFound,
+        TransactionErrorCode.Forbidden => ErrorType.Forbidden,
         _ => ErrorType.Validation
     };
 }

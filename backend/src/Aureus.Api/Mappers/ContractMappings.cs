@@ -20,10 +20,13 @@ public sealed class ContractMappings : Profile
         CreateMap<Category, CategoryResponse>();
         CreateMap<FinancialAccount, FinancialAccountResponse>();
         CreateMap<UserWorkspaceSummary, WorkspaceResponse>();
+        CreateMap<WorkspaceInvitation, InvitationResponse>();
+        CreateMap<PendingInvitationSummary, MyInvitationResponse>();
         CreateMap<Transaction, TransactionResponse>();
         CreateMap<CurrencySummary, CurrencySummaryResponse>();
         CreateMap<BreakdownItem, BreakdownItemResponse>();
         CreateMap<TimeSeriesPoint, TimeSeriesPointResponse>();
         CreateMap<CategoryTimeSeriesPoint, CategoryTimeSeriesPointResponse>();
+        CreateMap<WorkspaceMemberDetail, WorkspaceMemberResponse>();
     }
 }

@@ -7,6 +7,16 @@ namespace Aureus.Postgres.Implementations;
 
 public sealed class WorkspaceDailyUsageRepository(AureusDbContext dbContext) : IWorkspaceDailyUsageRepository
 {
+    public async Task<int> GetCountAsync(Guid workspaceId, DailyUsageFeature feature, DateOnly date,
+        CancellationToken cancellationToken)
+    {
+        var existing = await dbContext.WorkspaceDailyUsage
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x => x.WorkspaceId == workspaceId && x.Feature == feature, cancellationToken);
+
+        return existing is null || existing.LastDate != date ? 0 : existing.Count;
+    }
+
     public async Task<int> IncrementAndGetAsync(Guid workspaceId, DailyUsageFeature feature, DateOnly date,
         CancellationToken cancellationToken)
     {

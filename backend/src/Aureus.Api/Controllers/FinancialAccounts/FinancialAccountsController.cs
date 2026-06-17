@@ -1,5 +1,6 @@
 using Aureus.Api.Contracts.FinancialAccounts;
 using Aureus.Api.Filters;
+using Aureus.Domain.Workspaces;
 using Aureus.UseCases.FinancialAccounts.CreateFinancialAccount;
 using Aureus.UseCases.FinancialAccounts.DeleteFinancialAccount;
 using Aureus.UseCases.FinancialAccounts.GetFinancialAccounts;
@@ -10,11 +11,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Aureus.Api.Controllers.FinancialAccounts;
 
-[ValidateWorkspaceMember]
 [Route("api/workspaces/{workspaceId:guid}/financial-accounts")]
 public sealed class FinancialAccountsController(ISender sender, IMapper mapper) : ApiControllerBase
 {
     [HttpGet]
+    [RequireWorkspaceRole(WorkspaceRole.Member)]
     [ProducesResponseType(typeof(IReadOnlyList<FinancialAccountResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
@@ -24,6 +25,7 @@ public sealed class FinancialAccountsController(ISender sender, IMapper mapper) 
     }
 
     [HttpPost]
+    [RequireWorkspaceRole(WorkspaceRole.Manager)]
     [ProducesResponseType(typeof(FinancialAccountResponse), StatusCodes.Status201Created)]
     public async Task<IActionResult> CreateAsync(
         Guid workspaceId,
@@ -39,6 +41,7 @@ public sealed class FinancialAccountsController(ISender sender, IMapper mapper) 
     }
 
     [HttpPatch("{accountId:guid}")]
+    [RequireWorkspaceRole(WorkspaceRole.Manager)]
     [ProducesResponseType(typeof(FinancialAccountResponse), StatusCodes.Status200OK)]
     public async Task<IActionResult> UpdateAsync(
         Guid workspaceId,
@@ -55,6 +58,7 @@ public sealed class FinancialAccountsController(ISender sender, IMapper mapper) 
     }
 
     [HttpDelete("{accountId:guid}")]
+    [RequireWorkspaceRole(WorkspaceRole.Manager)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> DeleteAsync(
         Guid workspaceId,

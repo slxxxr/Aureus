@@ -11,6 +11,7 @@ internal sealed class CreateFinancialAccountCommandValidator : AbstractValidator
     {
         RuleFor(x => x.Name)
             .NotEmpty()
+            .Must(name => !string.IsNullOrWhiteSpace(name)).WithMessage("'Name' must not be empty.")
             .MaximumLength(InputLimits.AccountNameMaxLength);
 
         RuleFor(x => x.Currency)

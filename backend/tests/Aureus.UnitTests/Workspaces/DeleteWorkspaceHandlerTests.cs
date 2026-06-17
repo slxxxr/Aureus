@@ -6,10 +6,9 @@ namespace Aureus.UnitTests.Workspaces;
 
 public sealed class DeleteWorkspaceHandlerTests
 {
-    private static Workspace DefaultWorkspace(Guid? id = null, Guid? ownerId = null) => new()
+    private static Workspace DefaultWorkspace(Guid? id = null) => new()
     {
         Id = id ?? Guid.NewGuid(),
-        OwnerUserId = ownerId ?? Guid.NewGuid(),
         Name = "Personal",
         CreatedAt = DateTimeOffset.UtcNow,
     };
@@ -24,7 +23,7 @@ public sealed class DeleteWorkspaceHandlerTests
 
         // Act
         var exception = await Assert.ThrowsAsync<WorkspaceException>(() =>
-            handler.Handle(new DeleteWorkspaceCommand(workspaceId, Guid.NewGuid()), CancellationToken.None));
+            handler.Handle(new DeleteWorkspaceCommand(workspaceId), CancellationToken.None));
 
         // Assert
         Assert.Equal(WorkspaceErrorCode.NotFound, exception.Code);
@@ -32,35 +31,15 @@ public sealed class DeleteWorkspaceHandlerTests
     }
 
     [Fact]
-    public async Task Handle_NotOwner_ThrowsForbidden()
-    {
-        // Arrange
-        var ownerId = Guid.NewGuid();
-        var requestingUserId = Guid.NewGuid();
-        var workspace = DefaultWorkspace(ownerId: ownerId);
-        var repo = new WorkspaceRepositoryMock().WithWorkspace(workspace.Id, workspace).CapturingDelete();
-        var handler = new DeleteWorkspaceHandler(repo.Object);
-
-        // Act
-        var exception = await Assert.ThrowsAsync<WorkspaceException>(() =>
-            handler.Handle(new DeleteWorkspaceCommand(workspace.Id, requestingUserId), CancellationToken.None));
-
-        // Assert
-        Assert.Equal(WorkspaceErrorCode.Forbidden, exception.Code);
-        repo.VerifyDeleteNotCalled();
-    }
-
-    [Fact]
     public async Task Handle_ValidCommand_DeletesWorkspace()
     {
         // Arrange
-        var ownerId = Guid.NewGuid();
-        var workspace = DefaultWorkspace(ownerId: ownerId);
+        var workspace = DefaultWorkspace();
         var repo = new WorkspaceRepositoryMock().WithWorkspace(workspace.Id, workspace).CapturingDelete();
         var handler = new DeleteWorkspaceHandler(repo.Object);
 
         // Act
-        await handler.Handle(new DeleteWorkspaceCommand(workspace.Id, ownerId), CancellationToken.None);
+        await handler.Handle(new DeleteWorkspaceCommand(workspace.Id), CancellationToken.None);
 
         // Assert
         repo.VerifyDeleteCalledOnce();
