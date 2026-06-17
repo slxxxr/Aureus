@@ -354,6 +354,10 @@
       "generic": "Something went wrong. Please try again."
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "noItems": "No notifications"
+  },
   "workspaceSettings": {
     "title": "Workspace settings",
     "tabs": {
@@ -365,7 +369,6 @@
       "nameLabel": "Name",
       "save": "Save",
       "saving": "Saving…",
-      "dangerZone": "Danger zone",
       "deleteWorkspace": "Delete workspace"
     }
   },
