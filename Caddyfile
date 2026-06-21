@@ -11,6 +11,10 @@
         reverse_proxy api:8080
     }
 
+    handle /health {
+        reverse_proxy api:8080
+    }
+
     handle {
         root * /srv
         try_files {path} /index.html
