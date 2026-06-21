@@ -1,6 +1,5 @@
 using AutoMapper;
 using Aureus.Domain.Users;
-using Aureus.Domain.Workspaces;
 using Aureus.Persistence;
 using Aureus.Persistence.Entities;
 using Aureus.Persistence.Interfaces;
@@ -42,15 +41,9 @@ public sealed class UserRepository(AureusDbContext dbContext, IMapper mapper) : 
                 .SetProperty(u => u.Name, user.Name), cancellationToken);
     }
 
-    public async Task AddAsync(
-        User user,
-        Workspace workspace,
-        WorkspaceMember workspaceMember,
-        CancellationToken cancellationToken)
+    public async Task AddAsync(User user, CancellationToken cancellationToken)
     {
         dbContext.Users.Add(mapper.Map<UserDb>(user));
-        dbContext.Workspaces.Add(mapper.Map<WorkspaceDb>(workspace));
-        dbContext.WorkspaceMembers.Add(mapper.Map<WorkspaceMemberDb>(workspaceMember));
 
         try
         {

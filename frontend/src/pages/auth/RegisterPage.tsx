@@ -22,7 +22,7 @@ const MIN_PASSWORD_LENGTH = 8;
 const RESEND_COOLDOWN_SECONDS = 60;
 
 export function RegisterPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
@@ -113,7 +113,7 @@ export function RegisterPage() {
 
   const handlePasswordSubmit = (event: FormEvent) => {
     event.preventDefault();
-    completeMutation.mutate({ registrationToken, name: name.trim(), password });
+    completeMutation.mutate({ registrationToken, name: name.trim(), password, language: i18n.language.split('-')[0] });
   };
 
   // ─── Render ──────────────────────────────────────────────────────────────────
