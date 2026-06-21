@@ -27,8 +27,7 @@ builder.Services.AddAuthorizationBuilder()
         .Build());
 builder.Services.AddConfiguredSwagger();
 builder.Services.AddConfiguredRateLimiting();
-builder.Services.AddHealthChecks()
-    .AddCheck("test", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Unhealthy("rollback test"));
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
