@@ -1,5 +1,4 @@
 using Aureus.Domain.Users;
-using Aureus.Domain.Workspaces;
 using Aureus.Persistence.Interfaces;
 using Moq;
 
@@ -12,10 +11,6 @@ public sealed class UserRepositoryMock
     public IUserRepository Object => _mock.Object;
 
     public User? SavedUser { get; private set; }
-
-    public Workspace? SavedWorkspace { get; private set; }
-
-    public WorkspaceMember? SavedWorkspaceMember { get; private set; }
 
     public UserRepositoryMock WithExistingEmail(string email)
     {
@@ -62,44 +57,19 @@ public sealed class UserRepositoryMock
         return this;
     }
 
-    public UserRepositoryMock CapturingRegistration()
+    public UserRepositoryMock CapturingAdd()
     {
         _mock
-            .Setup(db => db.AddAsync(
-                It.IsAny<User>(),
-                It.IsAny<Workspace>(),
-                It.IsAny<WorkspaceMember>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<User, Workspace, WorkspaceMember, CancellationToken>((user, workspace, workspaceMember, _) =>
-            {
-                SavedUser = user;
-                SavedWorkspace = workspace;
-                SavedWorkspaceMember = workspaceMember;
-            })
+            .Setup(db => db.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()))
+            .Callback<User, CancellationToken>((user, _) => SavedUser = user)
             .Returns(Task.CompletedTask);
 
         return this;
     }
 
-    public void VerifyRegistrationSavedOnce()
-    {
-        _mock.Verify(
-            db => db.AddAsync(
-                It.IsAny<User>(),
-                It.IsAny<Workspace>(),
-                It.IsAny<WorkspaceMember>(),
-                It.IsAny<CancellationToken>()),
-            Times.Once);
-    }
+    public void VerifyAddCalledOnce() =>
+        _mock.Verify(db => db.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
 
-    public void VerifyRegistrationNotSaved()
-    {
-        _mock.Verify(
-            db => db.AddAsync(
-                It.IsAny<User>(),
-                It.IsAny<Workspace>(),
-                It.IsAny<WorkspaceMember>(),
-                It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
+    public void VerifyAddNotCalled() =>
+        _mock.Verify(db => db.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
 }
