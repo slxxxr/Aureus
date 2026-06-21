@@ -27,6 +27,7 @@ builder.Services.AddAuthorizationBuilder()
         .Build());
 builder.Services.AddConfiguredSwagger();
 builder.Services.AddConfiguredRateLimiting();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -48,5 +49,6 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapControllers();
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.Run();
