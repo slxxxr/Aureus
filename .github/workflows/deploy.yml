@@ -1,0 +1,19 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: aureus
+          key: ${{ secrets.SSH_DEPLOY_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          script: git pull && docker compose -f docker-compose.prod.yml up -d --build # keep in sync with command= in ~/.ssh/authorized_keys on the server
+          script_stop: true
