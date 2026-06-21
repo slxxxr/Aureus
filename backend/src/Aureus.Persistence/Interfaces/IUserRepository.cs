@@ -1,5 +1,4 @@
 using Aureus.Domain.Users;
-using Aureus.Domain.Workspaces;
 
 namespace Aureus.Persistence.Interfaces;
 
@@ -11,7 +10,7 @@ public interface IUserRepository
 
     Task<User?> FindByEmailAsync(string email, CancellationToken cancellationToken);
 
-    Task AddAsync(User user, Workspace workspace, WorkspaceMember workspaceMember, CancellationToken cancellationToken);
+    Task AddAsync(User user, CancellationToken cancellationToken);
 
     Task UpdateProfileAsync(User user, CancellationToken cancellationToken);
 }

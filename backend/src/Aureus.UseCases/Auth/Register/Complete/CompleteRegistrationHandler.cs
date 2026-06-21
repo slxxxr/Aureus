@@ -4,19 +4,22 @@ using Aureus.Infrastructure.Email.Interfaces;
 using Aureus.Infrastructure.Security.Interfaces;
 using Aureus.Persistence.Interfaces;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Aureus.UseCases.Auth.Register.Complete;
 
 public sealed class CompleteRegistrationHandler(
     IRegistrationTokenService tokenService,
-    IUserRepository userRepository,
+    IRegistrationRepository registrationRepository,
     IPasswordHasher passwordHasher,
     IJwtTokenGenerator jwtTokenGenerator,
     IWorkspaceInvitationRepository invitationRepository,
-    IWorkspaceRepository workspaceRepository) : IRequestHandler<CompleteRegistrationCommand, CompleteRegistrationResult>
+    IWorkspaceRepository workspaceRepository,
+    IFinancialAccountRepository accountRepository,
+    ICategoryRepository categoryRepository,
+    ILogger<CompleteRegistrationHandler> logger) : IRequestHandler<CompleteRegistrationCommand, CompleteRegistrationResult>
 {
     private const int MinimumPasswordLength = 8;
-    private const string DefaultWorkspaceName = "Personal";
     private const string ExpectedPurpose = nameof(EmailVerificationPurpose.Registration);
 
     public async Task<CompleteRegistrationResult> Handle(
@@ -42,7 +45,8 @@ public sealed class CompleteRegistrationHandler(
 
         var now = DateTimeOffset.UtcNow;
         var userId = Guid.NewGuid();
-        var workspaceId = Guid.NewGuid();
+
+        var bundle = DefaultWorkspaceSeeds.Build(userId, command.Language, now);
 
         var user = new User
         {
@@ -53,25 +57,11 @@ public sealed class CompleteRegistrationHandler(
             CreatedAt = now,
         };
 
-        var workspace = new Workspace
-        {
-            Id = workspaceId,
-            Name = DefaultWorkspaceName,
-            CreatedAt = now,
-        };
-
-        var workspaceMember = new WorkspaceMember
-        {
-            Id = Guid.NewGuid(),
-            WorkspaceId = workspaceId,
-            UserId = userId,
-            Role = WorkspaceRole.Owner,
-            JoinedAt = now,
-        };
-
-        await userRepository.AddAsync(user, workspace, workspaceMember, cancellationToken);
+        await registrationRepository.CreateUserWithWorkspaceAsync(user, bundle.Workspace, bundle.Member, cancellationToken);
 
         await AcceptPendingInvitationsAsync(userId, email, now, cancellationToken);
+
+        await SeedDefaultDataAsync(bundle, cancellationToken);
 
         var accessToken = jwtTokenGenerator.Generate(userId, email);
         return new CompleteRegistrationResult(accessToken);
@@ -101,6 +91,26 @@ public sealed class CompleteRegistrationHandler(
             };
 
             await invitationRepository.AcceptAsync(invitation.Id, member, cancellationToken);
+        }
+    }
+
+    private async Task SeedDefaultDataAsync(DefaultWorkspaceBundle bundle, CancellationToken cancellationToken)
+    {
+        try
+        {
+            foreach (var account in bundle.Accounts)
+            {
+                await accountRepository.AddAsync(account, cancellationToken);
+            }
+
+            foreach (var category in bundle.Categories)
+            {
+                await categoryRepository.AddAsync(category, cancellationToken);
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "Failed to seed default data for workspace {WorkspaceId}", bundle.Workspace.Id);
         }
     }
 }

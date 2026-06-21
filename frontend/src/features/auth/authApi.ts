@@ -26,6 +26,7 @@ export type CompleteRegistrationRequest = {
   registrationToken: string;
   name: string;
   password: string;
+  language: string;
 };
 
 export type CompleteRegistrationResponse = {
