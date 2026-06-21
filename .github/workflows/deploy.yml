@@ -51,6 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: build
+    permissions:
+      packages: write
     steps:
       - name: Setup SSH
         run: |
@@ -87,6 +89,17 @@ jobs:
           done
           echo "Health check timed out"
           exit 1
+
+      - name: Cleanup old image versions
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for pkg in aureus-api aureus-caddy; do
+            gh api "/user/packages/container/${pkg}/versions" --paginate \
+              | jq '.[3:][].id' \
+              | xargs -I{} gh api --method DELETE "/user/packages/container/${pkg}/versions/{}" || true
+          done
 
       - name: Rollback
         if: failure()
