@@ -14,18 +14,20 @@ export function LanguageToggle() {
       aria-label={t("language.switchLabel")}
     >
       <Button
-        variant={i18n.language === "ru" ? "secondary" : "ghost"}
+        variant="ghost"
         size="sm"
         onClick={() => setLanguage("ru")}
         aria-label={t("language.ru")}
+        className={i18n.language === "ru" ? "bg-background shadow-sm" : ""}
       >
         {t("language.ruShort")}
       </Button>
       <Button
-        variant={i18n.language === "en" ? "secondary" : "ghost"}
+        variant="ghost"
         size="sm"
         onClick={() => setLanguage("en")}
         aria-label={t("language.en")}
+        className={i18n.language === "en" ? "bg-background shadow-sm" : ""}
       >
         {t("language.enShort")}
       </Button>
