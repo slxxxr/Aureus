@@ -11,9 +11,28 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+function readValidToken(): string | null {
+  const stored = localStorage.getItem(TOKEN_STORAGE_KEY);
+  if (!stored) {
+    return null;
+  }
+  try {
+    const payload = JSON.parse(atob(stored.split(".")[1]));
+    if (typeof payload.exp === "number" && payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      localStorage.removeItem(ACTIVE_WORKSPACE_KEY);
+      return null;
+    }
+  } catch {
+    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    return null;
+  }
+  return stored;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(TOKEN_STORAGE_KEY));
+  const [token, setToken] = useState<string | null>(readValidToken);
 
   const resetSession = useCallback(() => {
     localStorage.removeItem(ACTIVE_WORKSPACE_KEY);
