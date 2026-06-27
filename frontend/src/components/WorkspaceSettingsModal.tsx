@@ -1,4 +1,5 @@
 import { useState, useEffect, type FormEvent } from "react";
+import { formatDate } from "@/lib/formatDate";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -490,11 +491,7 @@ function InvitationsTab({ workspaceId }: { workspaceId: string }) {
         ) : (
           <ul>
             {invitations.map((inv) => {
-              const expiresDate = new Date(inv.expiresAt).toLocaleDateString(undefined, {
-                day: "2-digit",
-                month: "2-digit",
-                year: "numeric",
-              });
+              const expiresDate = formatDate(inv.expiresAt, i18n.language);
 
               return (
                 <li key={inv.id} className="flex items-center gap-3 py-2">

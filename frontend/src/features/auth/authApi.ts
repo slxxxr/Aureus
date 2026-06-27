@@ -11,6 +11,7 @@ export type LoginResponse = {
 
 export type StartRegistrationRequest = {
   email: string;
+  language: string;
 };
 
 export type VerifyEmailCodeRequest = {
