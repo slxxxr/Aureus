@@ -22,6 +22,7 @@ public sealed class StartRegistrationHandler(
     public async Task Handle(StartRegistrationCommand command, CancellationToken cancellationToken)
     {
         var email = (command.Email ?? string.Empty).Trim().ToLowerInvariant();
+        var language = NormalizeLanguage(command.Language);
 
         if (await userRepository.EmailExistsAsync(email, cancellationToken))
         {
@@ -53,25 +54,15 @@ public sealed class StartRegistrationHandler(
             CreatedAt = existing?.CreatedAt ?? now,
         }, cancellationToken);
 
+        var (subject, htmlBody) = RegistrationEmailTemplates.Build(language, code);
         await emailSender.SendAsync(new EmailMessage(
             To: email,
-            Subject: "Your Aureus verification code",
-            HtmlBody: BuildEmailHtml(code)), cancellationToken);
+            Subject: subject,
+            HtmlBody: htmlBody), cancellationToken);
     }
 
-    private static string BuildEmailHtml(string code) => $"""
-        <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
-          <h2 style="margin:0 0 8px">Confirm your email</h2>
-          <p style="color:#6b7280;margin:0 0 24px">Enter this code in Aureus to complete registration.</p>
-          <div style="font-size:36px;font-weight:700;letter-spacing:8px;text-align:center;
-                      padding:20px;background:#f9fafb;border-radius:8px;margin-bottom:24px">
-            {code}
-          </div>
-          <p style="color:#9ca3af;font-size:13px;margin:0">
-            Code expires in 1 hour. If you did not request this, you can ignore this email.
-          </p>
-        </div>
-        """;
+    private static string NormalizeLanguage(string? language) =>
+        (language ?? string.Empty).Trim().ToLowerInvariant() == "en" ? "en" : "ru";
 
     private static string ComputeSha256(string input)
     {

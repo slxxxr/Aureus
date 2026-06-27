@@ -23,6 +23,7 @@ const RESEND_COOLDOWN_SECONDS = 60;
 
 export function RegisterPage() {
   const { t, i18n } = useTranslation();
+  const language = i18n.language.split("-")[0];
   const navigate = useNavigate();
   const { signIn } = useAuth();
 
@@ -78,7 +79,7 @@ export function RegisterPage() {
 
   const handleEmailSubmit = (event: FormEvent) => {
     event.preventDefault();
-    startMutation.mutate({ email: email.trim() });
+    startMutation.mutate({ email: email.trim(), language: language });
   };
 
   // ─── Step 2: verify code ─────────────────────────────────────────────────────
@@ -98,7 +99,7 @@ export function RegisterPage() {
 
   const handleResend = () => {
     verifyMutation.reset();
-    startMutation.mutate({ email: email.trim() });
+    startMutation.mutate({ email: email.trim(), language: language });
   };
 
   // ─── Step 3: set password ────────────────────────────────────────────────────

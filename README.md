@@ -91,7 +91,7 @@ Personal finance service. Track income and expenses across accounts and categori
 
 **Frontend** — React + TypeScript (Vite), TanStack Query, Tailwind CSS, react-i18next, Recharts (charts). UI in Russian and English.
 
-**Infrastructure** — Docker Compose, Caddy, Cloudflare Tunnel.
+**Infrastructure** — Docker Compose, Caddy, Cloudflare Tunnel. Database backups in Backblaze B2.
 
 **Tests** — unit tests with xUnit + Moq; integration tests with xUnit + Testcontainers.
 

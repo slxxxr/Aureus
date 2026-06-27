@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import { formatDate } from "@/lib/formatDate";
 import { Bell } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/AuthContext";
@@ -15,21 +16,14 @@ import { resolveInvitationError } from "@/features/workspaces/resolveInvitationE
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-function formatExpiryDate(isoDate: string, t: TFunction): string {
-  const date = new Date(isoDate);
-  const formatted = date.toLocaleDateString(undefined, {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-
-  return t("invitations.expires", { date: formatted });
+function formatExpiryDate(isoDate: string, language: string, t: TFunction): string {
+  return t("invitations.expires", { date: formatDate(isoDate, language) });
 }
 
 // ─── single invitation row ─────────────────────────────────────────────────────
 
 function InvitationRow({ invitation }: { invitation: MyInvitation }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
 
@@ -59,7 +53,7 @@ function InvitationRow({ invitation }: { invitation: MyInvitation }) {
     <div className="px-3 py-2.5">
       <p className="truncate text-sm font-medium">{invitation.workspaceName}</p>
       <p className="text-xs text-muted-foreground">
-        {formatExpiryDate(invitation.expiresAt, t)}
+        {formatExpiryDate(invitation.expiresAt, i18n.language, t)}
       </p>
 
       {error !== null && (
