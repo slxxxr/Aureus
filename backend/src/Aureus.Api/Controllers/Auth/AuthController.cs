@@ -25,7 +25,7 @@ public sealed class AuthController(ISender sender) : ApiControllerBase
         StartRegistrationRequest request,
         CancellationToken cancellationToken)
     {
-        await sender.Send(new StartRegistrationCommand(request.Email), cancellationToken);
+        await sender.Send(new StartRegistrationCommand(request.Email, request.Language), cancellationToken);
         return NoContent();
     }
 

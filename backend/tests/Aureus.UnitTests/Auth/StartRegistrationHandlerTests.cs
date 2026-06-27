@@ -20,7 +20,7 @@ public sealed class StartRegistrationHandlerTests
         var validator = new StartRegistrationCommandValidator();
 
         // Act
-        var result = validator.Validate(new StartRegistrationCommand(email));
+        var result = validator.Validate(new StartRegistrationCommand(email, null));
 
         // Assert
         Assert.False(result.IsValid);
@@ -41,7 +41,7 @@ public sealed class StartRegistrationHandlerTests
         var handler = new StartRegistrationHandler(userRepository.Object, codeRepository.Object, emailSender.Object);
 
         // Act
-        await handler.Handle(new StartRegistrationCommand(email), CancellationToken.None);
+        await handler.Handle(new StartRegistrationCommand(email, null), CancellationToken.None);
 
         // Assert
         codeRepository.VerifyUpsertedOnce();
@@ -63,7 +63,7 @@ public sealed class StartRegistrationHandlerTests
 
         // Act
         var exception = await Assert.ThrowsAsync<EmailVerificationException>(() =>
-            handler.Handle(new StartRegistrationCommand(email), CancellationToken.None));
+            handler.Handle(new StartRegistrationCommand(email, null), CancellationToken.None));
 
         // Assert
         Assert.Equal(EmailVerificationErrorCode.EmailAlreadyConfirmed, exception.Code);
@@ -94,7 +94,7 @@ public sealed class StartRegistrationHandlerTests
 
         // Act
         var exception = await Assert.ThrowsAsync<EmailVerificationException>(() =>
-            handler.Handle(new StartRegistrationCommand(email), CancellationToken.None));
+            handler.Handle(new StartRegistrationCommand(email, null), CancellationToken.None));
 
         // Assert
         Assert.Equal(EmailVerificationErrorCode.RateLimited, exception.Code);
@@ -115,7 +115,7 @@ public sealed class StartRegistrationHandlerTests
         var handler = new StartRegistrationHandler(userRepository.Object, codeRepository.Object, emailSender.Object);
 
         // Act
-        await handler.Handle(new StartRegistrationCommand(" User@Example.COM "), CancellationToken.None);
+        await handler.Handle(new StartRegistrationCommand(" User@Example.COM ", null), CancellationToken.None);
 
         // Assert
         Assert.Equal(normalizedEmail, emailSender.SentMessage?.To);
