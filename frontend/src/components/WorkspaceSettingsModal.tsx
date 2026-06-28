@@ -280,7 +280,7 @@ function MembersTab({
                     </span>
                   )}
                 </div>
-                <p className="truncate text-xs text-muted-foreground">{member.email}</p>
+                <p className="hidden truncate text-xs text-muted-foreground sm:block">{member.email}</p>
               </div>
 
               {isConfirmingRemove ? (
@@ -311,7 +311,7 @@ function MembersTab({
               ) : (
                 <>
                   {currentRole === "Owner" && !isMe && member.role !== "Owner" ? (
-                    <div className="w-36 shrink-0">
+                    <div className="w-24 shrink-0 sm:w-36">
                       <CustomSelect
                         value={member.role}
                         disabled={isUpdatingRole}

@@ -585,8 +585,8 @@ function TransactionRow({
     <div
       onClick={canEdit ? onEdit : undefined}
       className={cn(
-        "group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent/60",
-        canEdit && "cursor-pointer",
+        "group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
+        canEdit && "cursor-pointer active:bg-accent/60 [@media(hover:hover)]:hover:bg-accent/60",
       )}
     >
       {/* type icon */}

@@ -107,9 +107,13 @@ export function NotificationsPopover() {
   useEffect(() => {
     if (!open || !triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
+    const dropdownWidth = 288; // w-72
+    const rightFromEdge = window.innerWidth - rect.right;
+    // clamp so the dropdown doesn't overflow the left side of the viewport
+    const maxRight = window.innerWidth - dropdownWidth - 8;
     setPos({
       top: rect.bottom + 4,
-      right: window.innerWidth - rect.right,
+      right: Math.min(Math.max(8, rightFromEdge), Math.max(8, maxRight)),
     });
   }, [open]);
 
@@ -150,7 +154,7 @@ export function NotificationsPopover() {
         <div
           ref={dropdownRef}
           style={{ top: pos.top, right: pos.right }}
-          className="fixed z-50 w-72 rounded-md border border-border bg-background shadow-md"
+          className="fixed z-50 w-72 max-w-[calc(100vw-16px)] rounded-md border border-border bg-background shadow-md"
         >
           <p className="border-b border-border px-3 py-2 text-xs font-medium text-muted-foreground">
             {t("notifications.title")}
