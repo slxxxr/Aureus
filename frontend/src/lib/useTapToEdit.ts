@@ -7,6 +7,6 @@ export function useTapToEdit(onEdit: () => void, enabled = true) {
   }
   return {
     onPointerDown: () => { pressStart.current = Date.now(); },
-    onClick: () => { if (Date.now() - pressStart.current < 500) onEdit(); },
+    onClick: () => { if (Date.now() - pressStart.current < 400) onEdit(); },
   };
 }
