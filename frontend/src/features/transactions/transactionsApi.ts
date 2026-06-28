@@ -1,4 +1,5 @@
-import { apiFetch } from "@/lib/apiClient";
+import { apiFetch, ApiError } from "@/lib/apiClient";
+import { TOKEN_STORAGE_KEY } from "@/lib/constants";
 
 export type TransactionType = "Income" | "Expense";
 
@@ -60,6 +61,51 @@ export function updateTransaction(
     `/workspaces/${workspaceId}/transactions/${transactionId}`,
     { method: "PATCH", body: payload },
   );
+}
+
+export type ExportTransactionsFilter = {
+  from?: string;
+  to?: string;
+  accountIds?: string[];
+  categoryIds?: string[];
+  type?: "Income" | "Expense";
+};
+
+export async function exportTransactions(
+  workspaceId: string,
+  filter: ExportTransactionsFilter = {},
+): Promise<void> {
+  const params = new URLSearchParams();
+  if (filter.from) { params.set("from", filter.from); }
+  if (filter.to) { params.set("to", filter.to); }
+  if (filter.type) { params.set("type", filter.type); }
+  filter.accountIds?.forEach((id) => params.append("accountIds", id));
+  filter.categoryIds?.forEach((id) => params.append("categoryIds", id));
+
+  const url = `/api/workspaces/${workspaceId}/transactions/export?${params.toString()}`;
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+
+  const response = await fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+
+  if (!response.ok) {
+    let problem: { title?: string; detail?: string } | undefined;
+    try { problem = await response.json() as typeof problem; } catch { problem = undefined; }
+    if (response.status === 401) { window.dispatchEvent(new CustomEvent("aureus:unauthorized")); }
+    throw new ApiError(response.status, problem);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.style.display = "none";
+  anchor.href = objectUrl;
+  anchor.download = "transactions.csv";
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 100);
 }
 
 export function deleteTransaction(

@@ -1,8 +1,11 @@
+using Aureus.Api.Contracts.Analytics;
 using Aureus.Api.Contracts.Transactions;
 using Aureus.Api.Filters;
+using Aureus.Domain.Analytics;
 using Aureus.Domain.Workspaces;
 using Aureus.UseCases.Transactions.CreateTransaction;
 using Aureus.UseCases.Transactions.DeleteTransaction;
+using Aureus.UseCases.Transactions.ExportTransactions;
 using Aureus.UseCases.Transactions.GetTransactions;
 using Aureus.UseCases.Transactions.UpdateTransaction;
 using AutoMapper;
@@ -15,6 +18,18 @@ namespace Aureus.Api.Controllers.Transactions;
 [Route("api/workspaces/{workspaceId:guid}/transactions")]
 public sealed class TransactionsController(ISender sender, IMapper mapper) : ApiControllerBase
 {
+    [HttpGet("export")]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ExportAsync(
+        Guid workspaceId,
+        [FromQuery] AnalyticsFilterRequest request,
+        CancellationToken cancellationToken)
+    {
+        var filter = new AnalyticsFilter(workspaceId, request.From, request.To, request.AccountIds, request.Type, request.CategoryIds);
+        var bytes = await sender.Send(new ExportTransactionsQuery(filter), cancellationToken);
+        return File(bytes, "text/csv; charset=utf-8", "transactions.csv");
+    }
+
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyList<TransactionResponse>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetAsync(Guid workspaceId, CancellationToken cancellationToken)

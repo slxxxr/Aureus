@@ -165,6 +165,7 @@
   },
   "transactions": {
     "addTransaction": "Добавить транзакцию",
+    "export": "Экспорт CSV",
     "emptyTitle": "Нет транзакций",
     "emptyDescription": "Добавьте первую транзакцию для учёта доходов и расходов.",
     "emptyNoAccounts": "Сначала создайте счет",

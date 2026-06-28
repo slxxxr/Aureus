@@ -1,3 +1,4 @@
+using Aureus.Domain.Analytics;
 using Aureus.Domain.Transactions;
 
 namespace Aureus.Persistence.Interfaces;
@@ -5,6 +6,8 @@ namespace Aureus.Persistence.Interfaces;
 public interface ITransactionRepository
 {
     Task<IReadOnlyList<Transaction>> GetByWorkspaceIdAsync(Guid workspaceId, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<Transaction>> GetByFilterAsync(AnalyticsFilter filter, CancellationToken cancellationToken);
 
     Task<Transaction?> FindByIdAsync(Guid id, Guid workspaceId, CancellationToken cancellationToken);
 

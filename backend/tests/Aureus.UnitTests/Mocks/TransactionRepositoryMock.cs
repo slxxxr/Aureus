@@ -1,3 +1,4 @@
+using Aureus.Domain.Analytics;
 using Aureus.Domain.Transactions;
 using Aureus.Persistence.Interfaces;
 using Moq;
@@ -24,6 +25,15 @@ public sealed class TransactionRepositoryMock
 
     public Transaction? DeletedTransaction { get; private set; }
     public long? DeletedBalanceDelta { get; private set; }
+
+    public TransactionRepositoryMock WithFilterResult(IReadOnlyList<Transaction> transactions)
+    {
+        _mock
+            .Setup(r => r.GetByFilterAsync(It.IsAny<AnalyticsFilter>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        return this;
+    }
 
     public TransactionRepositoryMock WithTransaction(Guid id, Guid workspaceId, Transaction transaction)
     {
