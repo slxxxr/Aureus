@@ -118,7 +118,7 @@ export function DashboardPage() {
 
   return (
     <div className="min-w-0">
-      <div className="sticky top-0 z-10 bg-background pb-3 pr-8 pt-9">
+      <div className="sticky top-0 z-10 bg-background pb-3 pt-9 md:pr-8">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <PeriodFilter />
           {accounts.length > 0 && (
@@ -145,7 +145,7 @@ export function DashboardPage() {
       </div>
 
       {enabled && (
-        <div className="pb-4 pr-8">
+        <div className="pb-4 md:pr-8">
           <InsightsCard workspaceId={activeWorkspace!.id} from={filter.from} to={filter.to} />
         </div>
       )}
@@ -160,7 +160,7 @@ export function DashboardPage() {
       )}
 
       {!summaryLoading && summary.length > 0 && (
-        <div className="pr-8">
+        <div className="md:pr-8">
           {tab === "overview" && (
             <OverviewTab
               workspaceId={activeWorkspace!.id}

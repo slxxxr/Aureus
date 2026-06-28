@@ -581,7 +581,13 @@ function TransactionRow({
   const account = accountMap.get(tx.financialAccountId);
 
   return (
-    <div className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent/60">
+    <div
+      onClick={canEdit ? onEdit : undefined}
+      className={cn(
+        "group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent/60",
+        canEdit && "cursor-pointer",
+      )}
+    >
       {/* type icon */}
       <div
         className={cn(
@@ -622,19 +628,16 @@ function TransactionRow({
         </p>
       </div>
 
-      {/* edit pencil — always rendered to keep alignment stable */}
-      <button
-        onClick={canEdit ? onEdit : undefined}
-        tabIndex={canEdit ? 0 : -1}
-        aria-hidden={!canEdit}
+      {/* edit pencil — desktop hover only, hidden on mobile */}
+      <span
+        aria-hidden="true"
         className={cn(
-          "shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-          canEdit ? "group-hover:opacity-100 cursor-pointer" : "pointer-events-none",
+          "hidden shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity sm:block",
+          canEdit ? "group-hover:opacity-100" : "invisible",
         )}
-        aria-label={t("transactions.editModal.title")}
       >
         <Pencil className="h-3.5 w-3.5" />
-      </button>
+      </span>
     </div>
   );
 }
@@ -937,7 +940,7 @@ export function TransactionsPage() {
       {/* main content */}
       <div className="min-w-0 flex-1">
         {/* add button — sticky below header so it stays visible while scrolling */}
-        <div className="sticky top-0 z-10 mb-3 flex justify-end bg-background pb-0 pt-9 pr-8">
+        <div className="sticky top-0 z-10 mb-3 flex justify-end bg-background pb-0 pt-9 md:pr-8">
           <Button
             size="sm"
             variant="ghost"

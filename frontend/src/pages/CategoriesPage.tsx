@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import {
   createCategory,
@@ -196,17 +197,22 @@ function CategoryCard({
   const { t } = useTranslation();
 
   return (
-    <div className="group relative flex flex-col rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm">
+    <div
+      onClick={canManage ? onEdit : undefined}
+      className={cn(
+        "group relative flex flex-col rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm",
+        canManage && "cursor-pointer",
+      )}
+    >
       <div className="mb-3 flex items-start justify-between gap-2">
         <p className="text-sm font-medium leading-tight">{category.name}</p>
         {canManage && (
-          <button
-            onClick={onEdit}
-            className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            aria-label={t("categories.editModal.title")}
+          <span
+            aria-hidden="true"
+            className="hidden shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 sm:block"
           >
             <Pencil className="h-3.5 w-3.5" />
-          </button>
+          </span>
         )}
       </div>
 
