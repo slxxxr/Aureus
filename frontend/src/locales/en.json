@@ -289,9 +289,9 @@
       "empty": "No data for this period"
     },
     "breakdown": {
-      "title": "Expenses by category",
+      "title": "Expenses",
       "empty": "No expenses in this period",
-      "incomeTitle": "Income by category",
+      "incomeTitle": "Income",
       "incomeEmpty": "No income in this period",
       "other": "Other",
       "detailEmpty": "No transactions",
@@ -304,7 +304,8 @@
       "title": "Category dynamics",
       "expense": "Expenses",
       "income": "Income",
-      "empty": "No data for this period"
+      "empty": "No data for this period",
+      "showMore": "Show {{count}} more"
     },
     "insights": {
       "title": "Ask AI",

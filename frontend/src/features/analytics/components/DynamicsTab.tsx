@@ -240,6 +240,7 @@ export function DynamicsTab({
 }) {
   const { t } = useTranslation();
   const [type, setType] = useState<"Expense" | "Income">("Expense");
+  const [visibleCount, setVisibleCount] = useState(5);
 
   const typedFilter = useMemo<AnalyticsFilter>(() => ({ ...filter, type }), [filter, type]);
 
@@ -291,15 +292,17 @@ export function DynamicsTab({
       ) : (
         currencies.map((currency) => {
           const { series, rows } = buildDynamics(byCurrency.get(currency) ?? [], colorMeta, buckets);
+          const visibleSeries = series.slice(0, visibleCount);
+          const hiddenCount = series.length - visibleCount;
           return (
             <div key={currency} className="[&:not(:first-child)]:mt-4">
               {multiCurrency && (
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="mb-2 pl-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {currency}
                 </p>
               )}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {series.map((item) => (
+                {visibleSeries.map((item) => (
                   <SmallMultiple
                     key={item.key}
                     serie={item}
@@ -311,6 +314,15 @@ export function DynamicsTab({
                   />
                 ))}
               </div>
+              {hiddenCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((c) => c + 5)}
+                  className="mt-3 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  {t("dashboard.dynamics.showMore", { count: Math.min(5, hiddenCount) })}
+                </button>
+              )}
             </div>
           );
         })

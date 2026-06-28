@@ -244,7 +244,7 @@ function CategorySection({
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
+        <span className="pl-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
         {canManage && (
           <Button size="sm" variant="ghost" onClick={onAdd} className="gap-1.5">
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -312,7 +312,7 @@ export function CategoriesPage() {
   const income = (categories ?? []).filter((c) => c.type === "Income");
 
   return (
-    <div className="pt-9">
+    <div className="pt-0 md:pt-9">
       {isLoading && <CategoriesSkeleton />}
 
       {!isLoading && (

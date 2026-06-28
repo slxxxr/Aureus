@@ -369,7 +369,7 @@ export function FinancialAccountsPage() {
 
   return (
     <div>
-      <div className="mb-3 flex justify-end pt-9">
+      <div className="mb-3 flex justify-end pt-0 md:pt-9">
         {canManage && (
           <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="gap-1.5">
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />

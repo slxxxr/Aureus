@@ -42,7 +42,7 @@ export function SettingsPage() {
   const canSubmit = isValid && hasChanged && !updateMutation.isPending;
 
   return (
-    <div className="pt-11 px-6 max-w-lg">
+    <div className="max-w-lg px-6 pt-4 sm:pt-11">
       <section>
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {t("settings.profile.title")}

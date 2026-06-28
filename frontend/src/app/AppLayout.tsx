@@ -18,6 +18,7 @@ import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { NotificationsPopover } from "@/components/NotificationsPopover";
 import { useAuth } from "@/features/auth/AuthContext";
 import { cn } from "@/lib/utils";
+import { HeaderActionProvider, useHeaderAction } from "./HeaderActionContext";
 
 type NavigationItem = {
   to: string;
@@ -103,7 +104,16 @@ function DashboardNavGroup({ location, t }: { location: ReturnType<typeof useLoc
 }
 
 export function AppLayout() {
+  return (
+    <HeaderActionProvider>
+      <AppLayoutContent />
+    </HeaderActionProvider>
+  );
+}
+
+function AppLayoutContent() {
   const { t } = useTranslation();
+  const { action } = useHeaderAction();
   const location = useLocation();
   const { signOut } = useAuth();
   const currentTitleKey = pageTitleByPath[location.pathname] ?? "pages.dashboard.title";
@@ -286,7 +296,13 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto px-4 pb-4 md:px-8 md:pb-5">
+        {action && (
+          <div className="flex justify-end bg-background px-4 pb-1 md:hidden">
+            {action}
+          </div>
+        )}
+
+        <main className="flex-1 overflow-y-auto bg-background px-4 pb-4 md:px-8 md:pb-5">
           <Outlet />
         </main>
 

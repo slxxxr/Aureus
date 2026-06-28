@@ -1,5 +1,5 @@
 import { InputLimits } from "@/lib/inputLimits";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -33,6 +33,7 @@ import { ImportTransactionsModal } from "@/features/transactions/ImportTransacti
 import { CustomSelect } from "@/components/ui/custom-select";
 import { MultiSelect } from "@/components/ui/custom-select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useHeaderAction } from "@/app/HeaderActionContext";
 
 const MAX_AMOUNT = 1_000_000_000;
 
@@ -905,6 +906,7 @@ function MobileFilterBar({
 export function TransactionsPage() {
   const { t } = useTranslation();
   const { activeWorkspace } = useWorkspace();
+  const { setAction } = useHeaderAction();
   const [accountFilter, setAccountFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<"" | TransactionType>("");
   const [showCreate, setShowCreate] = useState(false);
@@ -993,6 +995,16 @@ export function TransactionsPage() {
         ? "transactions.emptyNoCategoriesHint"
         : "transactions.emptyDescription";
 
+  useEffect(() => {
+    setAction(
+      <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="gap-1.5">
+        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+        {t("transactions.addTransaction")}
+      </Button>,
+    );
+    return () => { setAction(null); };
+  }, [setAction, setShowCreate, t]);
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
@@ -1024,8 +1036,8 @@ export function TransactionsPage() {
 
       {/* main content */}
       <div className="min-w-0 flex-1">
-        {/* add button — sticky below header so it stays visible while scrolling */}
-        <div className="sticky top-0 z-10 mb-3 flex justify-end bg-background pb-0 pt-9 md:pr-8">
+        {/* add button — sticky on desktop; on mobile it's rendered in the app header via context */}
+        <div className="sticky top-0 z-10 hidden justify-end bg-background pb-3 pt-9 pr-8 md:flex">
           <Button
             size="sm"
             variant="ghost"

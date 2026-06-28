@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -53,7 +53,7 @@ function SummaryCards({ summary, showCurrency }: { summary: CurrencySummary; sho
   return (
     <div>
       {showCurrency && (
-        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <p className="mb-2 pl-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {summary.currency}
         </p>
       )}
@@ -152,45 +152,58 @@ function IncomeExpenseChart({
     });
   }, [points, periods, interval, from]);
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) { el.scrollLeft = el.scrollWidth; }
+  }, [data]);
+
+  const tickEvery = Math.max(1, Math.ceil(data.length / 8));
+  const xTicks = data.filter((_, i) => i % tickEvery === 0).map((d) => d.label);
+
   return (
-    <ResponsiveContainer width="100%" height={260}>
-      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-        <defs>
-          <linearGradient id="bar-income" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={INCOME_COLOR} stopOpacity={0.95} />
-            <stop offset="100%" stopColor={INCOME_COLOR} stopOpacity={0.45} />
-          </linearGradient>
-          <linearGradient id="bar-expense" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={EXPENSE_COLOR} stopOpacity={0.95} />
-            <stop offset="100%" stopColor={EXPENSE_COLOR} stopOpacity={0.45} />
-          </linearGradient>
-        </defs>
-        <CartesianGrid vertical={false} stroke={GRID_COLOR} />
-        <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: AXIS_COLOR, fontSize: 12 }} />
-        <YAxis
-          width={48}
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: AXIS_COLOR, fontSize: 12 }}
-          tickFormatter={formatAxisNumber}
-        />
-        <Tooltip
-          cursor={{ fill: GRID_COLOR, opacity: 0.3 }}
-          isAnimationActive={false}
-          content={(props) => (
-            <ChartTooltip
-              {...(props as { active?: boolean; payload?: readonly TooltipPayloadEntry[] })}
-              currency={currency}
-              interval={interval}
-              from={from}
-              to={to}
+    <div ref={scrollRef} className="overflow-x-auto">
+      <div style={{ minWidth: data.length * 36 }}>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
+            <defs>
+              <linearGradient id="bar-income" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={INCOME_COLOR} stopOpacity={0.95} />
+                <stop offset="100%" stopColor={INCOME_COLOR} stopOpacity={0.45} />
+              </linearGradient>
+              <linearGradient id="bar-expense" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={EXPENSE_COLOR} stopOpacity={0.95} />
+                <stop offset="100%" stopColor={EXPENSE_COLOR} stopOpacity={0.45} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} stroke={GRID_COLOR} />
+            <XAxis dataKey="label" ticks={xTicks} interval={0} tickLine={false} axisLine={false} tick={{ fill: AXIS_COLOR, fontSize: 12 }} />
+            <YAxis
+              width={48}
+              tickLine={false}
+              axisLine={false}
+              tick={{ fill: AXIS_COLOR, fontSize: 12 }}
+              tickFormatter={formatAxisNumber}
             />
-          )}
-        />
-        <Bar dataKey="income" fill="url(#bar-income)" radius={[10, 10, 0, 0]} isAnimationActive={false} />
-        <Bar dataKey="expenses" fill="url(#bar-expense)" radius={[10, 10, 0, 0]} isAnimationActive={false} />
-      </BarChart>
-    </ResponsiveContainer>
+            <Tooltip
+              cursor={{ fill: GRID_COLOR, opacity: 0.3 }}
+              isAnimationActive={false}
+              content={(props) => (
+                <ChartTooltip
+                  {...(props as { active?: boolean; payload?: readonly TooltipPayloadEntry[] })}
+                  currency={currency}
+                  interval={interval}
+                  from={from}
+                  to={to}
+                />
+              )}
+            />
+            <Bar dataKey="income" fill="url(#bar-income)" radius={[10, 10, 0, 0]} isAnimationActive={false} />
+            <Bar dataKey="expenses" fill="url(#bar-expense)" radius={[10, 10, 0, 0]} isAnimationActive={false} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
   );
 }
 
