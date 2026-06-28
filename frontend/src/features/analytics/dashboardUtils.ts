@@ -96,9 +96,7 @@ export function enumerateBuckets(
 
   const endDate = to
     ? new Date(to)
-    : present.length > 0
-      ? nextBucket(bucketStartOf(present.reduce((a, b) => (a > b ? a : b)), interval), interval)
-      : undefined;
+    : nextBucket(bucketStartOf(new Date().toISOString(), interval), interval);
   if (endDate === undefined) return [];
 
   const buckets: string[] = [];

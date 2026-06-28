@@ -158,7 +158,8 @@ function IncomeExpenseChart({
     if (el) { el.scrollLeft = el.scrollWidth; }
   }, [data]);
 
-  const tickEvery = Math.max(1, Math.ceil(data.length / 8));
+  const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
+  const tickEvery = isMobile ? Math.max(1, Math.ceil(data.length / 4)) : 1;
   const xTicks = data.filter((_, i) => i % tickEvery === 0).map((d) => d.label);
 
   return (
