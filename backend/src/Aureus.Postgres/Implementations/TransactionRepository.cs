@@ -1,3 +1,4 @@
+using Aureus.Domain.Analytics;
 using Aureus.Domain.Transactions;
 using Aureus.Persistence.Entities;
 using Aureus.Persistence;
@@ -18,6 +19,48 @@ public sealed class TransactionRepository(AureusDbContext dbContext, IMapper map
             .Where(transaction => transaction.WorkspaceId == workspaceId)
             .OrderByDescending(transaction => transaction.OccurredAt)
             .ThenByDescending(transaction => transaction.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return mapper.Map<List<Transaction>>(entities);
+    }
+
+    public async Task<IReadOnlyList<Transaction>> GetByFilterAsync(
+        AnalyticsFilter filter,
+        CancellationToken cancellationToken)
+    {
+        var query = dbContext.Transactions
+            .AsNoTracking()
+            .Where(t => t.WorkspaceId == filter.WorkspaceId);
+
+        if (filter.From.HasValue)
+        {
+            query = query.Where(t => t.OccurredAt >= filter.From.Value);
+        }
+
+        if (filter.To.HasValue)
+        {
+            query = query.Where(t => t.OccurredAt < filter.To.Value);
+        }
+
+        if (filter.Type.HasValue)
+        {
+            var typeString = filter.Type.Value.ToString();
+            query = query.Where(t => t.Type == typeString);
+        }
+
+        if (filter.AccountIds is { Count: > 0 })
+        {
+            query = query.Where(t => filter.AccountIds.Contains(t.FinancialAccountId));
+        }
+
+        if (filter.CategoryIds is { Count: > 0 })
+        {
+            query = query.Where(t => filter.CategoryIds.Contains(t.CategoryId));
+        }
+
+        var entities = await query
+            .OrderByDescending(t => t.OccurredAt)
+            .ThenByDescending(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
 
         return mapper.Map<List<Transaction>>(entities);

@@ -23,6 +23,19 @@ public sealed class CategoryRepository(AureusDbContext dbContext, IMapper mapper
         return mapper.Map<List<Category>>(entities);
     }
 
+    public async Task<IReadOnlyList<Category>> GetAllIncludingDeletedAsync(
+        Guid workspaceId,
+        CancellationToken cancellationToken)
+    {
+        var entities = await dbContext.Categories
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(c => c.WorkspaceId == workspaceId)
+            .ToListAsync(cancellationToken);
+
+        return mapper.Map<List<Category>>(entities);
+    }
+
     public async Task<Category?> FindByIdAsync(Guid id, Guid workspaceId, CancellationToken cancellationToken)
     {
         var entity = await dbContext.Categories
