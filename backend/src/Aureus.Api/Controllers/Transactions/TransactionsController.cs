@@ -1,5 +1,6 @@
 using Aureus.Api.Contracts.Analytics;
 using Aureus.Api.Contracts.Transactions;
+using Aureus.Api.Extensions;
 using Aureus.Api.Filters;
 using Aureus.Domain.Analytics;
 using Aureus.Domain.Workspaces;
@@ -7,10 +8,12 @@ using Aureus.UseCases.Transactions.CreateTransaction;
 using Aureus.UseCases.Transactions.DeleteTransaction;
 using Aureus.UseCases.Transactions.ExportTransactions;
 using Aureus.UseCases.Transactions.GetTransactions;
+using Aureus.UseCases.Transactions.ImportTransactions;
 using Aureus.UseCases.Transactions.UpdateTransaction;
 using AutoMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Aureus.Api.Controllers.Transactions;
 
@@ -28,6 +31,51 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
         var filter = new AnalyticsFilter(workspaceId, request.From, request.To, request.AccountIds, request.Type, request.CategoryIds);
         var bytes = await sender.Send(new ExportTransactionsQuery(filter), cancellationToken);
         return File(bytes, "text/csv; charset=utf-8", "transactions.csv");
+    }
+
+    [HttpPost("import/preview")]
+    [RequireWorkspaceRole(WorkspaceRole.Manager)]
+    [RequestSizeLimit(5 * 1024 * 1024)]
+    [EnableRateLimiting(RateLimitingExtensions.Import)]
+    [ProducesResponseType(typeof(ImportPreviewResponse), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ImportPreviewAsync(
+        Guid workspaceId,
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, cancellationToken);
+        var content = ms.ToArray();
+
+        var result = await sender.Send(new ImportPreviewQuery(workspaceId, content), cancellationToken);
+
+        var response = new ImportPreviewResponse(
+            result.Rows.Select(r => new ImportRowPreviewResponse(
+                r.RowNumber, r.IsValid, r.ErrorCode, r.ErrorSubject,
+                r.Date, r.Type, r.Amount, r.Account, r.Category, r.Name, r.Note)).ToList(),
+            result.ValidCount,
+            result.ErrorCount);
+
+        return Ok(response);
+    }
+
+    [HttpPost("import/commit")]
+    [RequireWorkspaceRole(WorkspaceRole.Manager)]
+    [RequestSizeLimit(5 * 1024 * 1024)]
+    [EnableRateLimiting(RateLimitingExtensions.Import)]
+    [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+    public async Task<IActionResult> ImportCommitAsync(
+        Guid workspaceId,
+        IFormFile file,
+        CancellationToken cancellationToken)
+    {
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, cancellationToken);
+        var content = ms.ToArray();
+
+        var count = await sender.Send(new CommitImportCommand(workspaceId, CurrentUserId, content), cancellationToken);
+
+        return Ok(count);
     }
 
     [HttpGet]

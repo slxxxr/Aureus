@@ -94,6 +94,29 @@ public sealed class TransactionRepository(AureusDbContext dbContext, IMapper map
         await dbTransaction.CommitAsync(cancellationToken);
     }
 
+    public async Task AddBulkAsync(
+        IReadOnlyList<Transaction> transactions,
+        IReadOnlyDictionary<Guid, long> accountBalanceDeltas,
+        CancellationToken cancellationToken)
+    {
+        await using var dbTransaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        var entities = transactions.Select(mapper.Map<TransactionDb>).ToList();
+        await dbContext.Transactions.AddRangeAsync(entities, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        foreach (var (accountId, delta) in accountBalanceDeltas)
+        {
+            await dbContext.FinancialAccounts
+                .Where(a => a.Id == accountId)
+                .ExecuteUpdateAsync(
+                    s => s.SetProperty(a => a.CurrentBalanceMinor, a => a.CurrentBalanceMinor + delta),
+                    cancellationToken);
+        }
+
+        await dbTransaction.CommitAsync(cancellationToken);
+    }
+
     public async Task UpdateAsync(
         Transaction transaction,
         Guid oldAccountId,
