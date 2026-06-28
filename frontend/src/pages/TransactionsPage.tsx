@@ -34,6 +34,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { MultiSelect } from "@/components/ui/custom-select";
 import { DatePicker } from "@/components/ui/date-picker";
 import { useHeaderAction } from "@/app/HeaderActionContext";
+import { useTapToEdit } from "@/lib/useTapToEdit";
 
 const MAX_AMOUNT = 1_000_000_000;
 
@@ -577,13 +578,14 @@ function TransactionRow({
   canEdit: boolean;
 }) {
   const { t } = useTranslation();
+  const tapHandlers = useTapToEdit(onEdit, canEdit);
   const isIncome = tx.type === "Income";
   const category = categoryMap.get(tx.categoryId);
   const account = accountMap.get(tx.financialAccountId);
 
   return (
     <div
-      onClick={canEdit ? onEdit : undefined}
+      {...tapHandlers}
       className={cn(
         "group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
         canEdit && "cursor-pointer active:bg-accent/60 [@media(hover:hover)]:hover:bg-accent/60",

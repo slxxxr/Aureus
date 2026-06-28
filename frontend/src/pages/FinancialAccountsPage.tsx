@@ -15,6 +15,7 @@ import {
 } from "@/features/financial-accounts/financialAccountsApi";
 import { resolveFinancialAccountError } from "@/features/financial-accounts/resolveFinancialAccountError";
 import { formatMoney } from "@/lib/formatMoney";
+import { useTapToEdit } from "@/lib/useTapToEdit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -312,11 +313,12 @@ function AccountCard({
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
+  const tapHandlers = useTapToEdit(() => setEditing(true), canManage);
 
   return (
     <>
       <div
-        onClick={canManage ? () => setEditing(true) : undefined}
+        {...tapHandlers}
         className={cn(
           "group rounded-lg border border-border bg-card p-5 transition-shadow hover:shadow-sm",
           canManage && "cursor-pointer",

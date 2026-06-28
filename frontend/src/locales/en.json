@@ -136,7 +136,6 @@
     "typeIncome": "Income",
     "addCategory": "Add category",
     "emptySection": "No categories",
-    "statsLast30Days": "last 30 days",
     "emptyTitle": "No categories yet",
     "emptyDescription": "Create your first category to classify transactions.",
     "createModal": {
