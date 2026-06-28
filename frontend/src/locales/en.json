@@ -165,6 +165,7 @@
   },
   "transactions": {
     "addTransaction": "Add Transaction",
+    "export": "Export CSV",
     "emptyTitle": "No transactions yet",
     "emptyDescription": "Add your first transaction to start tracking income and expenses.",
     "emptyNoAccounts": "Create an account first",

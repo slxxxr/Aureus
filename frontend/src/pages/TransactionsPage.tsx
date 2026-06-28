@@ -3,7 +3,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Pencil, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Download, Pencil, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DAY_MS } from "@/lib/constants";
 import { formatMoney } from "@/lib/formatMoney";
@@ -13,6 +13,7 @@ import {
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  exportTransactions,
   type Transaction,
   type TransactionType,
 } from "@/features/transactions/transactionsApi";
@@ -659,13 +660,14 @@ function DateGroup({
 
   return (
     <div>
-      <div className="mb-1 flex items-center px-3 pr-8">
+      <div className="mb-1 flex items-center gap-3 px-3">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {formatDateLabel(dateKey, t as TFunction)}
         </span>
         {net && (
           <span className="ml-auto text-xs font-medium tabular-nums text-muted-foreground">{net}</span>
         )}
+        <span className="w-[18px] shrink-0" aria-hidden="true" />
       </div>
       <div className="space-y-0.5">
         {items.map((tx) => (
@@ -722,12 +724,16 @@ function FilterSidebar({
   onAccountChange,
   typeFilter,
   onTypeChange,
+  isExporting,
+  onExport,
 }: {
   accounts: FinancialAccount[];
   accountFilter: string[];
   onAccountChange: (v: string[]) => void;
   typeFilter: "" | TransactionType;
   onTypeChange: (v: "" | TransactionType) => void;
+  isExporting: boolean;
+  onExport: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -776,6 +782,18 @@ function FilterSidebar({
             ))}
           </div>
         </div>
+
+        <div className="border-t border-border pt-4">
+          <button
+            type="button"
+            disabled={isExporting}
+            onClick={onExport}
+            className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+            {t("transactions.export")}
+          </button>
+        </div>
       </div>
     </aside>
   );
@@ -789,6 +807,7 @@ export function TransactionsPage() {
   const [accountFilter, setAccountFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<"" | TransactionType>("");
   const [showCreate, setShowCreate] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
 
   const { data: transactions = [], isLoading: txLoading } = useQuery({
@@ -880,6 +899,18 @@ export function TransactionsPage() {
           onAccountChange={setAccountFilter}
           typeFilter={typeFilter}
           onTypeChange={setTypeFilter}
+          isExporting={isExporting}
+          onExport={async () => {
+            setIsExporting(true);
+            try {
+              await exportTransactions(activeWorkspace!.id, {
+                accountIds: accountFilter.length > 0 ? accountFilter : undefined,
+                type: typeFilter || undefined,
+              });
+            } finally {
+              setIsExporting(false);
+            }
+          }}
         />
       )}
 
