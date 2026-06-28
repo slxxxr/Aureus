@@ -166,6 +166,31 @@
   "transactions": {
     "addTransaction": "Add Transaction",
     "export": "Export CSV",
+    "import": "Import CSV",
+    "importModal": {
+      "title": "Import transactions",
+      "dropzone": "Click to select a file or drag and drop",
+      "constraints": "CSV · max 5 MB · up to 5 000 rows",
+      "previewing": "Checking…",
+      "validRows": "{{count}} valid",
+      "errorRows": "{{count}} errors",
+      "errorColumn": "Error",
+      "confirmButton": "Import {{count}}",
+      "importing": "Importing…",
+      "success": "{{count}} transactions imported",
+      "close": "Close"
+    },
+    "importRowErrors": {
+      "InvalidDate": "Invalid date (expected YYYY-MM-DD)",
+      "InvalidType": "Unknown type (expected Income or Expense)",
+      "InvalidAmount": "Invalid amount",
+      "AmountTooLarge": "Amount exceeds the maximum",
+      "AccountNotFound": "Account \"{{subject}}\" not found",
+      "CategoryNotFound": "Category \"{{subject}}\" not found",
+      "NameRequired": "Name is required",
+      "NameTooLong": "Name is too long",
+      "NoteTooLong": "Note is too long"
+    },
     "emptyTitle": "No transactions yet",
     "emptyDescription": "Add your first transaction to start tracking income and expenses.",
     "emptyNoAccounts": "Create an account first",
@@ -228,6 +253,10 @@
       "categoryNotFound": "Category not found.",
       "categoryRequired": "A category is required when changing the transaction type.",
       "categoryTypeMismatch": "The category type does not match the transaction type.",
+      "importFileTooLarge": "File exceeds the 5 MB limit.",
+      "importTooManyRows": "File contains more than 5 000 rows.",
+      "importInvalidFormat": "Could not read the file. Check the CSV format.",
+      "importHasErrors": "Fix the errors before importing.",
       "generic": "Something went wrong. Please try again."
     }
   },

@@ -166,6 +166,31 @@
   "transactions": {
     "addTransaction": "Добавить транзакцию",
     "export": "Экспорт CSV",
+    "import": "Импорт CSV",
+    "importModal": {
+      "title": "Импорт транзакций",
+      "dropzone": "Нажмите, чтобы выбрать файл, или перетащите его",
+      "constraints": "CSV · не более 5 МБ · до 5 000 строк",
+      "previewing": "Проверяю…",
+      "validRows": "{{count}} строк готово",
+      "errorRows": "{{count}} ошибок",
+      "errorColumn": "Ошибка",
+      "confirmButton": "Импортировать {{count}}",
+      "importing": "Импорт…",
+      "success": "Импортировано {{count}} транзакций",
+      "close": "Закрыть"
+    },
+    "importRowErrors": {
+      "InvalidDate": "Неверная дата (ожидается YYYY-MM-DD)",
+      "InvalidType": "Неизвестный тип (ожидается Income или Expense)",
+      "InvalidAmount": "Некорректная сумма",
+      "AmountTooLarge": "Сумма превышает максимум",
+      "AccountNotFound": "Счёт «{{subject}}» не найден",
+      "CategoryNotFound": "Категория «{{subject}}» не найдена",
+      "NameRequired": "Название обязательно",
+      "NameTooLong": "Название слишком длинное",
+      "NoteTooLong": "Заметка слишком длинная"
+    },
     "emptyTitle": "Нет транзакций",
     "emptyDescription": "Добавьте первую транзакцию для учёта доходов и расходов.",
     "emptyNoAccounts": "Сначала создайте счет",
@@ -228,6 +253,10 @@
       "categoryNotFound": "Категория не найдена.",
       "categoryRequired": "При смене типа необходимо выбрать категорию.",
       "categoryTypeMismatch": "Тип категории не совпадает с типом транзакции.",
+      "importFileTooLarge": "Файл превышает лимит 5 МБ.",
+      "importTooManyRows": "Файл содержит более 5 000 строк.",
+      "importInvalidFormat": "Не удалось прочитать файл. Проверьте формат CSV.",
+      "importHasErrors": "Исправьте ошибки перед импортом.",
       "generic": "Что-то пошло не так. Попробуйте ещё раз."
     }
   },
