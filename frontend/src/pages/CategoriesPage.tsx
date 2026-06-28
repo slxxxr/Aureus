@@ -15,6 +15,7 @@ import {
   type CategoryType,
 } from "@/features/categories/categoriesApi";
 import { resolveCategoryError } from "@/features/categories/resolveCategoryError";
+import { useTapToEdit } from "@/lib/useTapToEdit";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -194,17 +195,17 @@ function CategoryCard({
   onEdit: () => void;
   canManage: boolean;
 }) {
-  const { t } = useTranslation();
+  const tapHandlers = useTapToEdit(onEdit, canManage);
 
   return (
     <div
-      onClick={canManage ? onEdit : undefined}
+      {...tapHandlers}
       className={cn(
-        "group relative flex flex-col rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm",
+        "group relative rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm",
         canManage && "cursor-pointer",
       )}
     >
-      <div className="mb-3 flex items-start justify-between gap-2">
+      <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-medium leading-tight">{category.name}</p>
         {canManage && (
           <span
@@ -214,12 +215,6 @@ function CategoryCard({
             <Pencil className="h-3.5 w-3.5" />
           </span>
         )}
-      </div>
-
-      {/* stats — placeholder until transactions feature */}
-      <div className="mt-auto border-t border-border pt-3">
-        <p className="text-lg font-semibold tabular-nums text-muted-foreground">—</p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{t("categories.statsLast30Days")}</p>
       </div>
     </div>
   );

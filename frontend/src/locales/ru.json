@@ -136,7 +136,6 @@
     "typeIncome": "Доход",
     "addCategory": "Добавить категорию",
     "emptySection": "Нет категорий",
-    "statsLast30Days": "за последние 30 дней",
     "emptyTitle": "Нет категорий",
     "emptyDescription": "Создайте первую категорию для классификации транзакций.",
     "createModal": {
