@@ -7,6 +7,7 @@ public static class RateLimitingExtensions
 {
     public const string AuthLogin = "auth-login";
     public const string AuthRegisterStart = "auth-register-start";
+    public const string Import = "import";
 
     public static IServiceCollection AddConfiguredRateLimiting(this IServiceCollection services)
     {
@@ -57,6 +58,16 @@ public static class RateLimitingExtensions
                     PermitLimit = 5,
                     Window = TimeSpan.FromMinutes(5),
                     SegmentsPerWindow = 5,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
+
+            options.AddPolicy(Import, context =>
+                RateLimitPartition.GetSlidingWindowLimiter(GetClientIp(context), _ => new SlidingWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(1),
+                    SegmentsPerWindow = 6,
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                     QueueLimit = 0
                 }));

@@ -117,3 +117,51 @@ export function deleteTransaction(
     { method: "DELETE" },
   );
 }
+
+export type ImportRowPreview = {
+  rowNumber: number;
+  isValid: boolean;
+  errorCode: string | null;
+  errorSubject: string | null;
+  date: string;
+  type: string;
+  amount: string;
+  account: string;
+  category: string;
+  name: string;
+  note: string;
+};
+
+export type ImportPreviewResult = {
+  rows: ImportRowPreview[];
+  validCount: number;
+  errorCount: number;
+};
+
+async function importFetch<T>(path: string, body: FormData): Promise<T> {
+  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+  const response = await fetch(path, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body,
+  });
+  if (!response.ok) {
+    let problem: { title?: string; detail?: string } | undefined;
+    try { problem = await response.json() as typeof problem; } catch { problem = undefined; }
+    if (response.status === 401) { window.dispatchEvent(new CustomEvent("aureus:unauthorized")); }
+    throw new ApiError(response.status, problem);
+  }
+  return response.json() as Promise<T>;
+}
+
+export function previewImport(workspaceId: string, file: File): Promise<ImportPreviewResult> {
+  const form = new FormData();
+  form.append("file", file);
+  return importFetch<ImportPreviewResult>(`/api/workspaces/${workspaceId}/transactions/import/preview`, form);
+}
+
+export function commitImport(workspaceId: string, file: File): Promise<number> {
+  const form = new FormData();
+  form.append("file", file);
+  return importFetch<number>(`/api/workspaces/${workspaceId}/transactions/import/commit`, form);
+}

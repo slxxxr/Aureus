@@ -39,7 +39,7 @@ Personal finance service. Track income and expenses across accounts and categori
 - **Workspaces** — independent spaces for different finances (personal, work, family); invite members by email, three roles (Owner / Manager / Member), manage members, transfer ownership; notifications bell for incoming invitations
 - **Financial accounts** — multi-currency accounts with running balance
 - **Categories** — income and expense categories
-- **Transactions** — list grouped by date with daily net; filter by account and type; export to CSV (UTF-8 BOM, formula injection protection, respects active filters)
+- **Transactions** — list grouped by date with daily net; filter by account and type; export to CSV (UTF-8 BOM, formula injection protection, respects active filters); import from CSV with pre-import preview and per-row error reporting (Manager+)
 - **Dashboard analytics** — three-tab view navigated from the sidebar; filter by period, accounts, and categories; per-currency view throughout
   - **Overview** — income/expense/net summary cards, income-vs-expense bar chart, breakdowns by account
   - **Categories** — accordion list with progress bars; expanding a category loads a name-level breakdown rendered as an interactive donut chart
@@ -50,7 +50,6 @@ Personal finance service. Track income and expenses across accounts and categori
 
 - **UI polish & mobile** — responsive layout improvements
 - **Budgets** — per-category monthly limits with progress tracking
-- **CSV import** — bulk transaction import with pre-import preview
 - **Expense forecasting** — 30-day forecast based on time series
 
 ---
@@ -67,7 +66,7 @@ Personal finance service. Track income and expenses across accounts and categori
 - **Рабочие области** — независимые пространства под разные финансы (личные, рабочие, семейные); приглашение участников по email, три роли (Owner / Manager / Member), управление составом, передача владения; колокольчик уведомлений о входящих приглашениях
 - **Счета** — мультивалютные счета с актуальным балансом
 - **Категории** — категории доходов и расходов
-- **Транзакции** — список, сгруппированный по датам с дневным нетто; фильтры по счёту и типу; экспорт в CSV (UTF-8 BOM, защита от formula injection, учитывает активные фильтры)
+- **Транзакции** — список, сгруппированный по датам с дневным нетто; фильтры по счёту и типу; экспорт в CSV (UTF-8 BOM, защита от formula injection, учитывает активные фильтры); импорт из CSV с предпросмотром и построчными ошибками (только Manager+)
 - **Аналитический дашборд** — три вкладки с навигацией через сайдбар; фильтры по периоду, счетам и категориям; мультивалютный вид
   - **Обзор** — карточки сводки доходов/расходов/нетто, бар-чарт доходов и расходов, разбивки по счетам
   - **Категории** — аккордеон с прогресс-барами; при открытии категории загружается разбивка по названиям транзакций в виде интерактивной donut-диаграммы
@@ -78,7 +77,6 @@ Personal finance service. Track income and expenses across accounts and categori
 
 - **Полировка UI и мобильная версия** — адаптация интерфейса под разные экраны
 - **Бюджеты** — лимиты по категориям на месяц, отслеживание прогресса
-- **CSV-импорт** — массовая загрузка транзакций с предпросмотром
 - **Прогнозирование** — прогноз расходов на 30 дней вперёд на основе временных рядов
 
 ---

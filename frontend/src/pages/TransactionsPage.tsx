@@ -3,7 +3,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Download, Pencil, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, Download, Pencil, Plus, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DAY_MS } from "@/lib/constants";
 import { formatMoney } from "@/lib/formatMoney";
@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Modal } from "@/components/ui/modal";
+import { ImportTransactionsModal } from "@/features/transactions/ImportTransactionsModal";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { MultiSelect } from "@/components/ui/custom-select";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -726,6 +727,8 @@ function FilterSidebar({
   onTypeChange,
   isExporting,
   onExport,
+  canImport,
+  onImport,
 }: {
   accounts: FinancialAccount[];
   accountFilter: string[];
@@ -734,6 +737,8 @@ function FilterSidebar({
   onTypeChange: (v: "" | TransactionType) => void;
   isExporting: boolean;
   onExport: () => void;
+  canImport: boolean;
+  onImport: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -783,7 +788,7 @@ function FilterSidebar({
           </div>
         </div>
 
-        <div className="border-t border-border pt-4">
+        <div className="border-t border-border pt-4 space-y-0.5">
           <button
             type="button"
             disabled={isExporting}
@@ -793,6 +798,16 @@ function FilterSidebar({
             <Download className="h-3.5 w-3.5" aria-hidden="true" />
             {t("transactions.export")}
           </button>
+          {canImport && (
+            <button
+              type="button"
+              onClick={onImport}
+              className="flex w-full items-center gap-1.5 rounded px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+            >
+              <Upload className="h-3.5 w-3.5" aria-hidden="true" />
+              {t("transactions.import")}
+            </button>
+          )}
         </div>
       </div>
     </aside>
@@ -807,6 +822,7 @@ export function TransactionsPage() {
   const [accountFilter, setAccountFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<"" | TransactionType>("");
   const [showCreate, setShowCreate] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
 
@@ -839,6 +855,8 @@ export function TransactionsPage() {
 
   const canEdit = (tx: Transaction) =>
     activeWorkspace?.role !== "Member" || tx.createdByUserId === profile?.id;
+
+  const canImport = activeWorkspace?.role === "Manager" || activeWorkspace?.role === "Owner";
 
   const isLoading = txLoading || accLoading || catLoading;
 
@@ -911,6 +929,8 @@ export function TransactionsPage() {
               setIsExporting(false);
             }
           }}
+          canImport={canImport}
+          onImport={() => setShowImport(true)}
         />
       )}
 
@@ -976,6 +996,12 @@ export function TransactionsPage() {
           categories={categories}
           accounts={accounts}
           onClose={() => setEditing(null)}
+        />
+      )}
+      {showImport && activeWorkspace && (
+        <ImportTransactionsModal
+          workspaceId={activeWorkspace.id}
+          onClose={() => setShowImport(false)}
         />
       )}
     </div>

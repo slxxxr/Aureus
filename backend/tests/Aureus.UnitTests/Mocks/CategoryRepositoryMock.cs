@@ -16,6 +16,15 @@ public sealed class CategoryRepositoryMock
 
     public Category? DeletedCategory { get; private set; }
 
+    public CategoryRepositoryMock WithCategories(Guid workspaceId, IReadOnlyList<Category> categories)
+    {
+        _mock
+            .Setup(r => r.GetByWorkspaceIdAsync(workspaceId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(categories);
+
+        return this;
+    }
+
     public CategoryRepositoryMock WithAllIncludingDeleted(IReadOnlyList<Category> categories)
     {
         _mock
