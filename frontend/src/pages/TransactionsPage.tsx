@@ -1,5 +1,5 @@
 import { InputLimits } from "@/lib/inputLimits";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -33,6 +33,7 @@ import { ImportTransactionsModal } from "@/features/transactions/ImportTransacti
 import { CustomSelect } from "@/components/ui/custom-select";
 import { MultiSelect } from "@/components/ui/custom-select";
 import { DatePicker } from "@/components/ui/date-picker";
+import { useHeaderAction } from "@/app/HeaderActionContext";
 
 const MAX_AMOUNT = 1_000_000_000;
 
@@ -581,7 +582,13 @@ function TransactionRow({
   const account = accountMap.get(tx.financialAccountId);
 
   return (
-    <div className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-accent/60">
+    <div
+      onClick={canEdit ? onEdit : undefined}
+      className={cn(
+        "group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
+        canEdit && "cursor-pointer active:bg-accent/60 [@media(hover:hover)]:hover:bg-accent/60",
+      )}
+    >
       {/* type icon */}
       <div
         className={cn(
@@ -622,19 +629,16 @@ function TransactionRow({
         </p>
       </div>
 
-      {/* edit pencil — always rendered to keep alignment stable */}
-      <button
-        onClick={canEdit ? onEdit : undefined}
-        tabIndex={canEdit ? 0 : -1}
-        aria-hidden={!canEdit}
+      {/* edit pencil — desktop hover only, hidden on mobile */}
+      <span
+        aria-hidden="true"
         className={cn(
-          "shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-          canEdit ? "group-hover:opacity-100 cursor-pointer" : "pointer-events-none",
+          "hidden shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity sm:block",
+          canEdit ? "group-hover:opacity-100" : "invisible",
         )}
-        aria-label={t("transactions.editModal.title")}
       >
         <Pencil className="h-3.5 w-3.5" />
-      </button>
+      </span>
     </div>
   );
 }
@@ -668,7 +672,7 @@ function DateGroup({
         {net && (
           <span className="ml-auto text-xs font-medium tabular-nums text-muted-foreground">{net}</span>
         )}
-        <span className="w-[18px] shrink-0" aria-hidden="true" />
+        <span className="hidden w-[18px] shrink-0 sm:block" aria-hidden="true" />
       </div>
       <div className="space-y-0.5">
         {items.map((tx) => (
@@ -749,7 +753,7 @@ function FilterSidebar({
   ];
 
   return (
-    <aside className="w-48 shrink-0">
+    <aside className="hidden w-48 shrink-0 md:block">
       <div className="sticky top-0 space-y-5 pt-10">
         {/* account filter */}
         <div>
@@ -814,11 +818,95 @@ function FilterSidebar({
   );
 }
 
+// ─── mobile filter bar ───────────────────────────────────────────────────────
+
+function MobileFilterBar({
+  accounts,
+  accountFilter,
+  onAccountChange,
+  typeFilter,
+  onTypeChange,
+  isExporting,
+  onExport,
+  canImport,
+  onImport,
+}: {
+  accounts: FinancialAccount[];
+  accountFilter: string[];
+  onAccountChange: (v: string[]) => void;
+  typeFilter: "" | TransactionType;
+  onTypeChange: (v: "" | TransactionType) => void;
+  isExporting: boolean;
+  onExport: () => void;
+  canImport: boolean;
+  onImport: () => void;
+}) {
+  const { t } = useTranslation();
+
+  const typeOptions: { value: "" | TransactionType; label: string }[] = [
+    { value: "", label: t("transactions.filters.typeAll") },
+    { value: "Income", label: t("transactions.filters.typeIncome") },
+    { value: "Expense", label: t("transactions.filters.typeExpense") },
+  ];
+
+  return (
+    <div className="mb-4 flex flex-col gap-2 md:hidden">
+      <MultiSelect
+        values={accountFilter}
+        onChange={onAccountChange}
+        options={accounts.map((a) => ({ value: a.id, label: a.name }))}
+        allLabel={t("transactions.filters.allAccounts")}
+      />
+      <div className="flex items-center gap-1">
+        <div className="flex flex-1 gap-1">
+          {typeOptions.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => onTypeChange(opt.value)}
+              className={cn(
+                "flex-1 rounded px-2 py-1.5 text-sm transition-colors",
+                typeFilter === opt.value
+                  ? "bg-accent font-medium text-foreground"
+                  : "text-muted-foreground hover:bg-accent/60",
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          disabled={isExporting}
+          onClick={onExport}
+          className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground disabled:opacity-50"
+          aria-label={t("transactions.export")}
+          title={t("transactions.export")}
+        >
+          <Download className="h-4 w-4" aria-hidden="true" />
+        </button>
+        {canImport && (
+          <button
+            type="button"
+            onClick={onImport}
+            className="rounded p-1.5 text-muted-foreground transition-colors hover:bg-accent/60 hover:text-foreground"
+            aria-label={t("transactions.import")}
+            title={t("transactions.import")}
+          >
+            <Upload className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── page ─────────────────────────────────────────────────────────────────────
 
 export function TransactionsPage() {
   const { t } = useTranslation();
   const { activeWorkspace } = useWorkspace();
+  const { setAction } = useHeaderAction();
   const [accountFilter, setAccountFilter] = useState<string[]>([]);
   const [typeFilter, setTypeFilter] = useState<"" | TransactionType>("");
   const [showCreate, setShowCreate] = useState(false);
@@ -907,37 +995,49 @@ export function TransactionsPage() {
         ? "transactions.emptyNoCategoriesHint"
         : "transactions.emptyDescription";
 
+  useEffect(() => {
+    setAction(
+      <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="gap-1.5">
+        <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+        {t("transactions.addTransaction")}
+      </Button>,
+    );
+    return () => { setAction(null); };
+  }, [setAction, setShowCreate, t]);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await exportTransactions(activeWorkspace!.id, {
+        accountIds: accountFilter.length > 0 ? accountFilter : undefined,
+        type: typeFilter || undefined,
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const filterProps = {
+    accounts,
+    accountFilter,
+    onAccountChange: setAccountFilter,
+    typeFilter,
+    onTypeChange: setTypeFilter,
+    isExporting,
+    onExport: handleExport,
+    canImport,
+    onImport: () => setShowImport(true),
+  };
+
   return (
     <div className="flex gap-6">
-      {/* filter panel */}
-      {!isLoading && hasData && (
-        <FilterSidebar
-          accounts={accounts}
-          accountFilter={accountFilter}
-          onAccountChange={setAccountFilter}
-          typeFilter={typeFilter}
-          onTypeChange={setTypeFilter}
-          isExporting={isExporting}
-          onExport={async () => {
-            setIsExporting(true);
-            try {
-              await exportTransactions(activeWorkspace!.id, {
-                accountIds: accountFilter.length > 0 ? accountFilter : undefined,
-                type: typeFilter || undefined,
-              });
-            } finally {
-              setIsExporting(false);
-            }
-          }}
-          canImport={canImport}
-          onImport={() => setShowImport(true)}
-        />
-      )}
+      {/* filter panel — desktop only */}
+      {!isLoading && hasData && <FilterSidebar {...filterProps} />}
 
       {/* main content */}
       <div className="min-w-0 flex-1">
-        {/* add button — sticky below header so it stays visible while scrolling */}
-        <div className="sticky top-0 z-10 mb-3 flex justify-end bg-background pb-0 pt-9 pr-8">
+        {/* add button — sticky on desktop; on mobile it's rendered in the app header via context */}
+        <div className="sticky top-0 z-10 hidden justify-end bg-background pb-3 pt-9 pr-8 md:flex">
           <Button
             size="sm"
             variant="ghost"
@@ -948,6 +1048,9 @@ export function TransactionsPage() {
             {t("transactions.addTransaction")}
           </Button>
         </div>
+
+        {/* mobile filter bar — shown instead of sidebar */}
+        {!isLoading && hasData && <MobileFilterBar {...filterProps} />}
 
         {isLoading && <TransactionsSkeleton />}
 

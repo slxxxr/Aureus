@@ -7,7 +7,6 @@ import {
   CreditCard,
   FolderTree,
   LogOut,
-  Menu,
   PanelLeftClose,
   PanelLeftOpen,
   ReceiptText,
@@ -19,6 +18,7 @@ import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { NotificationsPopover } from "@/components/NotificationsPopover";
 import { useAuth } from "@/features/auth/AuthContext";
 import { cn } from "@/lib/utils";
+import { HeaderActionProvider, useHeaderAction } from "./HeaderActionContext";
 
 type NavigationItem = {
   to: string;
@@ -104,7 +104,16 @@ function DashboardNavGroup({ location, t }: { location: ReturnType<typeof useLoc
 }
 
 export function AppLayout() {
+  return (
+    <HeaderActionProvider>
+      <AppLayoutContent />
+    </HeaderActionProvider>
+  );
+}
+
+function AppLayoutContent() {
   const { t } = useTranslation();
+  const { action } = useHeaderAction();
   const location = useLocation();
   const { signOut } = useAuth();
   const currentTitleKey = pageTitleByPath[location.pathname] ?? "pages.dashboard.title";
@@ -264,15 +273,12 @@ export function AppLayout() {
 
       {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur md:px-6">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background px-4 md:bg-background/95 md:backdrop-blur md:px-6">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="md:hidden" aria-label={t("navigation.mobileMenuLabel")}>
-              <Menu className="h-5 w-5" aria-hidden="true" />
-            </Button>
-            <div>
-              <p className="text-xs text-muted-foreground md:hidden">{t("common.appName")}</p>
-              <h1 className="text-base font-semibold md:text-lg">{t(currentTitleKey)}</h1>
+            <div className="md:hidden">
+              <WorkspaceSwitcher collapsed />
             </div>
+            <h1 className="text-base font-semibold md:text-lg">{t(currentTitleKey)}</h1>
           </div>
 
           <div className="flex items-center gap-2">
@@ -290,7 +296,13 @@ export function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto px-4 pb-4 md:px-8 md:pb-5">
+        {action && (
+          <div className="flex justify-end bg-background px-4 pb-1 md:hidden">
+            {action}
+          </div>
+        )}
+
+        <main className="flex-1 overflow-y-auto bg-background px-4 pb-4 md:px-8 md:pb-5">
           <Outlet />
         </main>
 

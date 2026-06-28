@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import {
   createCategory,
@@ -196,17 +197,22 @@ function CategoryCard({
   const { t } = useTranslation();
 
   return (
-    <div className="group relative flex flex-col rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm">
+    <div
+      onClick={canManage ? onEdit : undefined}
+      className={cn(
+        "group relative flex flex-col rounded-lg border border-border bg-card p-4 transition-shadow hover:shadow-sm",
+        canManage && "cursor-pointer",
+      )}
+    >
       <div className="mb-3 flex items-start justify-between gap-2">
         <p className="text-sm font-medium leading-tight">{category.name}</p>
         {canManage && (
-          <button
-            onClick={onEdit}
-            className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            aria-label={t("categories.editModal.title")}
+          <span
+            aria-hidden="true"
+            className="hidden shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 sm:block"
           >
             <Pencil className="h-3.5 w-3.5" />
-          </button>
+          </span>
         )}
       </div>
 
@@ -238,7 +244,7 @@ function CategorySection({
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
+        <span className="pl-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{title}</span>
         {canManage && (
           <Button size="sm" variant="ghost" onClick={onAdd} className="gap-1.5">
             <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -306,7 +312,7 @@ export function CategoriesPage() {
   const income = (categories ?? []).filter((c) => c.type === "Income");
 
   return (
-    <div className="pt-9">
+    <div className="pt-0 md:pt-9">
       {isLoading && <CategoriesSkeleton />}
 
       {!isLoading && (

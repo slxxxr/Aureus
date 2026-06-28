@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
@@ -33,15 +33,15 @@ function PeriodFilter() {
   ];
 
   return (
-    <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
-      <div className="flex gap-0.5">
+    <div className="flex flex-wrap gap-y-2">
+      <div className="flex w-full gap-0.5 sm:w-auto">
         {presets.map((option) => (
           <button
             key={option.value}
             type="button"
             onClick={() => selectPreset(option.value)}
             className={cn(
-              "h-9 rounded px-2.5 text-sm transition-colors",
+              "h-9 flex-1 rounded px-1.5 text-xs transition-colors sm:flex-none sm:px-2.5 sm:text-sm",
               preset === option.value
                 ? "bg-accent font-medium text-foreground"
                 : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
@@ -52,11 +52,15 @@ function PeriodFilter() {
         ))}
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">{t("dashboard.period.from")}</span>
-        <DatePicker value={customFrom} onChange={(value) => changeCustom(value, customTo)} />
-        <span className="text-sm text-muted-foreground">{t("dashboard.period.to")}</span>
-        <DatePicker value={customTo} onChange={(value) => changeCustom(customFrom, value)} />
+      <div className="flex w-full items-center gap-2 pl-1 sm:w-auto sm:pl-0">
+        <span className="shrink-0 text-sm text-muted-foreground">{t("dashboard.period.from")}</span>
+        <div className="flex-1 sm:w-36 sm:flex-none">
+          <DatePicker value={customFrom} onChange={(value) => changeCustom(value, customTo)} />
+        </div>
+        <span className="shrink-0 text-sm text-muted-foreground">{t("dashboard.period.to")}</span>
+        <div className="flex-1 sm:w-36 sm:flex-none">
+          <DatePicker value={customTo} onChange={(value) => changeCustom(customFrom, value)} />
+        </div>
       </div>
     </div>
   );
@@ -118,11 +122,11 @@ export function DashboardPage() {
 
   return (
     <div className="min-w-0">
-      <div className="sticky top-0 z-10 bg-background pb-3 pr-8 pt-9">
+      <div className="z-10 bg-background pb-3 pt-4 sm:sticky sm:top-0 sm:pt-9 md:pr-8">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <PeriodFilter />
           {accounts.length > 0 && (
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <MultiSelect
                 values={accountIds}
                 onChange={setAccountIds}
@@ -132,7 +136,7 @@ export function DashboardPage() {
             </div>
           )}
           {categoryGroups.length > 0 && (
-            <div className="w-48">
+            <div className="w-full sm:w-48">
               <MultiSelect
                 values={categoryIds}
                 onChange={setCategoryIds}
@@ -144,8 +148,26 @@ export function DashboardPage() {
         </div>
       </div>
 
+      {/* Mobile tab bar — desktop uses sidebar sub-links */}
+      <div className="mb-3 flex gap-1 md:hidden">
+        {(["overview", "categories", "dynamics"] as const).map((tabValue) => (
+          <Link
+            key={tabValue}
+            to={tabValue === "overview" ? "/" : `/?tab=${tabValue}`}
+            className={cn(
+              "flex-1 rounded px-2 py-1.5 text-center text-sm transition-colors",
+              tab === tabValue
+                ? "bg-accent font-medium text-foreground"
+                : "text-muted-foreground hover:bg-accent/60",
+            )}
+          >
+            {t(`dashboard.tabs.${tabValue}`)}
+          </Link>
+        ))}
+      </div>
+
       {enabled && (
-        <div className="pb-4 pr-8">
+        <div className="pb-4 md:pr-8">
           <InsightsCard workspaceId={activeWorkspace!.id} from={filter.from} to={filter.to} />
         </div>
       )}
@@ -160,7 +182,7 @@ export function DashboardPage() {
       )}
 
       {!summaryLoading && summary.length > 0 && (
-        <div className="pr-8">
+        <div className="md:pr-8">
           {tab === "overview" && (
             <OverviewTab
               workspaceId={activeWorkspace!.id}

@@ -33,7 +33,11 @@ export function Modal({
       <div
         role="dialog"
         aria-modal="true"
-        className={cn("w-full rounded-lg border border-border bg-background p-6 shadow-lg", sizeClass[size])}
+        className={cn(
+          "w-full overflow-y-auto rounded-lg border border-border bg-background p-4 shadow-lg sm:p-6",
+          "max-h-[calc(100dvh-2rem)]",
+          sizeClass[size],
+        )}
       >
         {children}
       </div>

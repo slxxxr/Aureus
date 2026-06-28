@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { InputLimits } from "@/lib/inputLimits";
-import { Check, ChevronDown, Landmark, Plus, Settings } from "lucide-react";
+import { Check, ChevronDown, Landmark, Menu, Plus, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import { useClickOutside } from "@/hooks/useClickOutside";
@@ -102,36 +102,51 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
       )}
     >
       <ul role="menu" aria-label={t("workspace.listLabel")}>
-        {workspaces.map((workspace) => (
-          <li key={workspace.id} role="none">
-            {/* Order: [name] → [pencil on hover] → [checkmark] */}
-            <div className="group flex items-center hover:bg-accent">
-              <button
-                type="button"
-                onClick={() => { setActiveWorkspace(workspace); setOpen(false); }}
-                role="menuitem"
-                title={workspace.name}
-                className="flex min-w-0 flex-1 items-center py-2 pl-3 pr-1 text-sm"
-              >
-                <span className="flex-1 truncate text-left">{truncateName(workspace.name)}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => openSettings(workspace)}
-                className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                aria-label={t("workspaceSettings.title")}
-              >
-                <Settings className="h-3.5 w-3.5" />
-              </button>
-              <div className="px-2">
-                <Check
-                  className={cn("h-4 w-4 shrink-0 text-muted-foreground", workspace.id !== activeWorkspace?.id && "invisible")}
-                  aria-hidden="true"
-                />
+        {workspaces.map((workspace) => {
+          const isActive = workspace.id === activeWorkspace?.id;
+          return (
+            <li key={workspace.id} role="none">
+              <div className="group flex items-center hover:bg-accent">
+                <button
+                  type="button"
+                  onClick={() => { setActiveWorkspace(workspace); setOpen(false); }}
+                  role="menuitem"
+                  title={workspace.name}
+                  className="flex min-w-0 flex-1 items-center py-2 pl-3 pr-1 text-sm"
+                >
+                  <span className="flex-1 truncate text-left">{truncateName(workspace.name)}</span>
+                </button>
+                {/* Mobile: gear button for active workspace (always visible, proper touch target) */}
+                {isActive && (
+                  <button
+                    type="button"
+                    onClick={() => { openSettings(workspace); setOpen(false); }}
+                    className="shrink-0 rounded p-2 text-muted-foreground transition-colors hover:text-foreground sm:hidden"
+                    aria-label={t("workspaceSettings.title")}
+                  >
+                    <Settings className="h-4 w-4" />
+                  </button>
+                )}
+                {/* Desktop: gear on hover */}
+                <button
+                  type="button"
+                  onClick={() => { openSettings(workspace); setOpen(false); }}
+                  className="hidden shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:block"
+                  aria-label={t("workspaceSettings.title")}
+                >
+                  <Settings className="h-3.5 w-3.5" />
+                </button>
+                {/* Desktop: checkmark for active */}
+                <div className="hidden px-2 sm:block">
+                  <Check
+                    className={cn("h-4 w-4 shrink-0 text-muted-foreground", !isActive && "invisible")}
+                    aria-hidden="true"
+                  />
+                </div>
               </div>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
       <div className="border-t border-border p-1">
         <button
@@ -162,12 +177,12 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
           <button
             type="button"
             onClick={() => setOpen((prev) => !prev)}
-            className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-background transition-colors hover:bg-accent"
+            className="flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
             aria-label={activeWorkspace?.name ?? t("common.appName")}
             aria-expanded={open}
             title={activeWorkspace?.name ?? t("common.appName")}
           >
-            <Landmark className="h-4 w-4" aria-hidden="true" />
+            <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
           {dropdown}
         </div>
@@ -208,7 +223,7 @@ export function WorkspaceSwitcher({ collapsed = false }: { collapsed?: boolean }
             <button
               type="button"
               onClick={() => openSettings(activeWorkspace)}
-              className="shrink-0 rounded p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="shrink-0 rounded p-1 text-muted-foreground transition-opacity hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
               aria-label={t("workspaceSettings.title")}
             >
               <Settings className="h-3.5 w-3.5" />

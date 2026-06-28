@@ -4,7 +4,7 @@
 
 [Tech Stack](#tech-stack) · [Getting started](#getting-started)
 
-**Live: [aureus.life](https://aureus.life)** — not yet optimized for mobile
+**Live: [aureus.life](https://aureus.life)**
 
 ---
 
@@ -48,7 +48,6 @@ Personal finance service. Track income and expenses across accounts and categori
 
 ### What's next
 
-- **UI polish & mobile** — responsive layout improvements
 - **Budgets** — per-category monthly limits with progress tracking
 - **Expense forecasting** — 30-day forecast based on time series
 
@@ -75,7 +74,6 @@ Personal finance service. Track income and expenses across accounts and categori
 
 ### Что дальше
 
-- **Полировка UI и мобильная версия** — адаптация интерфейса под разные экраны
 - **Бюджеты** — лимиты по категориям на месяц, отслеживание прогресса
 - **Прогнозирование** — прогноз расходов на 30 дней вперёд на основе временных рядов
 
