@@ -5,12 +5,12 @@ using MediatR;
 
 namespace Aureus.UseCases.Transactions.ImportTransactions;
 
-public sealed class CommitImportHandler(
+public sealed class ImportHandler(
     IFinancialAccountRepository accountRepository,
     ICategoryRepository categoryRepository,
-    IImportRepository importRepository) : IRequestHandler<CommitImportCommand, int>
+    IImportRepository importRepository) : IRequestHandler<ImportCommand, int>
 {
-    public async Task<int> Handle(CommitImportCommand command, CancellationToken cancellationToken)
+    public async Task<int> Handle(ImportCommand command, CancellationToken cancellationToken)
     {
         if (command.FileContent.Length > TransactionCsvParser.MaxFileSizeBytes)
         {

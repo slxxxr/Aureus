@@ -54,7 +54,7 @@ public sealed class ImportTransactionsHandlerTests
         return new ImportPreviewHandler(accRepo.Object, catRepo.Object);
     }
 
-    private static (CommitImportHandler handler, ImportRepositoryMock importMock) BuildCommitHandler(
+    private static (ImportHandler handler, ImportRepositoryMock importMock) BuildImportHandler(
         FinancialAccount? account = null, Category? category = null, FinancialAccount? toAccount = null)
     {
         var accounts = new List<FinancialAccount>();
@@ -63,7 +63,7 @@ public sealed class ImportTransactionsHandlerTests
         var accRepo = new FinancialAccountRepositoryMock().WithAccounts(WorkspaceId, accounts);
         var catRepo = new CategoryRepositoryMock().WithCategories(WorkspaceId, category is null ? [] : [category]);
         var importMock = new ImportRepositoryMock().CapturingAddBulk();
-        return (new CommitImportHandler(accRepo.Object, catRepo.Object, importMock.Object), importMock);
+        return (new ImportHandler(accRepo.Object, catRepo.Object, importMock.Object), importMock);
     }
 
     // ─── preview ───────────────────────────────────────────────────────────────
@@ -263,10 +263,10 @@ public sealed class ImportTransactionsHandlerTests
     {
         // Arrange
         var csv = Csv("date,type,amount,account,category,name,note\n2026-06-01,Expense,1500.00,Тинькофф,Продукты,Пятёрочка,");
-        var (handler, importMock) = BuildCommitHandler(MakeAccount(), MakeCategory());
+        var (handler, importMock) = BuildImportHandler(MakeAccount(), MakeCategory());
 
         // Act
-        var count = await handler.Handle(new CommitImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
+        var count = await handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
 
         // Assert
         Assert.Equal(1, count);
@@ -279,10 +279,10 @@ public sealed class ImportTransactionsHandlerTests
     {
         // Arrange
         var csv = Csv("date,type,amount,account,category,name,note\n2026-06-01,Expense,1500.50,Тинькофф,Продукты,Тест,");
-        var (handler, importMock) = BuildCommitHandler(MakeAccount(), MakeCategory());
+        var (handler, importMock) = BuildImportHandler(MakeAccount(), MakeCategory());
 
         // Act
-        await handler.Handle(new CommitImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
+        await handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
 
         // Assert
         Assert.Equal(150050L, importMock.AddedTransactions![0].AmountMinor);
@@ -293,10 +293,10 @@ public sealed class ImportTransactionsHandlerTests
     {
         // Arrange
         var csv = Csv("date,type,amount,currency,account,category,name,note\n2026-06-01,Expense,500.00,USD,Тинькофф,Продукты,Тест,");
-        var (handler, importMock) = BuildCommitHandler(MakeAccount("Тинькофф", "RUB"), MakeCategory());
+        var (handler, importMock) = BuildImportHandler(MakeAccount("Тинькофф", "RUB"), MakeCategory());
 
         // Act
-        await handler.Handle(new CommitImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
+        await handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
 
         // Assert — currency comes from account, not CSV column
         Assert.Equal("RUB", importMock.AddedTransactions![0].Currency);
@@ -315,10 +315,10 @@ public sealed class ImportTransactionsHandlerTests
         var accRepo = new FinancialAccountRepositoryMock().WithAccounts(WorkspaceId, [MakeAccount()]);
         var catRepo = new CategoryRepositoryMock().WithCategories(WorkspaceId, [incomeCategory, expenseCategory]);
         var importMock = new ImportRepositoryMock().CapturingAddBulk();
-        var handler = new CommitImportHandler(accRepo.Object, catRepo.Object, importMock.Object);
+        var handler = new ImportHandler(accRepo.Object, catRepo.Object, importMock.Object);
 
         // Act
-        await handler.Handle(new CommitImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
+        await handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
 
         // Assert — net delta: +300000 - 150000 = 150000
         Assert.Equal(150000L, importMock.AddedTransactionDeltas![AccountId]);
@@ -329,11 +329,11 @@ public sealed class ImportTransactionsHandlerTests
     {
         // Arrange — invalid date in row
         var csv = Csv("date,type,amount,account,category,name,note\nbad,Expense,500.00,Тинькофф,Продукты,Тест,");
-        var (handler, _) = BuildCommitHandler(MakeAccount(), MakeCategory());
+        var (handler, _) = BuildImportHandler(MakeAccount(), MakeCategory());
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<TransactionException>(
-            () => handler.Handle(new CommitImportCommand(WorkspaceId, UserId, csv), CancellationToken.None));
+            () => handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None));
         Assert.Equal(TransactionErrorCode.ImportHasErrors, ex.Code);
     }
 
@@ -345,10 +345,10 @@ public sealed class ImportTransactionsHandlerTests
             "date,type,amount,account,category,name,note\n" +
             "2026-06-01,Expense,100.00,Тинькофф,Продукты,Первая,\n" +
             "2026-06-01,Expense,200.00,Тинькофф,Продукты,Вторая,");
-        var (handler, importMock) = BuildCommitHandler(MakeAccount(), MakeCategory());
+        var (handler, importMock) = BuildImportHandler(MakeAccount(), MakeCategory());
 
         // Act
-        await handler.Handle(new CommitImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
+        await handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
 
         // Assert — second row has later CreatedAt
         Assert.True(importMock.AddedTransactions![1].CreatedAt > importMock.AddedTransactions![0].CreatedAt);
@@ -361,10 +361,10 @@ public sealed class ImportTransactionsHandlerTests
     {
         // Arrange
         var csv = Csv("date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Наличные,,,");
-        var (handler, importMock) = BuildCommitHandler(MakeAccount(), toAccount: MakeToAccount());
+        var (handler, importMock) = BuildImportHandler(MakeAccount(), toAccount: MakeToAccount());
 
         // Act
-        var count = await handler.Handle(new CommitImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
+        var count = await handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
 
         // Assert
         Assert.Equal(1, count);
@@ -380,10 +380,10 @@ public sealed class ImportTransactionsHandlerTests
     {
         // Arrange
         var csv = Csv("date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Наличные,,,");
-        var (handler, importMock) = BuildCommitHandler(MakeAccount(), toAccount: MakeToAccount());
+        var (handler, importMock) = BuildImportHandler(MakeAccount(), toAccount: MakeToAccount());
 
         // Act
-        await handler.Handle(new CommitImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
+        await handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
 
         // Assert
         Assert.Equal(-500000L, importMock.AddedTransferDeltas![AccountId]);
@@ -398,10 +398,10 @@ public sealed class ImportTransactionsHandlerTests
             "date,type,amount,account,toAccount,category,name,note\n" +
             "2026-06-01,Expense,1500.00,Тинькофф,,Продукты,Пятёрочка,\n" +
             "2026-06-02,Transfer,5000.00,Тинькофф,Наличные,,,");
-        var (handler, importMock) = BuildCommitHandler(MakeAccount(), MakeCategory(), MakeToAccount());
+        var (handler, importMock) = BuildImportHandler(MakeAccount(), MakeCategory(), MakeToAccount());
 
         // Act
-        var count = await handler.Handle(new CommitImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
+        var count = await handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
 
         // Assert
         Assert.Equal(2, count);
