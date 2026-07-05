@@ -58,6 +58,8 @@ public sealed class TransfersController(ISender sender, IMapper mapper) : ApiCon
             workspaceId,
             CurrentUserId,
             CurrentWorkspaceMembership.Role,
+            request.FromAccountId,
+            request.ToAccountId,
             request.AmountMinor,
             request.OccurredAt,
             request.Note);

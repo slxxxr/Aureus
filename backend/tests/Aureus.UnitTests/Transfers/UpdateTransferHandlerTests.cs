@@ -1,3 +1,4 @@
+using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transfers;
 using Aureus.Domain.Workspaces;
 using Aureus.UnitTests.Mocks;
@@ -10,27 +11,49 @@ public sealed class UpdateTransferHandlerTests
     private static Transfer DefaultTransfer(
         Guid? id = null,
         Guid? workspaceId = null,
+        Guid? fromAccountId = null,
+        Guid? toAccountId = null,
         Guid? createdByUserId = null,
-        long amountMinor = 100_00) => new()
+        long amountMinor = 100_00,
+        string currency = "RUB") => new()
     {
         Id = id ?? Guid.NewGuid(),
         WorkspaceId = workspaceId ?? Guid.NewGuid(),
-        FromAccountId = Guid.NewGuid(),
-        ToAccountId = Guid.NewGuid(),
+        FromAccountId = fromAccountId ?? Guid.NewGuid(),
+        ToAccountId = toAccountId ?? Guid.NewGuid(),
         CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
         AmountMinor = amountMinor,
-        Currency = "RUB",
+        Currency = currency,
         OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
         CreatedAt = DateTimeOffset.UtcNow,
     };
 
+    private static FinancialAccount DefaultAccount(Guid? id = null, Guid? workspaceId = null, string currency = "RUB") => new()
+    {
+        Id = id ?? Guid.NewGuid(),
+        WorkspaceId = workspaceId ?? Guid.NewGuid(),
+        Name = "Cash",
+        Currency = currency,
+        InitialBalanceMinor = 0,
+        CurrentBalanceMinor = 10_000_00,
+        CreatedAt = DateTimeOffset.UtcNow,
+    };
+
+    private static UpdateTransferHandler BuildHandler(
+        TransferRepositoryMock transferRepo,
+        FinancialAccountRepositoryMock? accountRepo = null) =>
+        new(transferRepo.Object, (accountRepo ?? new FinancialAccountRepositoryMock()).Object);
+
     private static UpdateTransferCommand OwnerCommand(
         Guid transferId,
         Guid workspaceId,
+        Guid? fromAccountId = null,
+        Guid? toAccountId = null,
         long? amountMinor = null,
         DateOnly? occurredAt = null,
         string? note = null) =>
-        new(transferId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner, amountMinor, occurredAt, note);
+        new(transferId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner,
+            fromAccountId, toAccountId, amountMinor, occurredAt, note);
 
     [Fact]
     public async Task Handle_TransferNotFound_ThrowsNotFound()
@@ -39,7 +62,7 @@ public sealed class UpdateTransferHandlerTests
         var transferId = Guid.NewGuid();
         var workspaceId = Guid.NewGuid();
         var transferRepo = new TransferRepositoryMock().WithNoTransfer(transferId, workspaceId);
-        var handler = new UpdateTransferHandler(transferRepo.Object);
+        var handler = BuildHandler(transferRepo);
 
         // Act
         var exception = await Assert.ThrowsAsync<TransferException>(() =>
@@ -61,7 +84,7 @@ public sealed class UpdateTransferHandlerTests
         var transferRepo = new TransferRepositoryMock()
             .WithTransfer(transfer.Id, workspaceId, transfer)
             .CapturingUpdate();
-        var handler = new UpdateTransferHandler(transferRepo.Object);
+        var handler = BuildHandler(transferRepo);
 
         // Act
         await handler.Handle(
@@ -69,8 +92,9 @@ public sealed class UpdateTransferHandlerTests
             CancellationToken.None);
 
         // Assert
-        Assert.Equal(expectedFromDelta, transferRepo.UpdatedFromAccountDelta);
-        Assert.Equal(expectedToDelta, transferRepo.UpdatedToAccountDelta);
+        var deltas = transferRepo.UpdatedAccountDeltas!;
+        Assert.Equal(expectedFromDelta, deltas[transfer.FromAccountId]);
+        Assert.Equal(expectedToDelta, deltas[transfer.ToAccountId]);
     }
 
     [Fact]
@@ -82,14 +106,15 @@ public sealed class UpdateTransferHandlerTests
         var transferRepo = new TransferRepositoryMock()
             .WithTransfer(transfer.Id, workspaceId, transfer)
             .CapturingUpdate();
-        var handler = new UpdateTransferHandler(transferRepo.Object);
+        var handler = BuildHandler(transferRepo);
 
         // Act
         await handler.Handle(OwnerCommand(transfer.Id, workspaceId), CancellationToken.None);
 
         // Assert
-        Assert.Equal(0, transferRepo.UpdatedFromAccountDelta);
-        Assert.Equal(0, transferRepo.UpdatedToAccountDelta);
+        var deltas = transferRepo.UpdatedAccountDeltas!;
+        Assert.Equal(0, deltas[transfer.FromAccountId]);
+        Assert.Equal(0, deltas[transfer.ToAccountId]);
     }
 
     [Fact]
@@ -101,7 +126,7 @@ public sealed class UpdateTransferHandlerTests
         var transferRepo = new TransferRepositoryMock()
             .WithTransfer(transfer.Id, workspaceId, transfer)
             .CapturingUpdate();
-        var handler = new UpdateTransferHandler(transferRepo.Object);
+        var handler = BuildHandler(transferRepo);
 
         // Act
         var result = await handler.Handle(
@@ -119,10 +144,12 @@ public sealed class UpdateTransferHandlerTests
         var workspaceId = Guid.NewGuid();
         var transfer = DefaultTransfer(workspaceId: workspaceId, amountMinor: 100_00);
         var originalOccurredAt = transfer.OccurredAt;
+        var originalFromAccountId = transfer.FromAccountId;
+        var originalToAccountId = transfer.ToAccountId;
         var transferRepo = new TransferRepositoryMock()
             .WithTransfer(transfer.Id, workspaceId, transfer)
             .CapturingUpdate();
-        var handler = new UpdateTransferHandler(transferRepo.Object);
+        var handler = BuildHandler(transferRepo);
 
         // Act
         var result = await handler.Handle(OwnerCommand(transfer.Id, workspaceId), CancellationToken.None);
@@ -130,6 +157,158 @@ public sealed class UpdateTransferHandlerTests
         // Assert
         Assert.Equal(100_00, result.AmountMinor);
         Assert.Equal(originalOccurredAt, result.OccurredAt);
+        Assert.Equal(originalFromAccountId, result.FromAccountId);
+        Assert.Equal(originalToAccountId, result.ToAccountId);
+    }
+
+    [Fact]
+    public async Task Handle_FromAccountNotFound_ThrowsAccountNotFound()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var newAccountId = Guid.NewGuid();
+        var transfer = DefaultTransfer(workspaceId: workspaceId);
+        var transferRepo = new TransferRepositoryMock()
+            .WithTransfer(transfer.Id, workspaceId, transfer);
+        var accountRepo = new FinancialAccountRepositoryMock().WithNoAccount(newAccountId, workspaceId);
+        var handler = BuildHandler(transferRepo, accountRepo);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<TransferException>(() =>
+            handler.Handle(
+                OwnerCommand(transfer.Id, workspaceId, fromAccountId: newAccountId),
+                CancellationToken.None));
+
+        // Assert
+        Assert.Equal(TransferErrorCode.AccountNotFound, exception.Code);
+    }
+
+    [Fact]
+    public async Task Handle_ToAccountNotFound_ThrowsAccountNotFound()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var newAccountId = Guid.NewGuid();
+        var transfer = DefaultTransfer(workspaceId: workspaceId);
+        var transferRepo = new TransferRepositoryMock()
+            .WithTransfer(transfer.Id, workspaceId, transfer);
+        var accountRepo = new FinancialAccountRepositoryMock().WithNoAccount(newAccountId, workspaceId);
+        var handler = BuildHandler(transferRepo, accountRepo);
+
+        // Act
+        var exception = await Assert.ThrowsAsync<TransferException>(() =>
+            handler.Handle(
+                OwnerCommand(transfer.Id, workspaceId, toAccountId: newAccountId),
+                CancellationToken.None));
+
+        // Assert
+        Assert.Equal(TransferErrorCode.AccountNotFound, exception.Code);
+    }
+
+    [Fact]
+    public async Task Handle_NewFromAccountEqualsExistingToAccount_ThrowsSameAccount()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var transfer = DefaultTransfer(workspaceId: workspaceId);
+        var transferRepo = new TransferRepositoryMock()
+            .WithTransfer(transfer.Id, workspaceId, transfer);
+        var handler = BuildHandler(transferRepo);
+
+        // Act — set FromAccountId to the transfer's own (unchanged) ToAccountId
+        var exception = await Assert.ThrowsAsync<TransferException>(() =>
+            handler.Handle(
+                OwnerCommand(transfer.Id, workspaceId, fromAccountId: transfer.ToAccountId),
+                CancellationToken.None));
+
+        // Assert
+        Assert.Equal(TransferErrorCode.SameAccount, exception.Code);
+        transferRepo.VerifyUpdateNotCalled();
+    }
+
+    [Fact]
+    public async Task Handle_NewAccountsCurrencyMismatch_ThrowsCurrencyMismatch()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var transfer = DefaultTransfer(workspaceId: workspaceId, currency: "RUB");
+        var newFromAccount = DefaultAccount(workspaceId: workspaceId, currency: "USD");
+        var transferRepo = new TransferRepositoryMock()
+            .WithTransfer(transfer.Id, workspaceId, transfer);
+        var accountRepo = new FinancialAccountRepositoryMock()
+            .WithAccount(newFromAccount.Id, workspaceId, newFromAccount);
+        var handler = BuildHandler(transferRepo, accountRepo);
+
+        // Act — new FromAccount is USD, but ToAccount (unchanged) stays RUB
+        var exception = await Assert.ThrowsAsync<TransferException>(() =>
+            handler.Handle(
+                OwnerCommand(transfer.Id, workspaceId, fromAccountId: newFromAccount.Id),
+                CancellationToken.None));
+
+        // Assert
+        Assert.Equal(TransferErrorCode.CurrencyMismatch, exception.Code);
+    }
+
+    [Fact]
+    public async Task Handle_FromAccountChanged_UpdatesFromAccountIdAndReversesOldBalance()
+    {
+        // Arrange
+        var workspaceId = Guid.NewGuid();
+        var oldFromAccountId = Guid.NewGuid();
+        var toAccountId = Guid.NewGuid();
+        var transfer = DefaultTransfer(
+            workspaceId: workspaceId, fromAccountId: oldFromAccountId, toAccountId: toAccountId, amountMinor: 100_00);
+        var newFromAccount = DefaultAccount(workspaceId: workspaceId, currency: "RUB");
+        var transferRepo = new TransferRepositoryMock()
+            .WithTransfer(transfer.Id, workspaceId, transfer)
+            .CapturingUpdate();
+        var accountRepo = new FinancialAccountRepositoryMock()
+            .WithAccount(newFromAccount.Id, workspaceId, newFromAccount);
+        var handler = BuildHandler(transferRepo, accountRepo);
+
+        // Act
+        var result = await handler.Handle(
+            OwnerCommand(transfer.Id, workspaceId, fromAccountId: newFromAccount.Id),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(newFromAccount.Id, result.FromAccountId);
+        var deltas = transferRepo.UpdatedAccountDeltas!;
+        Assert.Equal(100_00, deltas[oldFromAccountId]);   // reverse old debit
+        Assert.Equal(-100_00, deltas[newFromAccount.Id]); // apply new debit
+        Assert.Equal(0, deltas[toAccountId]);              // to-account unaffected
+    }
+
+    [Fact]
+    public async Task Handle_DirectionReversed_ProducesDoubleDeltaOnBothAccounts()
+    {
+        // Arrange — reverse an A->B transfer into B->A
+        var workspaceId = Guid.NewGuid();
+        var accountA = Guid.NewGuid();
+        var accountB = Guid.NewGuid();
+        var transfer = DefaultTransfer(
+            workspaceId: workspaceId, fromAccountId: accountA, toAccountId: accountB, amountMinor: 100_00);
+        var accountBEntity = DefaultAccount(id: accountB, workspaceId: workspaceId, currency: "RUB");
+        var accountAEntity = DefaultAccount(id: accountA, workspaceId: workspaceId, currency: "RUB");
+        var transferRepo = new TransferRepositoryMock()
+            .WithTransfer(transfer.Id, workspaceId, transfer)
+            .CapturingUpdate();
+        var accountRepo = new FinancialAccountRepositoryMock()
+            .WithAccount(accountB, workspaceId, accountBEntity)
+            .WithAccount(accountA, workspaceId, accountAEntity);
+        var handler = BuildHandler(transferRepo, accountRepo);
+
+        // Act
+        var result = await handler.Handle(
+            OwnerCommand(transfer.Id, workspaceId, fromAccountId: accountB, toAccountId: accountA),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(accountB, result.FromAccountId);
+        Assert.Equal(accountA, result.ToAccountId);
+        var deltas = transferRepo.UpdatedAccountDeltas!;
+        Assert.Equal(200_00, deltas[accountA]);
+        Assert.Equal(-200_00, deltas[accountB]);
     }
 
     [Fact]
@@ -142,12 +321,12 @@ public sealed class UpdateTransferHandlerTests
         var transfer = DefaultTransfer(workspaceId: workspaceId, createdByUserId: ownerId);
         var transferRepo = new TransferRepositoryMock()
             .WithTransfer(transfer.Id, workspaceId, transfer);
-        var handler = new UpdateTransferHandler(transferRepo.Object);
+        var handler = BuildHandler(transferRepo);
 
         // Act
         var exception = await Assert.ThrowsAsync<TransferException>(() =>
             handler.Handle(
-                new UpdateTransferCommand(transfer.Id, workspaceId, memberId, WorkspaceRole.Member, null, null, "note"),
+                new UpdateTransferCommand(transfer.Id, workspaceId, memberId, WorkspaceRole.Member, null, null, null, null, "note"),
                 CancellationToken.None));
 
         // Assert
@@ -165,11 +344,11 @@ public sealed class UpdateTransferHandlerTests
         var transferRepo = new TransferRepositoryMock()
             .WithTransfer(transfer.Id, workspaceId, transfer)
             .CapturingUpdate();
-        var handler = new UpdateTransferHandler(transferRepo.Object);
+        var handler = BuildHandler(transferRepo);
 
         // Act
         var result = await handler.Handle(
-            new UpdateTransferCommand(transfer.Id, workspaceId, memberId, WorkspaceRole.Member, null, null, "note"),
+            new UpdateTransferCommand(transfer.Id, workspaceId, memberId, WorkspaceRole.Member, null, null, null, null, "note"),
             CancellationToken.None);
 
         // Assert
@@ -185,11 +364,11 @@ public sealed class UpdateTransferHandlerTests
         var transferRepo = new TransferRepositoryMock()
             .WithTransfer(transfer.Id, workspaceId, transfer)
             .CapturingUpdate();
-        var handler = new UpdateTransferHandler(transferRepo.Object);
+        var handler = BuildHandler(transferRepo);
 
         // Act
         var result = await handler.Handle(
-            new UpdateTransferCommand(transfer.Id, workspaceId, Guid.NewGuid(), WorkspaceRole.Manager, null, null, "note"),
+            new UpdateTransferCommand(transfer.Id, workspaceId, Guid.NewGuid(), WorkspaceRole.Manager, null, null, null, null, "note"),
             CancellationToken.None);
 
         // Assert

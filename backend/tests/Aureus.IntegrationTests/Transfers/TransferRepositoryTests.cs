@@ -153,7 +153,7 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
             var transfer = await repo.FindByIdAsync(transferId, workspaceId, CancellationToken.None);
             transfer!.Note = "corrected note";
             transfer.UpdatedAt = DateTimeOffset.UtcNow;
-            await repo.UpdateAsync(transfer, fromAccountDelta: 0, toAccountDelta: 0, CancellationToken.None);
+            await repo.UpdateAsync(transfer, new Dictionary<Guid, long>(), CancellationToken.None);
         }
 
         // Assert
@@ -185,12 +185,50 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
             var transfer = await repo.FindByIdAsync(transferId, workspaceId, CancellationToken.None);
             transfer!.AmountMinor = newAmountMinor;
             transfer.UpdatedAt = DateTimeOffset.UtcNow;
-            await repo.UpdateAsync(transfer, fromAccountDelta: -amountDelta, toAccountDelta: amountDelta, CancellationToken.None);
+            var deltas = new Dictionary<Guid, long> { [fromAccountId] = -amountDelta, [toAccountId] = amountDelta };
+            await repo.UpdateAsync(transfer, deltas, CancellationToken.None);
         }
 
         // Assert
         Assert.Equal(fromInitialBalance - oldAmountMinor - amountDelta, await GetAccountBalanceAsync(fromAccountId, workspaceId));
         Assert.Equal(toInitialBalance + oldAmountMinor + amountDelta, await GetAccountBalanceAsync(toAccountId, workspaceId));
+    }
+
+    [Fact]
+    public async Task UpdateAsync_FromAccountChanged_UpdatesOldAndNewFromAccountBalances()
+    {
+        // Arrange
+        const long oldFromInitialBalance = 100_00;
+        const long newFromInitialBalance = 50_00;
+        const long toInitialBalance = 0;
+        const long amountMinor = 30_00;
+
+        var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
+        var oldFromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: oldFromInitialBalance);
+        var newFromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: newFromInitialBalance);
+        var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: toInitialBalance);
+        var transferId = await AddTransferAsync(workspaceId, oldFromAccountId, toAccountId, userId, amountMinor: amountMinor);
+
+        // Act — move the transfer's source from oldFromAccount to newFromAccount, amount unchanged
+        await using (var db = fixture.CreateDbContext())
+        {
+            var repo = new TransferRepository(db, fixture.Mapper);
+            var transfer = await repo.FindByIdAsync(transferId, workspaceId, CancellationToken.None);
+            transfer!.FromAccountId = newFromAccountId;
+            transfer.UpdatedAt = DateTimeOffset.UtcNow;
+            var deltas = new Dictionary<Guid, long>
+            {
+                [oldFromAccountId] = amountMinor,   // reverse old debit
+                [newFromAccountId] = -amountMinor,  // apply new debit
+                [toAccountId] = 0,
+            };
+            await repo.UpdateAsync(transfer, deltas, CancellationToken.None);
+        }
+
+        // Assert
+        Assert.Equal(oldFromInitialBalance, await GetAccountBalanceAsync(oldFromAccountId, workspaceId));
+        Assert.Equal(newFromInitialBalance - amountMinor, await GetAccountBalanceAsync(newFromAccountId, workspaceId));
+        Assert.Equal(toInitialBalance + amountMinor, await GetAccountBalanceAsync(toAccountId, workspaceId));
     }
 
     [Fact]

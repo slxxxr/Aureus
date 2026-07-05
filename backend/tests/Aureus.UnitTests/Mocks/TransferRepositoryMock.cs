@@ -13,8 +13,7 @@ public sealed class TransferRepositoryMock
     public Transfer? SavedTransfer { get; private set; }
 
     public Transfer? UpdatedTransfer { get; private set; }
-    public long? UpdatedFromAccountDelta { get; private set; }
-    public long? UpdatedToAccountDelta { get; private set; }
+    public IReadOnlyDictionary<Guid, long>? UpdatedAccountDeltas { get; private set; }
 
     public Transfer? DeletedTransfer { get; private set; }
 
@@ -51,14 +50,12 @@ public sealed class TransferRepositoryMock
         _mock
             .Setup(r => r.UpdateAsync(
                 It.IsAny<Transfer>(),
-                It.IsAny<long>(),
-                It.IsAny<long>(),
+                It.IsAny<IReadOnlyDictionary<Guid, long>>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<Transfer, long, long, CancellationToken>((t, fromDelta, toDelta, _) =>
+            .Callback<Transfer, IReadOnlyDictionary<Guid, long>, CancellationToken>((t, deltas, _) =>
             {
                 UpdatedTransfer = t;
-                UpdatedFromAccountDelta = fromDelta;
-                UpdatedToAccountDelta = toDelta;
+                UpdatedAccountDeltas = deltas;
             })
             .Returns(Task.CompletedTask);
 
@@ -83,5 +80,5 @@ public sealed class TransferRepositoryMock
 
     public void VerifyUpdateNotCalled() =>
         _mock.Verify(r => r.UpdateAsync(
-            It.IsAny<Transfer>(), It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<Transfer>(), It.IsAny<IReadOnlyDictionary<Guid, long>>(), It.IsAny<CancellationToken>()), Times.Never);
 }

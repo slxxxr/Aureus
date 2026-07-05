@@ -9,6 +9,8 @@ public sealed record UpdateTransferCommand(
     Guid WorkspaceId,
     Guid RequestingUserId,
     WorkspaceRole RequestingUserRole,
+    Guid? FromAccountId,
+    Guid? ToAccountId,
     long? AmountMinor,
     DateOnly? OccurredAt,
     string? Note) : IRequest<Transfer>;

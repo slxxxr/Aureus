@@ -6,4 +6,5 @@ public enum TransferErrorCode
     AccountNotFound = 2,
     CurrencyMismatch = 3,
     Forbidden = 4,
+    SameAccount = 5,
 }
