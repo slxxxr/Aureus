@@ -26,26 +26,6 @@ public sealed class TransactionRepositoryMock
     public Transaction? DeletedTransaction { get; private set; }
     public long? DeletedBalanceDelta { get; private set; }
 
-    public IReadOnlyList<Transaction>? BulkAdded { get; private set; }
-    public IReadOnlyDictionary<Guid, long>? BulkDeltas { get; private set; }
-
-    public TransactionRepositoryMock CapturingBulkAdd()
-    {
-        _mock
-            .Setup(r => r.AddBulkAsync(
-                It.IsAny<IReadOnlyList<Transaction>>(),
-                It.IsAny<IReadOnlyDictionary<Guid, long>>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyList<Transaction>, IReadOnlyDictionary<Guid, long>, CancellationToken>((txs, deltas, _) =>
-            {
-                BulkAdded = txs;
-                BulkDeltas = deltas;
-            })
-            .Returns(Task.CompletedTask);
-
-        return this;
-    }
-
     public TransactionRepositoryMock WithFilterResult(IReadOnlyList<Transaction> transactions)
     {
         _mock

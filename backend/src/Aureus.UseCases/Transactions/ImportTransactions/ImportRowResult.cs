@@ -13,7 +13,12 @@ internal sealed record ValidImportRow(
     string Name,
     string? Note);
 
-internal sealed record InvalidImportRow(string ErrorMessage);
+internal sealed record ValidTransferImportRow(
+    DateOnly OccurredAt,
+    long AmountMinor,
+    FinancialAccount FromAccount,
+    FinancialAccount ToAccount,
+    string? Note);
 
 internal sealed record ParsedRow(
     int RowNumber,
@@ -21,12 +26,14 @@ internal sealed record ParsedRow(
     string Type,
     string Amount,
     string Account,
+    string ToAccount,
     string Category,
     string Name,
     string Note,
-    ValidImportRow? Valid,
+    ValidImportRow? ValidTransaction,
+    ValidTransferImportRow? ValidTransfer,
     string? ErrorCode,
     string? ErrorSubject)
 {
-    public bool IsValid => Valid is not null;
+    public bool IsValid => ValidTransaction is not null || ValidTransfer is not null;
 }

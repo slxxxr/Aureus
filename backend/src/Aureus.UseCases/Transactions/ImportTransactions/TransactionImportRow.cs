@@ -9,6 +9,7 @@ internal sealed class TransactionImportRow
     [Name("amount")] public string Amount { get; set; } = string.Empty;
     [Name("currency")] public string? Currency { get; set; }
     [Name("account")] public string Account { get; set; } = string.Empty;
+    [Name("toAccount")] public string? ToAccount { get; set; }
     [Name("category")] public string Category { get; set; } = string.Empty;
     [Name("name")] public string Name { get; set; } = string.Empty;
     [Name("note")] public string? Note { get; set; }

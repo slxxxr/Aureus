@@ -18,31 +18,11 @@ public sealed class TransferRepositoryMock
 
     public Transfer? DeletedTransfer { get; private set; }
 
-    public IReadOnlyList<Transfer>? BulkAdded { get; private set; }
-    public IReadOnlyDictionary<Guid, long>? BulkDeltas { get; private set; }
-
     public TransferRepositoryMock WithFilterResult(IReadOnlyList<Transfer> transfers)
     {
         _mock
             .Setup(r => r.GetByFilterAsync(It.IsAny<AnalyticsFilter>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(transfers);
-
-        return this;
-    }
-
-    public TransferRepositoryMock CapturingBulkAdd()
-    {
-        _mock
-            .Setup(r => r.AddBulkAsync(
-                It.IsAny<IReadOnlyList<Transfer>>(),
-                It.IsAny<IReadOnlyDictionary<Guid, long>>(),
-                It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyList<Transfer>, IReadOnlyDictionary<Guid, long>, CancellationToken>((trs, deltas, _) =>
-            {
-                BulkAdded = trs;
-                BulkDeltas = deltas;
-            })
-            .Returns(Task.CompletedTask);
 
         return this;
     }

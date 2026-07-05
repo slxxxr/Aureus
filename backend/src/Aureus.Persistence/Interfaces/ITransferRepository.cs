@@ -13,8 +13,6 @@ public interface ITransferRepository
 
     Task AddAsync(Transfer transfer, CancellationToken cancellationToken);
 
-    Task AddBulkAsync(IReadOnlyList<Transfer> transfers, IReadOnlyDictionary<Guid, long> accountBalanceDeltas, CancellationToken cancellationToken);
-
     Task UpdateAsync(Transfer transfer, IReadOnlyDictionary<Guid, long> accountBalanceDeltas, CancellationToken cancellationToken);
 
     Task DeleteAsync(Transfer transfer, CancellationToken cancellationToken);

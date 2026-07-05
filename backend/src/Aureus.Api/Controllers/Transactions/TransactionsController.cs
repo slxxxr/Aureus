@@ -52,7 +52,7 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
         var response = new ImportPreviewResponse(
             result.Rows.Select(r => new ImportRowPreviewResponse(
                 r.RowNumber, r.IsValid, r.ErrorCode, r.ErrorSubject,
-                r.Date, r.Type, r.Amount, r.Account, r.Category, r.Name, r.Note)).ToList(),
+                r.Date, r.Type, r.Amount, r.Account, r.ToAccount, r.Category, r.Name, r.Note)).ToList(),
             result.ValidCount,
             result.ErrorCount);
 
