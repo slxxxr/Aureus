@@ -1,3 +1,4 @@
+using Aureus.Domain.Analytics;
 using Aureus.Domain.Transfers;
 using Aureus.Persistence.Interfaces;
 using Moq;
@@ -16,6 +17,35 @@ public sealed class TransferRepositoryMock
     public IReadOnlyDictionary<Guid, long>? UpdatedAccountDeltas { get; private set; }
 
     public Transfer? DeletedTransfer { get; private set; }
+
+    public IReadOnlyList<Transfer>? BulkAdded { get; private set; }
+    public IReadOnlyDictionary<Guid, long>? BulkDeltas { get; private set; }
+
+    public TransferRepositoryMock WithFilterResult(IReadOnlyList<Transfer> transfers)
+    {
+        _mock
+            .Setup(r => r.GetByFilterAsync(It.IsAny<AnalyticsFilter>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transfers);
+
+        return this;
+    }
+
+    public TransferRepositoryMock CapturingBulkAdd()
+    {
+        _mock
+            .Setup(r => r.AddBulkAsync(
+                It.IsAny<IReadOnlyList<Transfer>>(),
+                It.IsAny<IReadOnlyDictionary<Guid, long>>(),
+                It.IsAny<CancellationToken>()))
+            .Callback<IReadOnlyList<Transfer>, IReadOnlyDictionary<Guid, long>, CancellationToken>((trs, deltas, _) =>
+            {
+                BulkAdded = trs;
+                BulkDeltas = deltas;
+            })
+            .Returns(Task.CompletedTask);
+
+        return this;
+    }
 
     public TransferRepositoryMock WithTransfer(Guid id, Guid workspaceId, Transfer transfer)
     {

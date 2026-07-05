@@ -1,3 +1,4 @@
+using Aureus.Domain.Analytics;
 using Aureus.Domain.Transfers;
 using Aureus.Persistence;
 using Aureus.Persistence.Entities;
@@ -18,6 +19,37 @@ public sealed class TransferRepository(AureusDbContext dbContext, IMapper mapper
             .Where(transfer => transfer.WorkspaceId == workspaceId)
             .OrderByDescending(transfer => transfer.OccurredAt)
             .ThenByDescending(transfer => transfer.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return mapper.Map<List<Transfer>>(entities);
+    }
+
+    public async Task<IReadOnlyList<Transfer>> GetByFilterAsync(
+        AnalyticsFilter filter,
+        CancellationToken cancellationToken)
+    {
+        var query = dbContext.Transfers
+            .AsNoTracking()
+            .Where(t => t.WorkspaceId == filter.WorkspaceId);
+
+        if (filter.From.HasValue)
+        {
+            query = query.Where(t => t.OccurredAt >= filter.From.Value);
+        }
+
+        if (filter.To.HasValue)
+        {
+            query = query.Where(t => t.OccurredAt < filter.To.Value);
+        }
+
+        if (filter.AccountIds is { Count: > 0 })
+        {
+            query = query.Where(t => filter.AccountIds.Contains(t.FromAccountId) || filter.AccountIds.Contains(t.ToAccountId));
+        }
+
+        var entities = await query
+            .OrderByDescending(t => t.OccurredAt)
+            .ThenByDescending(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
 
         return mapper.Map<List<Transfer>>(entities);
@@ -53,6 +85,29 @@ public sealed class TransferRepository(AureusDbContext dbContext, IMapper mapper
             .ExecuteUpdateAsync(
                 s => s.SetProperty(a => a.CurrentBalanceMinor, a => a.CurrentBalanceMinor + transfer.AmountMinor),
                 cancellationToken);
+
+        await dbTransaction.CommitAsync(cancellationToken);
+    }
+
+    public async Task AddBulkAsync(
+        IReadOnlyList<Transfer> transfers,
+        IReadOnlyDictionary<Guid, long> accountBalanceDeltas,
+        CancellationToken cancellationToken)
+    {
+        await using var dbTransaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        var entities = transfers.Select(mapper.Map<TransferDb>).ToList();
+        await dbContext.Transfers.AddRangeAsync(entities, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        foreach (var (accountId, delta) in accountBalanceDeltas)
+        {
+            await dbContext.FinancialAccounts
+                .Where(a => a.Id == accountId)
+                .ExecuteUpdateAsync(
+                    s => s.SetProperty(a => a.CurrentBalanceMinor, a => a.CurrentBalanceMinor + delta),
+                    cancellationToken);
+        }
 
         await dbTransaction.CommitAsync(cancellationToken);
     }

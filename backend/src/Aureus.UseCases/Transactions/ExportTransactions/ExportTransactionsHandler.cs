@@ -8,29 +8,59 @@ namespace Aureus.UseCases.Transactions.ExportTransactions;
 
 public sealed class ExportTransactionsHandler(
     ITransactionRepository transactionRepository,
+    ITransferRepository transferRepository,
     IFinancialAccountRepository accountRepository,
     ICategoryRepository categoryRepository) : IRequestHandler<ExportTransactionsQuery, byte[]>
 {
     public async Task<byte[]> Handle(ExportTransactionsQuery query, CancellationToken cancellationToken)
     {
         var transactions = await transactionRepository.GetByFilterAsync(query.Filter, cancellationToken);
+        var transfers = query.Filter.Type.HasValue
+            ? []
+            : await transferRepository.GetByFilterAsync(query.Filter, cancellationToken);
         var accounts = await accountRepository.GetByWorkspaceIdAsync(query.Filter.WorkspaceId, cancellationToken);
         var categories = await categoryRepository.GetAllIncludingDeletedAsync(query.Filter.WorkspaceId, cancellationToken);
 
         var accountNames = accounts.ToDictionary(a => a.Id, a => a.Name);
         var categoryNames = categories.ToDictionary(c => c.Id, c => c.Name);
 
-        var records = transactions.Select(t => new TransactionCsvRecord
+        var transactionRecords = transactions.Select(t => new
         {
-            Date = t.OccurredAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            Type = t.Type.ToString(),
-            Amount = (t.AmountMinor / 100m).ToString("0.00", CultureInfo.InvariantCulture),
-            Currency = t.Currency,
-            Account = accountNames.GetValueOrDefault(t.FinancialAccountId, t.FinancialAccountId.ToString()),
-            Category = categoryNames.GetValueOrDefault(t.CategoryId, t.CategoryId.ToString()),
-            Name = EscapeFormula(t.Name),
-            Note = t.Note is null ? string.Empty : EscapeFormula(t.Note),
+            OccurredAt = t.OccurredAt,
+            CreatedAt = t.CreatedAt,
+            Record = new TransactionCsvRecord
+            {
+                Date = t.OccurredAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                Type = t.Type.ToString(),
+                Amount = (t.AmountMinor / 100m).ToString("0.00", CultureInfo.InvariantCulture),
+                Currency = t.Currency,
+                Account = accountNames.GetValueOrDefault(t.FinancialAccountId, t.FinancialAccountId.ToString()),
+                Category = categoryNames.GetValueOrDefault(t.CategoryId, t.CategoryId.ToString()),
+                Name = EscapeFormula(t.Name),
+                Note = t.Note is null ? string.Empty : EscapeFormula(t.Note),
+            },
         });
+
+        var transferRecords = transfers.Select(tr => new
+        {
+            OccurredAt = tr.OccurredAt,
+            CreatedAt = tr.CreatedAt,
+            Record = new TransactionCsvRecord
+            {
+                Date = tr.OccurredAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                Type = "Transfer",
+                Amount = (tr.AmountMinor / 100m).ToString("0.00", CultureInfo.InvariantCulture),
+                Currency = tr.Currency,
+                Account = accountNames.GetValueOrDefault(tr.FromAccountId, tr.FromAccountId.ToString()),
+                ToAccount = accountNames.GetValueOrDefault(tr.ToAccountId, tr.ToAccountId.ToString()),
+                Note = tr.Note is null ? string.Empty : EscapeFormula(tr.Note),
+            },
+        });
+
+        var records = transactionRecords.Concat(transferRecords)
+            .OrderByDescending(r => r.OccurredAt)
+            .ThenByDescending(r => r.CreatedAt)
+            .Select(r => r.Record);
 
         using var memoryStream = new MemoryStream();
         await using var writer = new StreamWriter(memoryStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
