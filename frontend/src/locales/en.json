@@ -181,10 +181,13 @@
     },
     "importRowErrors": {
       "InvalidDate": "Invalid date (expected YYYY-MM-DD)",
-      "InvalidType": "Unknown type (expected Income or Expense)",
+      "InvalidType": "Unknown type (expected Income, Expense or Transfer)",
       "InvalidAmount": "Invalid amount",
       "AmountTooLarge": "Amount exceeds the maximum",
       "AccountNotFound": "Account \"{{subject}}\" not found",
+      "ToAccountNotFound": "Account \"{{subject}}\" not found",
+      "SameAccount": "The source and destination accounts must be different",
+      "CurrencyMismatch": "Transfers are only possible between accounts with the same currency",
       "CategoryNotFound": "Category \"{{subject}}\" not found",
       "NameRequired": "Name is required",
       "NameTooLong": "Name is too long",
@@ -256,6 +259,45 @@
       "importTooManyRows": "File contains more than 5 000 rows.",
       "importInvalidFormat": "Could not read the file. Check the CSV format.",
       "importHasErrors": "Fix the errors before importing.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
+  "transfers": {
+    "type": "Transfer",
+    "unknownAccount": "Unknown account",
+    "createModal": {
+      "title": "New transfer",
+      "fromAccountLabel": "From account",
+      "toAccountLabel": "To account",
+      "selectFromAccount": "Select account",
+      "selectToAccount": "Select account",
+      "amountLabel": "Amount",
+      "dateLabel": "Date",
+      "noteLabel": "Note (optional)",
+      "notePlaceholder": "Additional details",
+      "noAccounts": "You need at least two accounts. Create them on the Accounts page.",
+      "submit": "Transfer",
+      "submitting": "Saving…"
+    },
+    "editModal": {
+      "title": "Edit transfer",
+      "amountLabel": "Amount",
+      "dateLabel": "Date",
+      "noteLabel": "Note (optional)",
+      "notePlaceholder": "Additional details",
+      "save": "Save",
+      "saving": "Saving…",
+      "deleteTransfer": "Delete transfer"
+    },
+    "deleteConfirm": {
+      "title": "Delete transfer?",
+      "description": "This action cannot be undone. Both account balances will be recalculated."
+    },
+    "errors": {
+      "notFound": "Transfer not found.",
+      "accountNotFound": "Account not found.",
+      "currencyMismatch": "Transfers are only possible between accounts with the same currency.",
+      "sameAccount": "The source and destination accounts must be different.",
       "generic": "Something went wrong. Please try again."
     }
   },

@@ -2,6 +2,7 @@ using AutoMapper;
 using Aureus.Domain.Categories;
 using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transactions;
+using Aureus.Domain.Transfers;
 using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
 using Aureus.Persistence.Entities;
@@ -40,5 +41,7 @@ public sealed class DatabaseMappings : Profile
             .ForMember(
                 destination => destination.Type,
                 options => options.MapFrom(source => Enum.Parse<TransactionType>(source.Type)));
+        CreateMap<Transfer, TransferDb>();
+        CreateMap<TransferDb, Transfer>();
     }
 }

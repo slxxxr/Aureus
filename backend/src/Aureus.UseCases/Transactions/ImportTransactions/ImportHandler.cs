@@ -1,15 +1,16 @@
 using Aureus.Domain.Transactions;
+using Aureus.Domain.Transfers;
 using Aureus.Persistence.Interfaces;
 using MediatR;
 
 namespace Aureus.UseCases.Transactions.ImportTransactions;
 
-public sealed class CommitImportHandler(
+public sealed class ImportHandler(
     IFinancialAccountRepository accountRepository,
     ICategoryRepository categoryRepository,
-    ITransactionRepository transactionRepository) : IRequestHandler<CommitImportCommand, int>
+    IImportRepository importRepository) : IRequestHandler<ImportCommand, int>
 {
-    public async Task<int> Handle(CommitImportCommand command, CancellationToken cancellationToken)
+    public async Task<int> Handle(ImportCommand command, CancellationToken cancellationToken)
     {
         if (command.FileContent.Length > TransactionCsvParser.MaxFileSizeBytes)
         {
@@ -40,10 +41,10 @@ public sealed class CommitImportHandler(
             throw new TransactionException(TransactionErrorCode.ImportHasErrors, $"{errors.Count} row(s) have validation errors.");
         }
 
-        var validRows = parsed.Select(r => r.Valid!).ToList();
-
         var baseTime = DateTimeOffset.UtcNow;
-        var transactions = validRows.Select((row, i) => new Transaction
+
+        var transactionRows = parsed.Where(r => r.ValidTransaction is not null).Select(r => r.ValidTransaction!).ToList();
+        var transactions = transactionRows.Select((row, i) => new Transaction
         {
             Id = Guid.NewGuid(),
             WorkspaceId = command.WorkspaceId,
@@ -59,15 +60,37 @@ public sealed class CommitImportHandler(
             CreatedAt = baseTime.AddTicks(i),
         }).ToList();
 
-        var balanceDeltas = new Dictionary<Guid, long>();
+        var transactionDeltas = new Dictionary<Guid, long>();
         foreach (var tx in transactions)
         {
             var delta = tx.Type == TransactionType.Income ? tx.AmountMinor : -tx.AmountMinor;
-            balanceDeltas[tx.FinancialAccountId] = balanceDeltas.GetValueOrDefault(tx.FinancialAccountId) + delta;
+            transactionDeltas[tx.FinancialAccountId] = transactionDeltas.GetValueOrDefault(tx.FinancialAccountId) + delta;
         }
 
-        await transactionRepository.AddBulkAsync(transactions, balanceDeltas, cancellationToken);
+        var transferRows = parsed.Where(r => r.ValidTransfer is not null).Select(r => r.ValidTransfer!).ToList();
+        var transfers = transferRows.Select((row, i) => new Transfer
+        {
+            Id = Guid.NewGuid(),
+            WorkspaceId = command.WorkspaceId,
+            FromAccountId = row.FromAccount.Id,
+            ToAccountId = row.ToAccount.Id,
+            CreatedByUserId = command.UserId,
+            AmountMinor = row.AmountMinor,
+            Currency = row.FromAccount.Currency,
+            OccurredAt = row.OccurredAt,
+            Note = row.Note,
+            CreatedAt = baseTime.AddTicks(transactions.Count + i),
+        }).ToList();
 
-        return transactions.Count;
+        var transferDeltas = new Dictionary<Guid, long>();
+        foreach (var transfer in transfers)
+        {
+            transferDeltas[transfer.FromAccountId] = transferDeltas.GetValueOrDefault(transfer.FromAccountId) - transfer.AmountMinor;
+            transferDeltas[transfer.ToAccountId] = transferDeltas.GetValueOrDefault(transfer.ToAccountId) + transfer.AmountMinor;
+        }
+
+        await importRepository.AddBulkAsync(transactions, transactionDeltas, transfers, transferDeltas, cancellationToken);
+
+        return transactions.Count + transfers.Count;
     }
 }

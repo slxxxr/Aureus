@@ -9,6 +9,7 @@ public sealed record ImportRowPreviewResponse(
     string Type,
     string Amount,
     string Account,
+    string ToAccount,
     string Category,
     string Name,
     string Note);

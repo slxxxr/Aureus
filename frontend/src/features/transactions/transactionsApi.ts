@@ -127,6 +127,7 @@ export type ImportRowPreview = {
   type: string;
   amount: string;
   account: string;
+  toAccount: string;
   category: string;
   name: string;
   note: string;

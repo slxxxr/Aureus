@@ -35,7 +35,7 @@ public sealed class ImportPreviewHandler(
 
         var rows = parsed.Select(r => new ImportRowPreview(
             r.RowNumber, r.IsValid, r.ErrorCode, r.ErrorSubject,
-            r.Date, r.Type, r.Amount, r.Account, r.Category, r.Name, r.Note)).ToList();
+            r.Date, r.Type, r.Amount, r.Account, r.ToAccount, r.Category, r.Name, r.Note)).ToList();
 
         return new ImportPreviewResult(rows, rows.Count(r => r.IsValid), rows.Count(r => !r.IsValid));
     }

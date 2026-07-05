@@ -181,10 +181,13 @@
     },
     "importRowErrors": {
       "InvalidDate": "Неверная дата (ожидается YYYY-MM-DD)",
-      "InvalidType": "Неизвестный тип (ожидается Income или Expense)",
+      "InvalidType": "Неизвестный тип (ожидается Income, Expense или Transfer)",
       "InvalidAmount": "Некорректная сумма",
       "AmountTooLarge": "Сумма превышает максимум",
       "AccountNotFound": "Счёт «{{subject}}» не найден",
+      "ToAccountNotFound": "Счёт «{{subject}}» не найден",
+      "SameAccount": "Счета отправления и получения должны различаться",
+      "CurrencyMismatch": "Перевод возможен только между счетами с одинаковой валютой",
       "CategoryNotFound": "Категория «{{subject}}» не найдена",
       "NameRequired": "Название обязательно",
       "NameTooLong": "Название слишком длинное",
@@ -256,6 +259,45 @@
       "importTooManyRows": "Файл содержит более 5 000 строк.",
       "importInvalidFormat": "Не удалось прочитать файл. Проверьте формат CSV.",
       "importHasErrors": "Исправьте ошибки перед импортом.",
+      "generic": "Что-то пошло не так. Попробуйте ещё раз."
+    }
+  },
+  "transfers": {
+    "type": "Перевод",
+    "unknownAccount": "Неизвестный счет",
+    "createModal": {
+      "title": "Новый перевод",
+      "fromAccountLabel": "Со счета",
+      "toAccountLabel": "На счет",
+      "selectFromAccount": "Выберите счет",
+      "selectToAccount": "Выберите счет",
+      "amountLabel": "Сумма",
+      "dateLabel": "Дата",
+      "noteLabel": "Заметка (необязательно)",
+      "notePlaceholder": "Дополнительная информация",
+      "noAccounts": "Нужно как минимум два счета. Создайте их в разделе «Счета».",
+      "submit": "Перевести",
+      "submitting": "Сохранение…"
+    },
+    "editModal": {
+      "title": "Редактировать перевод",
+      "amountLabel": "Сумма",
+      "dateLabel": "Дата",
+      "noteLabel": "Заметка (необязательно)",
+      "notePlaceholder": "Дополнительная информация",
+      "save": "Сохранить",
+      "saving": "Сохранение…",
+      "deleteTransfer": "Удалить перевод"
+    },
+    "deleteConfirm": {
+      "title": "Удалить перевод?",
+      "description": "Это действие необратимо. Балансы обоих счетов будут пересчитаны."
+    },
+    "errors": {
+      "notFound": "Перевод не найден.",
+      "accountNotFound": "Счет не найден.",
+      "currencyMismatch": "Перевод возможен только между счетами с одинаковой валютой.",
+      "sameAccount": "Счета отправления и получения должны различаться.",
       "generic": "Что-то пошло не так. Попробуйте ещё раз."
     }
   },

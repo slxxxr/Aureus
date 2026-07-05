@@ -52,7 +52,7 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
         var response = new ImportPreviewResponse(
             result.Rows.Select(r => new ImportRowPreviewResponse(
                 r.RowNumber, r.IsValid, r.ErrorCode, r.ErrorSubject,
-                r.Date, r.Type, r.Amount, r.Account, r.Category, r.Name, r.Note)).ToList(),
+                r.Date, r.Type, r.Amount, r.Account, r.ToAccount, r.Category, r.Name, r.Note)).ToList(),
             result.ValidCount,
             result.ErrorCount);
 
@@ -64,7 +64,7 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
     [RequestSizeLimit(5 * 1024 * 1024)]
     [EnableRateLimiting(RateLimitingExtensions.Import)]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
-    public async Task<IActionResult> ImportCommitAsync(
+    public async Task<IActionResult> ImportAsync(
         Guid workspaceId,
         IFormFile file,
         CancellationToken cancellationToken)
@@ -73,7 +73,7 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
         await file.CopyToAsync(ms, cancellationToken);
         var content = ms.ToArray();
 
-        var count = await sender.Send(new CommitImportCommand(workspaceId, CurrentUserId, content), cancellationToken);
+        var count = await sender.Send(new ImportCommand(workspaceId, CurrentUserId, content), cancellationToken);
 
         return Ok(count);
     }
