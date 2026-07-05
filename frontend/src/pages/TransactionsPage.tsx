@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, Download, Pencil, Plus, Upload } from "lucide-react";
+import { ArrowDown, ArrowLeftRight, ArrowUp, Download, Pencil, Plus, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DAY_MS } from "@/lib/constants";
 import { formatMoney } from "@/lib/formatMoney";
@@ -17,8 +17,16 @@ import {
   type Transaction,
   type TransactionType,
 } from "@/features/transactions/transactionsApi";
+import {
+  getTransfers,
+  createTransfer,
+  updateTransfer,
+  deleteTransfer,
+  type Transfer,
+} from "@/features/transfers/transfersApi";
 import { useNameIndex, type NameEntry } from "@/features/transactions/useNameIndex";
 import { resolveTransactionError } from "@/features/transactions/resolveTransactionError";
+import { resolveTransferError } from "@/features/transfers/resolveTransferError";
 import {
   getFinancialAccounts,
   type FinancialAccount,
@@ -67,6 +75,8 @@ function getDailyNet(items: Transaction[]): string | null {
 
 // ─── create modal ─────────────────────────────────────────────────────────────
 
+type EntryType = TransactionType | "Transfer";
+
 function CreateTransactionModal({
   workspaceId,
   accounts,
@@ -82,9 +92,11 @@ function CreateTransactionModal({
   const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
-  const [type, setType] = useState<TransactionType>("Expense");
+  const [entryType, setEntryType] = useState<EntryType>("Expense");
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [categoryId, setCategoryId] = useState("");
+  const [fromAccountId, setFromAccountId] = useState(accounts[0]?.id ?? "");
+  const [toAccountId, setToAccountId] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(() => localDateKey(new Date()));
   const [note, setNote] = useState("");
@@ -99,65 +111,88 @@ function CreateTransactionModal({
 
   const applyEntry = (entry: NameEntry) => {
     setName(entry.name);
-    setType(entry.type);
+    setEntryType(entry.type);
     setAccountId(entry.accountId);
     setCategoryId(entry.categoryId);
     setAmount((entry.amountMinor / 100).toFixed(2));
     setShowSuggestions(false);
   };
 
-  const filteredCategories = categories.filter((c) => c.type === type);
+  const isTransfer = entryType === "Transfer";
+  const filteredCategories = categories.filter((c) => c.type === entryType);
 
-  const handleTypeChange = (newType: TransactionType) => {
-    setType(newType);
-    if (!categories.some((c) => c.id === categoryId && c.type === newType)) {
+  const handleTypeChange = (newType: EntryType) => {
+    setEntryType(newType);
+    if (newType !== "Transfer" && !categories.some((c) => c.id === categoryId && c.type === newType)) {
       setCategoryId("");
     }
   };
 
-  const mutation = useMutation({
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["transactions", workspaceId] });
+    void queryClient.invalidateQueries({ queryKey: ["transfers", workspaceId] });
+    void queryClient.invalidateQueries({ queryKey: ["financial-accounts", workspaceId] });
+  };
+
+  const transactionMutation = useMutation({
     mutationFn: () => {
       return createTransaction(workspaceId, {
         financialAccountId: accountId,
         categoryId,
         name: name.trim(),
-        type,
+        type: entryType as TransactionType,
         amountMinor: Math.round(parseFloat(amount) * 100),
         occurredAt: date,
         note: note.trim() || null,
       });
     },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["transactions", workspaceId] });
-      void queryClient.invalidateQueries({ queryKey: ["financial-accounts", workspaceId] });
-      onClose();
-    },
+    onSuccess: () => { invalidate(); onClose(); },
   });
+
+  const transferMutation = useMutation({
+    mutationFn: () => {
+      return createTransfer(workspaceId, {
+        fromAccountId,
+        toAccountId,
+        amountMinor: Math.round(parseFloat(amount) * 100),
+        occurredAt: date,
+        note: note.trim() || null,
+      });
+    },
+    onSuccess: () => { invalidate(); onClose(); },
+  });
+
+  const mutation = isTransfer ? transferMutation : transactionMutation;
+
+  const toAccountOptions = accounts.filter((a) => a.id !== fromAccountId);
 
   const missingAccounts = accounts.length === 0;
   const missingCategoryForType = filteredCategories.length === 0;
   const amountNum = parseFloat(amount);
   const amountValid = amount !== "" && !isNaN(amountNum) && amountNum > 0;
   const amountOverMax = amountValid && amountNum > MAX_AMOUNT;
-  const canSubmit =
-    !missingAccounts &&
-    !missingCategoryForType &&
-    name.trim() &&
-    accountId &&
-    categoryId &&
-    amountValid &&
-    !amountOverMax;
+  const canSubmit = isTransfer
+    ? !missingAccounts && fromAccountId && toAccountId && amountValid && !amountOverMax
+    : !missingAccounts &&
+      !missingCategoryForType &&
+      name.trim() &&
+      accountId &&
+      categoryId &&
+      amountValid &&
+      !amountOverMax;
 
   return (
     <Modal onBackdropClick={onClose}>
-      <h2 className="mb-5 text-base font-semibold">{t("transactions.createModal.title")}</h2>
+      <h2 className="mb-5 text-base font-semibold">
+        {isTransfer ? t("transfers.createModal.title") : t("transactions.createModal.title")}
+      </h2>
       <form
         onSubmit={(e: FormEvent) => { e.preventDefault(); if (canSubmit) mutation.mutate(); }}
         className="space-y-4"
       >
         {/* type toggle */}
         <div className="flex rounded-md border border-input">
-          {(["Expense", "Income"] as TransactionType[]).map((opt) => (
+          {(["Expense", "Income", "Transfer"] as EntryType[]).map((opt) => (
             <button
               key={opt}
               type="button"
@@ -165,55 +200,62 @@ function CreateTransactionModal({
               disabled={mutation.isPending}
               className={cn(
                 "flex-1 py-1.5 text-sm font-medium transition-colors first:rounded-l-[5px] last:rounded-r-[5px]",
-                type === opt
+                entryType === opt
                   ? "bg-accent text-foreground"
                   : "text-muted-foreground hover:bg-accent/60",
               )}
             >
-              {t(opt === "Income" ? "categories.typeIncome" : "categories.typeExpense")}
+              {t(
+                opt === "Income"
+                  ? "categories.typeIncome"
+                  : opt === "Expense"
+                    ? "categories.typeExpense"
+                    : "transfers.type",
+              )}
             </button>
           ))}
         </div>
 
-        {/* name */}
-        <div className="space-y-1.5">
-          <Label htmlFor="tx-name">{t("transactions.createModal.nameLabel")}</Label>
-          <div className="relative z-10">
-            <Input
-              id="tx-name"
-              value={name}
-              onChange={(e) => { setName(e.target.value); setShowSuggestions(true); }}
-              onFocus={() => setShowSuggestions(true)}
-              onBlur={() => setShowSuggestions(false)}
-              placeholder={t("transactions.createModal.namePlaceholder")}
-              required
-              autoFocus
-              autoComplete="off"
-              maxLength={InputLimits.transactionNameMaxLength}
-              disabled={mutation.isPending}
-            />
-            {suggestions.length > 0 && (
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-md border border-border bg-background shadow-md">
-                {suggestions.map((s) => {
-                  const catLabel = categories.find((c) => c.id === s.categoryId)?.name;
-                  return (
-                    <button
-                      key={s.name}
-                      type="button"
-                      onMouseDown={(e) => { e.preventDefault(); applyEntry(s); }}
-                      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-accent"
-                    >
-                      <span className="truncate font-medium">{s.name}</span>
-                      {catLabel && (
-                        <span className="shrink-0 text-xs text-muted-foreground">{catLabel}</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+        {!isTransfer && (
+          <div className="space-y-1.5">
+            <Label htmlFor="tx-name">{t("transactions.createModal.nameLabel")}</Label>
+            <div className="relative z-10">
+              <Input
+                id="tx-name"
+                value={name}
+                onChange={(e) => { setName(e.target.value); setShowSuggestions(true); }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setShowSuggestions(false)}
+                placeholder={t("transactions.createModal.namePlaceholder")}
+                required
+                autoFocus
+                autoComplete="off"
+                maxLength={InputLimits.transactionNameMaxLength}
+                disabled={mutation.isPending}
+              />
+              {suggestions.length > 0 && (
+                <div className="absolute left-0 right-0 top-full z-20 mt-1 overflow-hidden rounded-md border border-border bg-background shadow-md">
+                  {suggestions.map((s) => {
+                    const catLabel = categories.find((c) => c.id === s.categoryId)?.name;
+                    return (
+                      <button
+                        key={s.name}
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); applyEntry(s); }}
+                        className="flex w-full items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-accent"
+                      >
+                        <span className="truncate font-medium">{s.name}</span>
+                        {catLabel && (
+                          <span className="shrink-0 text-xs text-muted-foreground">{catLabel}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* amount */}
         <div className="space-y-1.5">
@@ -242,41 +284,80 @@ function CreateTransactionModal({
           )}
         </div>
 
-        {/* account */}
-        <div className="space-y-1.5">
-          <Label>{t("transactions.createModal.accountLabel")}</Label>
-          {missingAccounts ? (
-            <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-              {t("transactions.createModal.noAccounts")}
-            </p>
-          ) : (
-            <CustomSelect
-              value={accountId}
-              onChange={setAccountId}
-              options={accounts.map((a) => ({ value: a.id, label: a.name }))}
-              placeholder={t("transactions.createModal.selectAccount")}
-              disabled={mutation.isPending}
-            />
-          )}
-        </div>
+        {isTransfer ? (
+          <>
+            {/* from account */}
+            <div className="space-y-1.5">
+              <Label>{t("transfers.createModal.fromAccountLabel")}</Label>
+              {missingAccounts ? (
+                <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  {t("transfers.createModal.noAccounts")}
+                </p>
+              ) : (
+                <CustomSelect
+                  value={fromAccountId}
+                  onChange={(v) => {
+                    setFromAccountId(v);
+                    if (v === toAccountId) setToAccountId("");
+                  }}
+                  options={accounts.map((a) => ({ value: a.id, label: a.name }))}
+                  placeholder={t("transfers.createModal.selectFromAccount")}
+                  disabled={mutation.isPending}
+                />
+              )}
+            </div>
 
-        {/* category */}
-        <div className="space-y-1.5">
-          <Label>{t("transactions.createModal.categoryLabel")}</Label>
-          {missingCategoryForType ? (
-            <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-              {t("transactions.createModal.noCategoriesForType")}
-            </p>
-          ) : (
-            <CustomSelect
-              value={categoryId}
-              onChange={setCategoryId}
-              options={filteredCategories.map((c) => ({ value: c.id, label: c.name }))}
-              placeholder={t("transactions.createModal.selectCategory")}
-              disabled={mutation.isPending}
-            />
-          )}
-        </div>
+            {/* to account */}
+            <div className="space-y-1.5">
+              <Label>{t("transfers.createModal.toAccountLabel")}</Label>
+              <CustomSelect
+                value={toAccountId}
+                onChange={setToAccountId}
+                options={toAccountOptions.map((a) => ({ value: a.id, label: a.name }))}
+                placeholder={t("transfers.createModal.selectToAccount")}
+                disabled={mutation.isPending || missingAccounts}
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            {/* account */}
+            <div className="space-y-1.5">
+              <Label>{t("transactions.createModal.accountLabel")}</Label>
+              {missingAccounts ? (
+                <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  {t("transactions.createModal.noAccounts")}
+                </p>
+              ) : (
+                <CustomSelect
+                  value={accountId}
+                  onChange={setAccountId}
+                  options={accounts.map((a) => ({ value: a.id, label: a.name }))}
+                  placeholder={t("transactions.createModal.selectAccount")}
+                  disabled={mutation.isPending}
+                />
+              )}
+            </div>
+
+            {/* category */}
+            <div className="space-y-1.5">
+              <Label>{t("transactions.createModal.categoryLabel")}</Label>
+              {missingCategoryForType ? (
+                <p className="rounded-md border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  {t("transactions.createModal.noCategoriesForType")}
+                </p>
+              ) : (
+                <CustomSelect
+                  value={categoryId}
+                  onChange={setCategoryId}
+                  options={filteredCategories.map((c) => ({ value: c.id, label: c.name }))}
+                  placeholder={t("transactions.createModal.selectCategory")}
+                  disabled={mutation.isPending}
+                />
+              )}
+            </div>
+          </>
+        )}
 
         {/* date */}
         <div className="space-y-1.5">
@@ -304,7 +385,9 @@ function CreateTransactionModal({
 
         {mutation.isError && (
           <p className="text-sm text-destructive" role="alert">
-            {resolveTransactionError(mutation.error, t as TFunction)}
+            {isTransfer
+              ? resolveTransferError(mutation.error, t as TFunction)
+              : resolveTransactionError(mutation.error, t as TFunction)}
           </p>
         )}
 
@@ -314,8 +397,8 @@ function CreateTransactionModal({
           </Button>
           <Button type="submit" disabled={mutation.isPending || !canSubmit}>
             {mutation.isPending
-              ? t("transactions.createModal.submitting")
-              : t("transactions.createModal.submit")}
+              ? (isTransfer ? t("transfers.createModal.submitting") : t("transactions.createModal.submitting"))
+              : (isTransfer ? t("transfers.createModal.submit") : t("transactions.createModal.submit"))}
           </Button>
         </div>
       </form>
@@ -562,6 +645,193 @@ function EditTransactionModal({
   );
 }
 
+// ─── edit transfer modal ──────────────────────────────────────────────────────
+
+function EditTransferModal({
+  transfer,
+  workspaceId,
+  accounts,
+  onClose,
+}: {
+  transfer: Transfer;
+  workspaceId: string;
+  accounts: FinancialAccount[];
+  onClose: () => void;
+}) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+
+  const [fromAccountId, setFromAccountId] = useState(transfer.fromAccountId);
+  const [toAccountId, setToAccountId] = useState(transfer.toAccountId);
+  const [amount, setAmount] = useState((transfer.amountMinor / 100).toFixed(2));
+  const [date, setDate] = useState(transfer.occurredAt);
+  const [note, setNote] = useState(transfer.note ?? "");
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const invalidate = () => {
+    void queryClient.invalidateQueries({ queryKey: ["transfers", workspaceId] });
+    void queryClient.invalidateQueries({ queryKey: ["financial-accounts", workspaceId] });
+  };
+
+  const updateMutation = useMutation({
+    mutationFn: () => {
+      const newAmountMinor = Math.round(parseFloat(amount) * 100);
+      return updateTransfer(workspaceId, transfer.id, {
+        fromAccountId: fromAccountId !== transfer.fromAccountId ? fromAccountId : undefined,
+        toAccountId: toAccountId !== transfer.toAccountId ? toAccountId : undefined,
+        amountMinor: newAmountMinor !== transfer.amountMinor ? newAmountMinor : undefined,
+        occurredAt: date !== transfer.occurredAt ? date : undefined,
+        note: note.trim() !== (transfer.note ?? "") ? (note.trim() || null) : undefined,
+      });
+    },
+    onSuccess: () => { invalidate(); onClose(); },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteTransfer(workspaceId, transfer.id),
+    onSuccess: () => { invalidate(); onClose(); },
+  });
+
+  const isPending = updateMutation.isPending || deleteMutation.isPending;
+  const toAccountOptions = accounts.filter((a) => a.id !== fromAccountId);
+  const amountNum = parseFloat(amount);
+  const amountValid = amount !== "" && !isNaN(amountNum) && amountNum > 0;
+  const amountOverMax = amountValid && amountNum > MAX_AMOUNT;
+  const canSave = fromAccountId && toAccountId && amountValid && !amountOverMax;
+
+  if (confirmingDelete) {
+    return (
+      <Modal onBackdropClick={() => setConfirmingDelete(false)}>
+        <h2 className="mb-2 text-base font-semibold">{t("transfers.deleteConfirm.title")}</h2>
+        <p className="mb-5 text-sm text-muted-foreground">{t("transfers.deleteConfirm.description")}</p>
+        <div className="flex justify-end gap-2">
+          <Button variant="secondary" onClick={() => setConfirmingDelete(false)} disabled={deleteMutation.isPending}>
+            {t("common.cancel")}
+          </Button>
+          <Button
+            disabled={deleteMutation.isPending}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => deleteMutation.mutate()}
+          >
+            {t("common.delete")}
+          </Button>
+        </div>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal onBackdropClick={onClose}>
+      <h2 className="mb-5 text-base font-semibold">{t("transfers.editModal.title")}</h2>
+      <form
+        onSubmit={(e: FormEvent) => { e.preventDefault(); if (canSave) updateMutation.mutate(); }}
+        className="space-y-4"
+      >
+        {/* amount */}
+        <div className="space-y-1.5">
+          <Label htmlFor="edit-transfer-amount">{t("transfers.editModal.amountLabel")}</Label>
+          <Input
+            id="edit-transfer-amount"
+            type="text"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => {
+              const val = e.target.value.replace(",", ".");
+              if (val === "" || /^\d*\.?\d{0,2}$/.test(val)) setAmount(val);
+            }}
+            onBlur={() => {
+              const n = parseFloat(amount);
+              if (!isNaN(n) && n > 0) setAmount(n.toFixed(2));
+              else if (amount !== "") setAmount("");
+            }}
+            required
+            autoFocus
+            autoComplete="off"
+            disabled={isPending}
+          />
+          {amountOverMax && (
+            <p className="text-xs text-destructive">{t("common.validation.amountTooLarge")}</p>
+          )}
+        </div>
+
+        {/* from account */}
+        <div className="space-y-1.5">
+          <Label>{t("transfers.createModal.fromAccountLabel")}</Label>
+          <CustomSelect
+            value={fromAccountId}
+            onChange={(v) => {
+              setFromAccountId(v);
+              if (v === toAccountId) setToAccountId("");
+            }}
+            options={accounts.map((a) => ({ value: a.id, label: a.name }))}
+            placeholder={t("transfers.createModal.selectFromAccount")}
+            disabled={isPending}
+          />
+        </div>
+
+        {/* to account */}
+        <div className="space-y-1.5">
+          <Label>{t("transfers.createModal.toAccountLabel")}</Label>
+          <CustomSelect
+            value={toAccountId}
+            onChange={setToAccountId}
+            options={toAccountOptions.map((a) => ({ value: a.id, label: a.name }))}
+            placeholder={t("transfers.createModal.selectToAccount")}
+            disabled={isPending}
+          />
+        </div>
+
+        {/* date */}
+        <div className="space-y-1.5">
+          <Label>{t("transfers.editModal.dateLabel")}</Label>
+          <DatePicker value={date} onChange={setDate} disabled={isPending} />
+        </div>
+
+        {/* note */}
+        <div className="space-y-1.5">
+          <Label htmlFor="edit-transfer-note">{t("transfers.editModal.noteLabel")}</Label>
+          <Input
+            id="edit-transfer-note"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={t("transfers.editModal.notePlaceholder")}
+            autoComplete="off"
+            maxLength={InputLimits.transactionNoteMaxLength}
+            disabled={isPending}
+          />
+        </div>
+
+        {updateMutation.isError && (
+          <p className="text-sm text-destructive" role="alert">
+            {resolveTransferError(updateMutation.error, t as TFunction)}
+          </p>
+        )}
+
+        <div className="flex items-center justify-between pt-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setConfirmingDelete(true)}
+            disabled={isPending}
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+          >
+            {t("transfers.editModal.deleteTransfer")}
+          </Button>
+          <div className="flex gap-2">
+            <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
+              {t("common.cancel")}
+            </Button>
+            <Button type="submit" disabled={isPending || !canSave}>
+              {updateMutation.isPending ? t("transfers.editModal.saving") : t("transfers.editModal.save")}
+            </Button>
+          </div>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 // ─── transaction row ──────────────────────────────────────────────────────────
 
 function TransactionRow({
@@ -645,25 +915,93 @@ function TransactionRow({
   );
 }
 
+// ─── transfer row ─────────────────────────────────────────────────────────────
+
+function TransferRow({
+  transfer,
+  accountMap,
+  onEdit,
+  canEdit,
+}: {
+  transfer: Transfer;
+  accountMap: Map<string, FinancialAccount>;
+  onEdit: () => void;
+  canEdit: boolean;
+}) {
+  const { t } = useTranslation();
+  const tapHandlers = useTapToEdit(onEdit, canEdit);
+  const fromAccount = accountMap.get(transfer.fromAccountId);
+  const toAccount = accountMap.get(transfer.toAccountId);
+
+  return (
+    <div
+      {...tapHandlers}
+      className={cn(
+        "group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
+        canEdit && "cursor-pointer active:bg-accent/60 [@media(hover:hover)]:hover:bg-accent/60",
+      )}
+    >
+      {/* type icon */}
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <ArrowLeftRight className="h-3.5 w-3.5" />
+      </div>
+
+      {/* from → to */}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-sm font-medium">{t("transfers.type")}</p>
+        <p className="truncate text-xs text-muted-foreground">
+          {(fromAccount?.name ?? t("transfers.unknownAccount"))} → {(toAccount?.name ?? t("transfers.unknownAccount"))}
+        </p>
+      </div>
+
+      {/* amount */}
+      <div className="shrink-0 text-right">
+        <p className="text-sm font-semibold tabular-nums text-muted-foreground">
+          {formatMoney(transfer.amountMinor, transfer.currency)}
+        </p>
+      </div>
+
+      {/* edit pencil — desktop hover only, hidden on mobile */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "hidden shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity sm:block",
+          canEdit ? "group-hover:opacity-100" : "invisible",
+        )}
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </span>
+    </div>
+  );
+}
+
 // ─── date group ───────────────────────────────────────────────────────────────
+
+type EntryItem =
+  | { kind: "tx"; tx: Transaction }
+  | { kind: "transfer"; transfer: Transfer };
 
 function DateGroup({
   dateKey,
   items,
   categoryMap,
   accountMap,
-  onEdit,
-  canEdit,
+  onEditTx,
+  canEditTx,
+  onEditTransfer,
+  canEditTransfer,
 }: {
   dateKey: string;
-  items: Transaction[];
+  items: EntryItem[];
   categoryMap: Map<string, Category>;
   accountMap: Map<string, FinancialAccount>;
-  onEdit: (tx: Transaction) => void;
-  canEdit: (tx: Transaction) => boolean;
+  onEditTx: (tx: Transaction) => void;
+  canEditTx: (tx: Transaction) => boolean;
+  onEditTransfer: (transfer: Transfer) => void;
+  canEditTransfer: (transfer: Transfer) => boolean;
 }) {
   const { t } = useTranslation();
-  const net = getDailyNet(items);
+  const net = getDailyNet(items.filter((i): i is { kind: "tx"; tx: Transaction } => i.kind === "tx").map((i) => i.tx));
 
   return (
     <div>
@@ -677,16 +1015,26 @@ function DateGroup({
         <span className="hidden w-[18px] shrink-0 sm:block" aria-hidden="true" />
       </div>
       <div className="space-y-0.5">
-        {items.map((tx) => (
-          <TransactionRow
-            key={tx.id}
-            tx={tx}
-            categoryMap={categoryMap}
-            accountMap={accountMap}
-            onEdit={() => onEdit(tx)}
-            canEdit={canEdit(tx)}
-          />
-        ))}
+        {items.map((item) =>
+          item.kind === "tx" ? (
+            <TransactionRow
+              key={item.tx.id}
+              tx={item.tx}
+              categoryMap={categoryMap}
+              accountMap={accountMap}
+              onEdit={() => onEditTx(item.tx)}
+              canEdit={canEditTx(item.tx)}
+            />
+          ) : (
+            <TransferRow
+              key={item.transfer.id}
+              transfer={item.transfer}
+              accountMap={accountMap}
+              onEdit={() => onEditTransfer(item.transfer)}
+              canEdit={canEditTransfer(item.transfer)}
+            />
+          ),
+        )}
       </div>
     </div>
   );
@@ -915,10 +1263,18 @@ export function TransactionsPage() {
   const [showImport, setShowImport] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const [editingTransfer, setEditingTransfer] = useState<Transfer | null>(null);
 
   const { data: transactions = [], isLoading: txLoading } = useQuery({
     queryKey: ["transactions", activeWorkspace?.id],
     queryFn: () => getTransactions(activeWorkspace!.id),
+    enabled: activeWorkspace !== null,
+    staleTime: 30_000,
+  });
+
+  const { data: transfers = [], isLoading: transfersLoading } = useQuery({
+    queryKey: ["transfers", activeWorkspace?.id],
+    queryFn: () => getTransfers(activeWorkspace!.id),
     enabled: activeWorkspace !== null,
     staleTime: 30_000,
   });
@@ -946,9 +1302,12 @@ export function TransactionsPage() {
   const canEdit = (tx: Transaction) =>
     activeWorkspace?.role !== "Member" || tx.createdByUserId === profile?.id;
 
+  const canEditTransfer = (transfer: Transfer) =>
+    activeWorkspace?.role !== "Member" || transfer.createdByUserId === profile?.id;
+
   const canImport = activeWorkspace?.role === "Manager" || activeWorkspace?.role === "Owner";
 
-  const isLoading = txLoading || accLoading || catLoading;
+  const isLoading = txLoading || transfersLoading || accLoading || catLoading;
 
   const categoryMap = useMemo(
     () => new Map(categories.map((c) => [c.id, c])),
@@ -970,18 +1329,43 @@ export function TransactionsPage() {
     [transactions, accountFilter, typeFilter],
   );
 
+  const filteredTransfers = useMemo(
+    () =>
+      typeFilter
+        ? []
+        : transfers.filter((transfer) => {
+            if (accountFilter.length === 0) return true;
+            return accountFilter.includes(transfer.fromAccountId) || accountFilter.includes(transfer.toAccountId);
+          }),
+    [transfers, accountFilter, typeFilter],
+  );
+
   const groups = useMemo(() => {
-    const map = new Map<string, Transaction[]>();
+    const map = new Map<string, EntryItem[]>();
     for (const tx of filtered) {
       const key = tx.occurredAt;
       if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(tx);
+      map.get(key)!.push({ kind: "tx", tx });
     }
-    return Array.from(map.entries()).map(([dateKey, items]) => ({ dateKey, items }));
-  }, [filtered]);
+    for (const transfer of filteredTransfers) {
+      const key = transfer.occurredAt;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push({ kind: "transfer", transfer });
+    }
+    for (const items of map.values()) {
+      items.sort((a, b) => {
+        const aCreated = a.kind === "tx" ? a.tx.createdAt : a.transfer.createdAt;
+        const bCreated = b.kind === "tx" ? b.tx.createdAt : b.transfer.createdAt;
+        return bCreated.localeCompare(aCreated);
+      });
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([dateKey, items]) => ({ dateKey, items }));
+  }, [filtered, filteredTransfers]);
 
-  const hasData = transactions.length > 0;
-  const hasFiltered = filtered.length > 0;
+  const hasData = transactions.length > 0 || transfers.length > 0;
+  const hasFiltered = filtered.length > 0 || filteredTransfers.length > 0;
 
   // Empty state message depends on what's missing
   const emptyTitleKey =
@@ -1078,8 +1462,10 @@ export function TransactionsPage() {
                 items={items}
                 categoryMap={categoryMap}
                 accountMap={accountMap}
-                onEdit={setEditing}
-                canEdit={canEdit}
+                onEditTx={setEditing}
+                canEditTx={canEdit}
+                onEditTransfer={setEditingTransfer}
+                canEditTransfer={canEditTransfer}
               />
             ))}
           </div>
@@ -1101,6 +1487,14 @@ export function TransactionsPage() {
           categories={categories}
           accounts={accounts}
           onClose={() => setEditing(null)}
+        />
+      )}
+      {editingTransfer && activeWorkspace && (
+        <EditTransferModal
+          transfer={editingTransfer}
+          workspaceId={activeWorkspace.id}
+          accounts={accounts}
+          onClose={() => setEditingTransfer(null)}
         />
       )}
       {showImport && activeWorkspace && (
