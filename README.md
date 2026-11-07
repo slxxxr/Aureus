@@ -81,7 +81,7 @@ Personal finance service. Track income and expenses across accounts and categori
 
 ## Tech Stack
 
-**Backend** — .NET 8 (C#), Entity Framework Core, PostgreSQL. Auth via JWT. Email via Resend. LLM via Gemini API.
+**Backend** — .NET 10 (C#), Entity Framework Core, PostgreSQL. Auth via JWT. Email via Resend. LLM via Gemini API.
 
 **Frontend** — React + TypeScript (Vite), TanStack Query, Tailwind CSS, react-i18next, Recharts (charts). UI in Russian and English.
 
