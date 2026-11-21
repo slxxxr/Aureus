@@ -121,6 +121,12 @@
   "financialAccounts": {
     "title": "Счета",
     "addAccount": "Добавить счет",
+    "summary": {
+      "title": "Общий баланс",
+      "loading": "Считаем баланс…",
+      "unavailable": "Курс временно недоступен.",
+      "rateDate": "По курсу ЦБ на {{date}}"
+    },
     "reorderHandle": "Переместить счёт «{{name}}»",
     "reorderInstructions": "Нажмите пробел, чтобы взять плитку. Переместите её стрелками и нажмите пробел, чтобы отпустить. Нажмите Escape, чтобы отменить.",
     "reorderStarted": "Вы взяли счёт «{{name}}».",

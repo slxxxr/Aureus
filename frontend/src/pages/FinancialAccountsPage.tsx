@@ -24,6 +24,7 @@ import {CSS} from "@dnd-kit/utilities";
 import {GripVertical, Pencil, Plus} from "lucide-react";
 import {cn} from "@/lib/utils";
 import {useWorkspace} from "@/features/workspaces/WorkspaceContext";
+import {AccountBalanceSummary} from "@/features/financial-accounts/AccountBalanceSummary";
 import {
     createFinancialAccount,
     deleteFinancialAccount,
@@ -459,7 +460,7 @@ export function FinancialAccountsPage() {
             reorderFinancialAccounts(workspaceId, payload),
         onMutate: async ({workspaceId, accountIds: nextIds, expectedAccountIds}) => {
             const queryKey = ["financial-accounts", workspaceId];
-            await queryClient.cancelQueries({queryKey});
+            await queryClient.cancelQueries({queryKey, exact: true});
             const currentAccounts = queryClient.getQueryData<FinancialAccount[]>(queryKey);
             if (currentAccounts?.length !== expectedAccountIds.length ||
                 !currentAccounts.every((account, index) => account.id === expectedAccountIds[index])) {
@@ -481,7 +482,7 @@ export function FinancialAccountsPage() {
             }
         },
         onSettled: (_data, _error, {workspaceId}) =>
-            queryClient.invalidateQueries({queryKey: ["financial-accounts", workspaceId]}),
+            queryClient.invalidateQueries({queryKey: ["financial-accounts", workspaceId], exact: true}),
     });
 
     const handleDragEnd = ({active, over}: DragEndEvent) => {
@@ -502,9 +503,12 @@ export function FinancialAccountsPage() {
 
     return (
         <div>
-            <div className="mb-3 flex justify-end pt-0 md:pt-9">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pt-0 md:pt-9">
+                {activeWorkspace && <AccountBalanceSummary workspaceId={activeWorkspace.id}/>}
+
                 {canManage && (
-                    <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)} className="gap-1.5">
+                    <Button size="sm" variant="ghost" onClick={() => setShowCreate(true)}
+                            className="ml-auto shrink-0 gap-1.5">
                         <Plus className="h-3.5 w-3.5" aria-hidden="true"/>
                         {t("financialAccounts.addAccount")}
                     </Button>

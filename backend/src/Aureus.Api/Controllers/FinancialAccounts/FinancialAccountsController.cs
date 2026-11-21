@@ -4,6 +4,7 @@ using Aureus.Domain.Workspaces;
 using Aureus.UseCases.FinancialAccounts.CreateFinancialAccount;
 using Aureus.UseCases.FinancialAccounts.DeleteFinancialAccount;
 using Aureus.UseCases.FinancialAccounts.GetFinancialAccounts;
+using Aureus.UseCases.FinancialAccounts.GetFinancialAccountsSummary;
 using Aureus.UseCases.FinancialAccounts.ReorderFinancialAccounts;
 using Aureus.UseCases.FinancialAccounts.UpdateFinancialAccount;
 using AutoMapper;
@@ -23,6 +24,20 @@ public sealed class FinancialAccountsController(ISender sender, IMapper mapper) 
         var accounts = await sender.Send(new GetFinancialAccountsQuery(workspaceId), cancellationToken);
 
         return Ok(mapper.Map<IReadOnlyList<FinancialAccountResponse>>(accounts));
+    }
+
+    [HttpGet("summary")]
+    [RequireWorkspaceRole(WorkspaceRole.Member)]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [ProducesResponseType(typeof(FinancialAccountsSummary), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status503ServiceUnavailable)]
+    public async Task<IActionResult> GetSummaryAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        var summary = await sender.Send(new GetFinancialAccountsSummaryQuery(workspaceId), cancellationToken);
+
+        return summary is null
+            ? Problem(title: "ExchangeRatesUnavailable", statusCode: StatusCodes.Status503ServiceUnavailable)
+            : Ok(summary);
     }
 
     [HttpPost]

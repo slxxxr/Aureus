@@ -121,6 +121,12 @@
   "financialAccounts": {
     "title": "Accounts",
     "addAccount": "Add account",
+    "summary": {
+      "title": "Total balance",
+      "loading": "Calculating balance…",
+      "unavailable": "Exchange rates are temporarily unavailable.",
+      "rateDate": "Bank of Russia rates on {{date}}"
+    },
     "reorderHandle": "Move account {{name}}",
     "reorderInstructions": "Press Space to pick up the card. Use the arrow keys to move it, then press Space to drop it. Press Escape to cancel.",
     "reorderStarted": "Picked up {{name}}.",

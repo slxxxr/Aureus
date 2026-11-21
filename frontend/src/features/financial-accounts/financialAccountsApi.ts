@@ -10,6 +10,11 @@ export type FinancialAccount = {
     updatedAt: string | null;
 };
 
+export type FinancialAccountsSummary = {
+    rateDate: string;
+    totals: { currency: string; amountMinor: number }[];
+};
+
 export type CreateFinancialAccountPayload = {
     name: string;
     currency: string;
@@ -28,6 +33,10 @@ export type ReorderFinancialAccountsPayload = {
 
 export function getFinancialAccounts(workspaceId: string): Promise<FinancialAccount[]> {
     return apiFetch<FinancialAccount[]>(`/workspaces/${workspaceId}/financial-accounts`);
+}
+
+export function getFinancialAccountsSummary(workspaceId: string): Promise<FinancialAccountsSummary> {
+    return apiFetch<FinancialAccountsSummary>(`/workspaces/${workspaceId}/financial-accounts/summary`);
 }
 
 export function reorderFinancialAccounts(
