@@ -1,8 +1,7 @@
-using Aureus.Postgres.Implementations;
 using Aureus.Domain.Categories;
 using Aureus.Domain.Transactions;
 using Aureus.IntegrationTests.Common;
-
+using Aureus.Postgres.Implementations;
 
 namespace Aureus.IntegrationTests.Categories;
 
@@ -242,15 +241,17 @@ public sealed class CategoryRepositoryTests(PostgresFixture fixture)
         Guid workspaceId,
         string name,
         TransactionType type,
-        DateTimeOffset? createdAt = null) =>
-        new()
+        DateTimeOffset? createdAt = null)
+    {
+        return new Category
         {
             Id = Guid.NewGuid(),
             WorkspaceId = workspaceId,
             Name = name,
             Type = type,
-            CreatedAt = createdAt ?? DateTimeOffset.UtcNow,
+            CreatedAt = createdAt ?? DateTimeOffset.UtcNow
         };
+    }
 
     private async Task<Guid> AddCategoryAsync(
         Guid workspaceId,

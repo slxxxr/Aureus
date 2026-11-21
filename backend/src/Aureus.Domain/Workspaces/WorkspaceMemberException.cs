@@ -16,6 +16,6 @@ public sealed class WorkspaceMemberException(WorkspaceMemberErrorCode code, stri
         WorkspaceMemberErrorCode.CannotLeaveAsOwner => ErrorType.Conflict,
         WorkspaceMemberErrorCode.CannotTargetSelf => ErrorType.Validation,
         WorkspaceMemberErrorCode.CannotChangeOwnerRole => ErrorType.Conflict,
-        _ => ErrorType.Validation,
+        _ => ErrorType.Validation
     };
 }

@@ -12,11 +12,9 @@ public sealed class DeleteFinancialAccountHandler(IFinancialAccountRepository re
         var account = await repository.FindByIdAsync(command.AccountId, command.WorkspaceId, cancellationToken);
 
         if (account is null)
-        {
             throw new FinancialAccountException(
                 FinancialAccountErrorCode.NotFound,
                 $"Financial account {command.AccountId} not found.");
-        }
 
         await repository.DeleteAsync(account, cancellationToken);
     }

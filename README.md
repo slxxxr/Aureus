@@ -36,15 +36,22 @@ Personal finance service. Track income and expenses across accounts and categori
 ### What's done
 
 - **Auth** — registration with email verification (3-step: email → OTP code → password) and login with JWT
-- **Workspaces** — independent spaces for different finances (personal, work, family); invite members by email, three roles (Owner / Manager / Member), manage members, transfer ownership; notifications bell for incoming invitations
+- **Workspaces** — independent spaces for different finances (personal, work, family); invite members by email, three
+  roles (Owner / Manager / Member), manage members, transfer ownership; notifications bell for incoming invitations
 - **Financial accounts** — multi-currency accounts with running balance
 - **Categories** — income and expense categories
-- **Transactions** — list grouped by date with daily net; filter by account and type; export to CSV (UTF-8 BOM, formula injection protection, respects active filters); import from CSV with pre-import preview and per-row error reporting (Manager+)
-- **Dashboard analytics** — three-tab view navigated from the sidebar; filter by period, accounts, and categories; per-currency view throughout
-  - **Overview** — income/expense/net summary cards, income-vs-expense bar chart, breakdowns by account
-  - **Categories** — accordion list with progress bars; expanding a category loads a name-level breakdown rendered as an interactive donut chart
-  - **Dynamics** — per-category small-multiples area charts showing spend over time
-- **Ask AI** — collapsible panel on the dashboard; ask any question about the period in natural language, powered by gemini-3.1-flash-lite; context strategy adapts to transaction volume (full list / category×period matrix / aggregated timeseries)
+- **Transactions** — list grouped by date with daily net; filter by account and type; export to CSV (UTF-8 BOM, formula
+  injection protection, respects active filters); import from CSV with pre-import preview and per-row error reporting (
+  Manager+)
+- **Dashboard analytics** — three-tab view navigated from the sidebar; filter by period, accounts, and categories;
+  per-currency view throughout
+    - **Overview** — income/expense/net summary cards, income-vs-expense bar chart, breakdowns by account
+    - **Categories** — accordion list with progress bars; expanding a category loads a name-level breakdown rendered as
+      an interactive donut chart
+    - **Dynamics** — per-category small-multiples area charts showing spend over time
+- **Ask AI** — collapsible panel on the dashboard; ask any question about the period in natural language, powered by
+  gemini-3.1-flash-lite; context strategy adapts to transaction volume (full list / category×period matrix / aggregated
+  timeseries)
 
 ### What's next
 
@@ -62,15 +69,23 @@ Personal finance service. Track income and expenses across accounts and categori
 ### Что сделано
 
 - **Авторизация** — регистрация с подтверждением email (3 шага: email → OTP-код → пароль) и вход по JWT
-- **Рабочие области** — независимые пространства под разные финансы (личные, рабочие, семейные); приглашение участников по email, три роли (Owner / Manager / Member), управление составом, передача владения; колокольчик уведомлений о входящих приглашениях
+- **Рабочие области** — независимые пространства под разные финансы (личные, рабочие, семейные); приглашение участников
+  по email, три роли (Owner / Manager / Member), управление составом, передача владения; колокольчик уведомлений о
+  входящих приглашениях
 - **Счета** — мультивалютные счета с актуальным балансом
 - **Категории** — категории доходов и расходов
-- **Транзакции** — список, сгруппированный по датам с дневным нетто; фильтры по счёту и типу; экспорт в CSV (UTF-8 BOM, защита от formula injection, учитывает активные фильтры); импорт из CSV с предпросмотром и построчными ошибками (только Manager+)
-- **Аналитический дашборд** — три вкладки с навигацией через сайдбар; фильтры по периоду, счетам и категориям; мультивалютный вид
-  - **Обзор** — карточки сводки доходов/расходов/нетто, бар-чарт доходов и расходов, разбивки по счетам
-  - **Категории** — аккордеон с прогресс-барами; при открытии категории загружается разбивка по названиям транзакций в виде интерактивной donut-диаграммы
-  - **Динамика** — мини-графики по каждой категории (small multiples), показывают изменение расходов во времени
-- **Спросить ИИ** — коллапсируемая панель на дашборде; задать вопрос о финансах на естественном языке, работает на gemini-3.1-flash-lite; стратегия контекста адаптируется к объёму транзакций (полный список / матрица категория × период / агрегированный таймсериес)
+- **Транзакции** — список, сгруппированный по датам с дневным нетто; фильтры по счёту и типу; экспорт в CSV (UTF-8 BOM,
+  защита от formula injection, учитывает активные фильтры); импорт из CSV с предпросмотром и построчными ошибками (
+  только Manager+)
+- **Аналитический дашборд** — три вкладки с навигацией через сайдбар; фильтры по периоду, счетам и категориям;
+  мультивалютный вид
+    - **Обзор** — карточки сводки доходов/расходов/нетто, бар-чарт доходов и расходов, разбивки по счетам
+    - **Категории** — аккордеон с прогресс-барами; при открытии категории загружается разбивка по названиям транзакций в
+      виде интерактивной donut-диаграммы
+    - **Динамика** — мини-графики по каждой категории (small multiples), показывают изменение расходов во времени
+- **Спросить ИИ** — коллапсируемая панель на дашборде; задать вопрос о финансах на естественном языке, работает на
+  gemini-3.1-flash-lite; стратегия контекста адаптируется к объёму транзакций (полный список / матрица категория ×
+  период / агрегированный таймсериес)
 
 ### Что дальше
 
@@ -83,7 +98,8 @@ Personal finance service. Track income and expenses across accounts and categori
 
 **Backend** — .NET 10 (C#), Entity Framework Core, PostgreSQL. Auth via JWT. Email via Resend. LLM via Gemini API.
 
-**Frontend** — React + TypeScript (Vite), TanStack Query, Tailwind CSS, react-i18next, Recharts (charts). UI in Russian and English.
+**Frontend** — React + TypeScript (Vite), TanStack Query, Tailwind CSS, react-i18next, Recharts (charts). UI in Russian
+and English.
 
 **Infrastructure** — Docker Compose, Caddy, Cloudflare Tunnel. Database backups in Backblaze B2.
 

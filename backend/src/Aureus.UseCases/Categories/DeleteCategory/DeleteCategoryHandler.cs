@@ -12,11 +12,9 @@ public sealed class DeleteCategoryHandler(ICategoryRepository repository)
         var category = await repository.FindByIdAsync(command.CategoryId, command.WorkspaceId, cancellationToken);
 
         if (category is null)
-        {
             throw new CategoryException(
                 CategoryErrorCode.NotFound,
                 $"Category {command.CategoryId} not found.");
-        }
 
         await repository.DeleteAsync(category, cancellationToken);
     }

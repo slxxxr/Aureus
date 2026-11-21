@@ -85,6 +85,9 @@ public sealed class AnalyticsController(ISender sender, IMapper mapper) : ApiCon
         return Ok(new InsightsResponse(answer));
     }
 
-    private static AnalyticsFilter ToFilter(Guid workspaceId, AnalyticsFilterRequest request) =>
-        new(workspaceId, request.From, request.To, request.AccountIds, request.Type, request.CategoryIds);
+    private static AnalyticsFilter ToFilter(Guid workspaceId, AnalyticsFilterRequest request)
+    {
+        return new AnalyticsFilter(workspaceId, request.From, request.To, request.AccountIds, request.Type,
+            request.CategoryIds);
+    }
 }

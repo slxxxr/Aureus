@@ -21,10 +21,8 @@ public sealed class VerifyEmailCodeHandler(
         var record = await codeRepository.FindAsync(email, Purpose, cancellationToken);
 
         if (record is null)
-        {
             throw new EmailVerificationException(EmailVerificationErrorCode.CodeNotFound,
                 "No verification code found. Please start registration again.");
-        }
 
         if (record.ExpiresAt <= DateTimeOffset.UtcNow)
         {

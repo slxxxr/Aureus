@@ -1,12 +1,9 @@
-using Aureus.Postgres.Implementations;
 using Aureus.Domain.Categories;
 using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transactions;
 using Aureus.Persistence;
 using Aureus.Persistence.Entities;
-
-
-
+using Aureus.Postgres.Implementations;
 using AutoMapper;
 
 namespace Aureus.IntegrationTests.Common;
@@ -21,7 +18,7 @@ public static class TestData
             Id = Guid.NewGuid(),
             Email = $"{Guid.NewGuid():N}@test.local",
             PasswordHash = "hash",
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
         db.Users.Add(user);
         await db.SaveChangesAsync();
@@ -36,7 +33,7 @@ public static class TestData
         {
             Id = Guid.NewGuid(),
             Name = $"ws-{Guid.NewGuid():N}",
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
         db.Workspaces.Add(workspace);
         await db.SaveChangesAsync();
@@ -53,7 +50,7 @@ public static class TestData
             Currency = "RUB",
             InitialBalanceMinor = initialBalance,
             CurrentBalanceMinor = initialBalance,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
         await using var db = fixture.CreateDbContext();
         await new FinancialAccountRepository(db, fixture.Mapper).AddAsync(account, CancellationToken.None);
@@ -71,7 +68,7 @@ public static class TestData
             WorkspaceId = workspaceId,
             Name = $"cat-{Guid.NewGuid():N}",
             Type = type,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
         await using var db = fixture.CreateDbContext();
         await new CategoryRepository(db, fixture.Mapper).AddAsync(category, CancellationToken.None);
@@ -102,7 +99,7 @@ public static class TestData
             AmountMinor = amountMinor,
             Currency = currency,
             OccurredAt = occurredAt ?? DateOnly.FromDateTime(DateTime.UtcNow),
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
         var delta = type == TransactionType.Income ? amountMinor : -amountMinor;
         await using var db = fixture.CreateDbContext();
@@ -111,14 +108,22 @@ public static class TestData
     }
 
     public static async Task<FinancialAccount?> FindAccountAsync(
-        AureusDbContext db, IMapper mapper, Guid accountId, Guid workspaceId) =>
-        await new FinancialAccountRepository(db, mapper).FindByIdAsync(accountId, workspaceId, CancellationToken.None);
+        AureusDbContext db, IMapper mapper, Guid accountId, Guid workspaceId)
+    {
+        return await new FinancialAccountRepository(db, mapper).FindByIdAsync(accountId, workspaceId,
+            CancellationToken.None);
+    }
 
     public static async Task<Category?> FindCategoryAsync(
-        AureusDbContext db, IMapper mapper, Guid categoryId, Guid workspaceId) =>
-        await new CategoryRepository(db, mapper).FindByIdAsync(categoryId, workspaceId, CancellationToken.None);
+        AureusDbContext db, IMapper mapper, Guid categoryId, Guid workspaceId)
+    {
+        return await new CategoryRepository(db, mapper).FindByIdAsync(categoryId, workspaceId, CancellationToken.None);
+    }
 
     public static async Task<Transaction?> FindTransactionAsync(
-        AureusDbContext db, IMapper mapper, Guid transactionId, Guid workspaceId) =>
-        await new TransactionRepository(db, mapper).FindByIdAsync(transactionId, workspaceId, CancellationToken.None);
+        AureusDbContext db, IMapper mapper, Guid transactionId, Guid workspaceId)
+    {
+        return await new TransactionRepository(db, mapper).FindByIdAsync(transactionId, workspaceId,
+            CancellationToken.None);
+    }
 }

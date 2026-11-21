@@ -25,7 +25,8 @@ public sealed class WorkspacesController(ISender sender, IMapper mapper) : ApiCo
 
     [HttpPost]
     [ProducesResponseType(typeof(WorkspaceResponse), StatusCodes.Status201Created)]
-    public async Task<IActionResult> CreateAsync([FromBody] CreateWorkspaceRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateAsync([FromBody] CreateWorkspaceRequest request,
+        CancellationToken cancellationToken)
     {
         var workspace = await sender.Send(new CreateWorkspaceCommand(CurrentUserId, request.Name), cancellationToken);
 

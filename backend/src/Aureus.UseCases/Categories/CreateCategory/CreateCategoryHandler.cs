@@ -15,7 +15,7 @@ public sealed class CreateCategoryHandler(ICategoryRepository repository)
             WorkspaceId = command.WorkspaceId,
             Name = command.Name.Trim(),
             Type = command.Type,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
         await repository.AddAsync(category, cancellationToken);

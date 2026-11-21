@@ -7,5 +7,5 @@ public enum WorkspaceMemberErrorCode
     InsufficientRole = 3,
     CannotLeaveAsOwner = 4,
     CannotTargetSelf = 5,
-    CannotChangeOwnerRole = 6,
+    CannotChangeOwnerRole = 6
 }

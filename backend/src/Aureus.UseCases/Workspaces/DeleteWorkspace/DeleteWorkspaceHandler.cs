@@ -11,10 +11,7 @@ public sealed class DeleteWorkspaceHandler(IWorkspaceRepository workspaceReposit
     {
         var workspace = await workspaceRepository.FindByIdAsync(command.WorkspaceId, cancellationToken);
 
-        if (workspace is null)
-        {
-            throw new WorkspaceException(WorkspaceErrorCode.NotFound, "Workspace not found.");
-        }
+        if (workspace is null) throw new WorkspaceException(WorkspaceErrorCode.NotFound, "Workspace not found.");
 
         await workspaceRepository.DeleteAsync(workspace, cancellationToken);
     }

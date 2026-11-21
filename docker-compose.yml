@@ -11,7 +11,7 @@ services:
     volumes:
       - aureus_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U aureus_user -d aureus_db"]
+      test: [ "CMD-SHELL", "pg_isready -U aureus_user -d aureus_db" ]
       interval: 10s
       timeout: 5s
       retries: 5

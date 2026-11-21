@@ -27,9 +27,9 @@ public sealed class InviteMemberHandler(
 
         // Resolved up front so a missing workspace/inviter fails before the invitation is persisted.
         var workspace = await workspaceRepository.FindByIdAsync(command.WorkspaceId, cancellationToken)
-            ?? throw new InvalidOperationException($"Workspace {command.WorkspaceId} not found.");
+                        ?? throw new InvalidOperationException($"Workspace {command.WorkspaceId} not found.");
         var inviter = await userRepository.FindByIdAsync(command.InvitedByUserId, cancellationToken)
-            ?? throw new InvalidOperationException($"Inviting user {command.InvitedByUserId} not found.");
+                      ?? throw new InvalidOperationException($"Inviting user {command.InvitedByUserId} not found.");
 
         var invitedUser = await userRepository.FindByEmailAsync(email, cancellationToken);
         if (invitedUser is not null)
@@ -38,10 +38,8 @@ public sealed class InviteMemberHandler(
                 command.WorkspaceId, invitedUser.Id, cancellationToken);
 
             if (membership is not null)
-            {
                 throw new WorkspaceInvitationException(
                     WorkspaceInvitationErrorCode.AlreadyMember, "This user is already a member of the workspace.");
-            }
         }
 
         var existing = await invitationRepository.FindPendingAsync(command.WorkspaceId, email, cancellationToken);
@@ -50,15 +48,15 @@ public sealed class InviteMemberHandler(
         // it via resend must go through the same cap check as a brand-new invitation.
         if (existing is null || existing.ExpiresAt <= now)
         {
-            var activeMembers = await workspaceRepository.CountActiveMembersAsync(command.WorkspaceId, cancellationToken);
-            var activeInvitations = await invitationRepository.CountActiveAsync(command.WorkspaceId, now, cancellationToken);
+            var activeMembers =
+                await workspaceRepository.CountActiveMembersAsync(command.WorkspaceId, cancellationToken);
+            var activeInvitations =
+                await invitationRepository.CountActiveAsync(command.WorkspaceId, now, cancellationToken);
 
             if (activeMembers + activeInvitations >= WorkspaceLimits.MaxMembers)
-            {
                 throw new WorkspaceInvitationException(
                     WorkspaceInvitationErrorCode.WorkspaceFull,
                     $"Workspace has reached the maximum of {WorkspaceLimits.MaxMembers} members.");
-            }
         }
 
         var dateToday = DateOnly.FromDateTime(now.UtcDateTime);
@@ -66,11 +64,9 @@ public sealed class InviteMemberHandler(
             command.WorkspaceId, DailyUsageFeature.WorkspaceInvitations, dateToday, cancellationToken);
 
         if (usageCount >= DailyInviteLimit)
-        {
             throw new WorkspaceInvitationException(
                 WorkspaceInvitationErrorCode.DailyQuotaExceeded,
                 $"Daily invitation limit of {DailyInviteLimit} requests per workspace exceeded.");
-        }
 
         var invitation = new WorkspaceInvitation
         {
@@ -79,15 +75,16 @@ public sealed class InviteMemberHandler(
             Email = email,
             InvitedByUserId = command.InvitedByUserId,
             ExpiresAt = now.Add(InvitationLifetime),
-            CreatedAt = existing?.CreatedAt ?? now,
+            CreatedAt = existing?.CreatedAt ?? now
         };
 
         await invitationRepository.UpsertAsync(invitation, cancellationToken);
 
         var template = InviteEmailTemplates.Build(
-            language, workspace.Name, inviter.Name, invitedUser is not null, appOptions.Value.BaseUrl, invitation.ExpiresAt);
+            language, workspace.Name, inviter.Name, invitedUser is not null, appOptions.Value.BaseUrl,
+            invitation.ExpiresAt);
 
-        await emailSender.SendAsync(new EmailMessage(To: email, Subject: template.Subject, HtmlBody: template.HtmlBody), cancellationToken);
+        await emailSender.SendAsync(new EmailMessage(email, template.Subject, template.HtmlBody), cancellationToken);
 
         // Counted only once the email is confirmed sent, so a transient send failure doesn't burn quota.
         await dailyUsageRepository.IncrementAndGetAsync(
@@ -96,6 +93,8 @@ public sealed class InviteMemberHandler(
         return invitation;
     }
 
-    private static string NormalizeLanguage(string? language) =>
-        (language ?? string.Empty).Trim().ToLowerInvariant() == "en" ? "en" : "ru";
+    private static string NormalizeLanguage(string? language)
+    {
+        return (language ?? string.Empty).Trim().ToLowerInvariant() == "en" ? "en" : "ru";
+    }
 }

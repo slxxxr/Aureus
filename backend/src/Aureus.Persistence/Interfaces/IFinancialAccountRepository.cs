@@ -6,6 +6,12 @@ public interface IFinancialAccountRepository
 {
     Task<IReadOnlyList<FinancialAccount>> GetByWorkspaceIdAsync(Guid workspaceId, CancellationToken cancellationToken);
 
+    Task ReorderAsync(
+        Guid workspaceId,
+        IReadOnlyList<Guid> accountIds,
+        IReadOnlyList<Guid> expectedAccountIds,
+        CancellationToken cancellationToken);
+
     Task<FinancialAccount?> FindByIdAsync(Guid id, Guid workspaceId, CancellationToken cancellationToken);
 
     Task AddAsync(FinancialAccount account, CancellationToken cancellationToken);

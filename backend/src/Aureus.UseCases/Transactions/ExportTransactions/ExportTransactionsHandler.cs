@@ -19,15 +19,16 @@ public sealed class ExportTransactionsHandler(
             ? []
             : await transferRepository.GetByFilterAsync(query.Filter, cancellationToken);
         var accounts = await accountRepository.GetByWorkspaceIdAsync(query.Filter.WorkspaceId, cancellationToken);
-        var categories = await categoryRepository.GetAllIncludingDeletedAsync(query.Filter.WorkspaceId, cancellationToken);
+        var categories =
+            await categoryRepository.GetAllIncludingDeletedAsync(query.Filter.WorkspaceId, cancellationToken);
 
         var accountNames = accounts.ToDictionary(a => a.Id, a => a.Name);
         var categoryNames = categories.ToDictionary(c => c.Id, c => c.Name);
 
         var transactionRecords = transactions.Select(t => new
         {
-            OccurredAt = t.OccurredAt,
-            CreatedAt = t.CreatedAt,
+            t.OccurredAt,
+            t.CreatedAt,
             Record = new TransactionCsvRecord
             {
                 Date = t.OccurredAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
@@ -37,14 +38,14 @@ public sealed class ExportTransactionsHandler(
                 Account = accountNames.GetValueOrDefault(t.FinancialAccountId, t.FinancialAccountId.ToString()),
                 Category = categoryNames.GetValueOrDefault(t.CategoryId, t.CategoryId.ToString()),
                 Name = EscapeFormula(t.Name),
-                Note = t.Note is null ? string.Empty : EscapeFormula(t.Note),
-            },
+                Note = t.Note is null ? string.Empty : EscapeFormula(t.Note)
+            }
         });
 
         var transferRecords = transfers.Select(tr => new
         {
-            OccurredAt = tr.OccurredAt,
-            CreatedAt = tr.CreatedAt,
+            tr.OccurredAt,
+            tr.CreatedAt,
             Record = new TransactionCsvRecord
             {
                 Date = tr.OccurredAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
@@ -53,8 +54,8 @@ public sealed class ExportTransactionsHandler(
                 Currency = tr.Currency,
                 Account = accountNames.GetValueOrDefault(tr.FromAccountId, tr.FromAccountId.ToString()),
                 ToAccount = accountNames.GetValueOrDefault(tr.ToAccountId, tr.ToAccountId.ToString()),
-                Note = tr.Note is null ? string.Empty : EscapeFormula(tr.Note),
-            },
+                Note = tr.Note is null ? string.Empty : EscapeFormula(tr.Note)
+            }
         });
 
         var records = transactionRecords.Concat(transferRecords)
@@ -63,7 +64,7 @@ public sealed class ExportTransactionsHandler(
             .Select(r => r.Record);
 
         using var memoryStream = new MemoryStream();
-        await using var writer = new StreamWriter(memoryStream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
+        await using var writer = new StreamWriter(memoryStream, new UTF8Encoding(true));
         await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
         csv.Context.RegisterClassMap<TransactionCsvRecordMap>();
@@ -76,10 +77,7 @@ public sealed class ExportTransactionsHandler(
     // Prefix fields that start with formula-trigger characters so spreadsheet apps don't execute them.
     private static string EscapeFormula(string value)
     {
-        if (value.Length > 0 && value[0] is '=' or '+' or '-' or '@')
-        {
-            return " " + value;
-        }
+        if (value.Length > 0 && value[0] is '=' or '+' or '-' or '@') return " " + value;
 
         return value;
     }

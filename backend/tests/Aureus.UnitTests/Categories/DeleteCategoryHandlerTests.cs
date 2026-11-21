@@ -51,7 +51,7 @@ public sealed class DeleteCategoryHandlerTests
             WorkspaceId = Guid.NewGuid(),
             Name = "Groceries",
             Type = TransactionType.Expense,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
         var repository = new CategoryRepositoryMock()
             .WithCategory(category.Id, category.WorkspaceId, category)

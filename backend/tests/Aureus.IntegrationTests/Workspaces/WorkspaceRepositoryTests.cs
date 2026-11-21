@@ -1,8 +1,7 @@
-using Aureus.Postgres.Implementations;
 using Aureus.Domain.Workspaces;
 using Aureus.IntegrationTests.Common;
 using Aureus.Persistence.Entities;
-
+using Aureus.Postgres.Implementations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aureus.IntegrationTests.Workspaces;
@@ -46,7 +45,8 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
 
         // Act
         await using var db = fixture.CreateDbContext();
-        var stored = await new WorkspaceRepository(db, fixture.Mapper).FindByIdAsync(workspaceId, CancellationToken.None);
+        var stored =
+            await new WorkspaceRepository(db, fixture.Mapper).FindByIdAsync(workspaceId, CancellationToken.None);
 
         // Assert
         Assert.Null(stored);
@@ -63,7 +63,8 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
 
         // Act
         await using var db = fixture.CreateDbContext();
-        var summaries = await new WorkspaceRepository(db, fixture.Mapper).GetByUserIdAsync(ownerId, CancellationToken.None);
+        var summaries =
+            await new WorkspaceRepository(db, fixture.Mapper).GetByUserIdAsync(ownerId, CancellationToken.None);
 
         // Assert
         Assert.Single(summaries);
@@ -337,7 +338,7 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
         {
             Id = Guid.NewGuid(),
             Name = name,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
         var member = new WorkspaceMember
@@ -346,7 +347,7 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
             WorkspaceId = workspace.Id,
             UserId = ownerId,
             Role = WorkspaceRole.Owner,
-            JoinedAt = workspace.CreatedAt,
+            JoinedAt = workspace.CreatedAt
         };
 
         return (workspace, member);
@@ -399,7 +400,7 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
             Email = $"{Guid.NewGuid():N}@test.local",
             InvitedByUserId = invitedByUserId,
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
         await using var db = fixture.CreateDbContext();
@@ -417,7 +418,7 @@ public sealed class WorkspaceRepositoryTests(PostgresFixture fixture)
             WorkspaceId = workspaceId,
             UserId = userId,
             Role = nameof(WorkspaceRole.Member),
-            JoinedAt = DateTimeOffset.UtcNow,
+            JoinedAt = DateTimeOffset.UtcNow
         });
         await db.SaveChangesAsync();
     }

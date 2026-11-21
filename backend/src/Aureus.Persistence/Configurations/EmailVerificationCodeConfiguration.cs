@@ -8,7 +8,7 @@ public sealed class EmailVerificationCodeConfiguration : IEntityTypeConfiguratio
 {
     private const int MaxEmailLength = 254;
     private const int MaxPurposeLength = 32;
-    private const int MaxCodeHashLength = 64;  // SHA-256 hex
+    private const int MaxCodeHashLength = 64; // SHA-256 hex
 
     public void Configure(EntityTypeBuilder<EmailVerificationCodeDb> builder)
     {

@@ -18,21 +18,17 @@ public sealed class CreateTransactionHandler(
             command.FinancialAccountId, command.WorkspaceId, cancellationToken);
 
         if (account is null)
-        {
             throw new FinancialAccountException(
                 FinancialAccountErrorCode.NotFound,
                 $"Financial account {command.FinancialAccountId} not found.");
-        }
 
         var category = await categoryRepository.FindByIdAsync(
             command.CategoryId, command.WorkspaceId, cancellationToken);
 
         if (category is null)
-        {
             throw new CategoryException(
                 CategoryErrorCode.NotFound,
                 $"Category {command.CategoryId} not found.");
-        }
 
         var balanceDelta = command.Type == TransactionType.Income ? command.AmountMinor : -command.AmountMinor;
 
@@ -49,7 +45,7 @@ public sealed class CreateTransactionHandler(
             Currency = account.Currency,
             OccurredAt = command.OccurredAt,
             Note = command.Note?.Trim(),
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
         await transactionRepository.AddAsync(transaction, balanceDelta, cancellationToken);

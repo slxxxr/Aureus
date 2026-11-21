@@ -10,5 +10,5 @@ public enum EmailVerificationErrorCode
     RateLimited = 6,
     RegistrationTokenInvalid = 7,
     InvalidPassword = 8,
-    EmailAlreadyConfirmed = 9,
+    EmailAlreadyConfirmed = 9
 }

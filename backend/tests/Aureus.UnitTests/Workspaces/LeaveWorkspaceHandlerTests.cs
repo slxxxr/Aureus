@@ -6,8 +6,10 @@ namespace Aureus.UnitTests.Workspaces;
 
 public sealed class LeaveWorkspaceHandlerTests
 {
-    private static LeaveWorkspaceHandler BuildHandler(WorkspaceRepositoryMock workspaceRepo) =>
-        new(workspaceRepo.Object);
+    private static LeaveWorkspaceHandler BuildHandler(WorkspaceRepositoryMock workspaceRepo)
+    {
+        return new LeaveWorkspaceHandler(workspaceRepo.Object);
+    }
 
     [Fact]
     public async Task Handle_MemberLeaves_SoftDeletesMembership()

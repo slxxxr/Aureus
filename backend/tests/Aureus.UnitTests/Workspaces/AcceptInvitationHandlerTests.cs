@@ -8,15 +8,18 @@ namespace Aureus.UnitTests.Workspaces;
 public sealed class AcceptInvitationHandlerTests
 {
     private static WorkspaceInvitation DefaultInvitation(
-        Guid id, Guid workspaceId, string email = "invitee@test.local", DateTimeOffset? expiresAt = null) => new()
+        Guid id, Guid workspaceId, string email = "invitee@test.local", DateTimeOffset? expiresAt = null)
     {
-        Id = id,
-        WorkspaceId = workspaceId,
-        Email = email,
-        InvitedByUserId = Guid.NewGuid(),
-        ExpiresAt = expiresAt ?? DateTimeOffset.UtcNow.AddDays(7),
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new WorkspaceInvitation
+        {
+            Id = id,
+            WorkspaceId = workspaceId,
+            Email = email,
+            InvitedByUserId = Guid.NewGuid(),
+            ExpiresAt = expiresAt ?? DateTimeOffset.UtcNow.AddDays(7),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     [Fact]
     public async Task Handle_InvitationNotFound_ThrowsNotFound()
@@ -61,10 +64,11 @@ public sealed class AcceptInvitationHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var invitationId = Guid.NewGuid();
-        var invitation = DefaultInvitation(invitationId, Guid.NewGuid(), email: "invitee@test.local");
+        var invitation = DefaultInvitation(invitationId, Guid.NewGuid(), "invitee@test.local");
         var user = new User { Id = userId, Email = "someone-else@test.local", CreatedAt = DateTimeOffset.UtcNow };
 
-        var invitationRepo = new WorkspaceInvitationRepositoryMock().WithInvitation(invitationId, invitation).CapturingAccept();
+        var invitationRepo = new WorkspaceInvitationRepositoryMock().WithInvitation(invitationId, invitation)
+            .CapturingAccept();
         var userRepo = new UserRepositoryMock().WithUserById(userId, user);
         var workspaceRepo = new WorkspaceRepositoryMock();
         var handler = new AcceptInvitationHandler(invitationRepo.Object, workspaceRepo.Object, userRepo.Object);
@@ -85,12 +89,14 @@ public sealed class AcceptInvitationHandlerTests
         var userId = Guid.NewGuid();
         var workspaceId = Guid.NewGuid();
         var invitationId = Guid.NewGuid();
-        var invitation = DefaultInvitation(invitationId, workspaceId, email: "invitee@test.local");
+        var invitation = DefaultInvitation(invitationId, workspaceId, "invitee@test.local");
         var user = new User { Id = userId, Email = "invitee@test.local", CreatedAt = DateTimeOffset.UtcNow };
 
-        var invitationRepo = new WorkspaceInvitationRepositoryMock().WithInvitation(invitationId, invitation).CapturingAccept();
+        var invitationRepo = new WorkspaceInvitationRepositoryMock().WithInvitation(invitationId, invitation)
+            .CapturingAccept();
         var userRepo = new UserRepositoryMock().WithUserById(userId, user);
-        var workspaceRepo = new WorkspaceRepositoryMock().WithActiveMemberCount(workspaceId, WorkspaceLimits.MaxMembers);
+        var workspaceRepo =
+            new WorkspaceRepositoryMock().WithActiveMemberCount(workspaceId, WorkspaceLimits.MaxMembers);
         var handler = new AcceptInvitationHandler(invitationRepo.Object, workspaceRepo.Object, userRepo.Object);
 
         // Act
@@ -109,10 +115,11 @@ public sealed class AcceptInvitationHandlerTests
         var userId = Guid.NewGuid();
         var workspaceId = Guid.NewGuid();
         var invitationId = Guid.NewGuid();
-        var invitation = DefaultInvitation(invitationId, workspaceId, email: "invitee@test.local");
+        var invitation = DefaultInvitation(invitationId, workspaceId, "invitee@test.local");
         var user = new User { Id = userId, Email = "invitee@test.local", CreatedAt = DateTimeOffset.UtcNow };
 
-        var invitationRepo = new WorkspaceInvitationRepositoryMock().WithInvitation(invitationId, invitation).CapturingAccept();
+        var invitationRepo = new WorkspaceInvitationRepositoryMock().WithInvitation(invitationId, invitation)
+            .CapturingAccept();
         var userRepo = new UserRepositoryMock().WithUserById(userId, user);
         var workspaceRepo = new WorkspaceRepositoryMock().WithActiveMemberCount(workspaceId, 1);
         var handler = new AcceptInvitationHandler(invitationRepo.Object, workspaceRepo.Object, userRepo.Object);

@@ -32,7 +32,7 @@ internal static class TransactionCsvParser
             PrepareHeaderForMatch = args => args.Header.ToLowerInvariant().Trim(),
             MissingFieldFound = null,
             HeaderValidated = null,
-            BadDataFound = null,
+            BadDataFound = null
         };
 
         using var stream = new MemoryStream(content);
@@ -40,7 +40,7 @@ internal static class TransactionCsvParser
         using var csv = new CsvReader(reader, config);
 
         var results = new List<ParsedRow>();
-        int rowNumber = 0;
+        var rowNumber = 0;
 
         foreach (var row in csv.GetRecords<TransactionImportRow>())
         {
@@ -60,49 +60,33 @@ internal static class TransactionCsvParser
         Dictionary<string, FinancialAccount> accountByName,
         Dictionary<(string, TransactionType), Category> categoryByKey)
     {
-        if (!DateOnly.TryParseExact(row.Date.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-        {
-            return Invalid(rowNumber, row, ImportRowErrorCode.InvalidDate);
-        }
+        if (!DateOnly.TryParseExact(row.Date.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                out var date)) return Invalid(rowNumber, row, ImportRowErrorCode.InvalidDate);
 
-        if (!Enum.TryParse<TransactionType>(row.Type.Trim(), ignoreCase: true, out var type))
-        {
+        if (!Enum.TryParse<TransactionType>(row.Type.Trim(), true, out var type))
             return Invalid(rowNumber, row, ImportRowErrorCode.InvalidType);
-        }
 
         if (!TryParseAmount(row.Amount, out var amountMinor, out var amountError))
-        {
             return Invalid(rowNumber, row, amountError!);
-        }
 
         var accountName = row.Account.Trim();
         if (string.IsNullOrEmpty(accountName) || !accountByName.TryGetValue(accountName, out var account))
-        {
             return Invalid(rowNumber, row, ImportRowErrorCode.AccountNotFound, accountName);
-        }
 
         var categoryName = row.Category.Trim();
-        if (string.IsNullOrEmpty(categoryName) || !categoryByKey.TryGetValue((categoryName.ToLowerInvariant(), type), out var category))
-        {
+        if (string.IsNullOrEmpty(categoryName) ||
+            !categoryByKey.TryGetValue((categoryName.ToLowerInvariant(), type), out var category))
             return Invalid(rowNumber, row, ImportRowErrorCode.CategoryNotFound, categoryName);
-        }
 
         var name = row.Name.Trim();
-        if (string.IsNullOrEmpty(name))
-        {
-            return Invalid(rowNumber, row, ImportRowErrorCode.NameRequired);
-        }
+        if (string.IsNullOrEmpty(name)) return Invalid(rowNumber, row, ImportRowErrorCode.NameRequired);
 
         if (name.Length > InputLimits.TransactionNameMaxLength)
-        {
             return Invalid(rowNumber, row, ImportRowErrorCode.NameTooLong);
-        }
 
         var note = string.IsNullOrWhiteSpace(row.Note) ? null : row.Note.Trim();
         if (note is not null && note.Length > InputLimits.TransactionNoteMaxLength)
-        {
             return Invalid(rowNumber, row, ImportRowErrorCode.NoteTooLong);
-        }
 
         var valid = new ValidImportRow(date, type, amountMinor, account, category, name, note);
         return new ParsedRow(
@@ -115,43 +99,28 @@ internal static class TransactionCsvParser
         TransactionImportRow row,
         Dictionary<string, FinancialAccount> accountByName)
     {
-        if (!DateOnly.TryParseExact(row.Date.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-        {
-            return Invalid(rowNumber, row, ImportRowErrorCode.InvalidDate);
-        }
+        if (!DateOnly.TryParseExact(row.Date.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None,
+                out var date)) return Invalid(rowNumber, row, ImportRowErrorCode.InvalidDate);
 
         if (!TryParseAmount(row.Amount, out var amountMinor, out var amountError))
-        {
             return Invalid(rowNumber, row, amountError!);
-        }
 
         var fromAccountName = row.Account.Trim();
         if (string.IsNullOrEmpty(fromAccountName) || !accountByName.TryGetValue(fromAccountName, out var fromAccount))
-        {
             return Invalid(rowNumber, row, ImportRowErrorCode.AccountNotFound, fromAccountName);
-        }
 
         var toAccountName = (row.ToAccount ?? string.Empty).Trim();
         if (string.IsNullOrEmpty(toAccountName) || !accountByName.TryGetValue(toAccountName, out var toAccount))
-        {
             return Invalid(rowNumber, row, ImportRowErrorCode.ToAccountNotFound, toAccountName);
-        }
 
-        if (fromAccount.Id == toAccount.Id)
-        {
-            return Invalid(rowNumber, row, ImportRowErrorCode.SameAccount);
-        }
+        if (fromAccount.Id == toAccount.Id) return Invalid(rowNumber, row, ImportRowErrorCode.SameAccount);
 
         if (fromAccount.Currency != toAccount.Currency)
-        {
             return Invalid(rowNumber, row, ImportRowErrorCode.CurrencyMismatch);
-        }
 
         var note = string.IsNullOrWhiteSpace(row.Note) ? null : row.Note.Trim();
         if (note is not null && note.Length > InputLimits.TransactionNoteMaxLength)
-        {
             return Invalid(rowNumber, row, ImportRowErrorCode.NoteTooLong);
-        }
 
         var valid = new ValidTransferImportRow(date, amountMinor, fromAccount, toAccount, note);
         return new ParsedRow(
@@ -162,7 +131,8 @@ internal static class TransactionCsvParser
     private static bool TryParseAmount(string rawAmount, out long amountMinor, out string? errorCode)
     {
         var amountStr = rawAmount.Trim().Replace(',', '.');
-        if (!decimal.TryParse(amountStr, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) || amount <= 0)
+        if (!decimal.TryParse(amountStr, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) ||
+            amount <= 0)
         {
             amountMinor = 0;
             errorCode = ImportRowErrorCode.InvalidAmount;
@@ -180,10 +150,13 @@ internal static class TransactionCsvParser
         return true;
     }
 
-    private static ParsedRow Invalid(int rowNumber, TransactionImportRow row, string errorCode, string? errorSubject = null) =>
-        new(
+    private static ParsedRow Invalid(int rowNumber, TransactionImportRow row, string errorCode,
+        string? errorSubject = null)
+    {
+        return new ParsedRow(
             rowNumber, row.Date, row.Type, row.Amount, row.Account, row.ToAccount ?? string.Empty, row.Category,
             row.Name, row.Note ?? string.Empty, null, null, errorCode, errorSubject);
+    }
 
     private static char DetectDelimiter(byte[] content)
     {

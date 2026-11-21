@@ -17,17 +17,17 @@ internal static class InsightsPromptBuilder
         var sb = new StringBuilder();
 
         sb.Append("""
-            You are a personal finance assistant. Answer the user's question using the financial data provided below.
+                  You are a personal finance assistant. Answer the user's question using the financial data provided below.
 
-            Rules:
-            - Ground every claim in the data. Do not invent figures, transactions, or categories that are not present.
-            - Answer only what is asked. Do not add unsolicited advice, observations, or recommendations.
-            - If the question explicitly asks for suggestions, recommendations, or analysis, you may draw reasonable conclusions from the data — frame them as suggestions, not certainties.
-            - If the data does not fully cover what is asked, say briefly what is missing, then offer what you can from what is available.
-            - Write all amounts using a space as thousands separator and a dot as decimal separator: 10 000.00 RUB. Never use a comma as decimal separator.
-            - Be concise. Use bullet points for lists.
+                  Rules:
+                  - Ground every claim in the data. Do not invent figures, transactions, or categories that are not present.
+                  - Answer only what is asked. Do not add unsolicited advice, observations, or recommendations.
+                  - If the question explicitly asks for suggestions, recommendations, or analysis, you may draw reasonable conclusions from the data — frame them as suggestions, not certainties.
+                  - If the data does not fully cover what is asked, say briefly what is missing, then offer what you can from what is available.
+                  - Write all amounts using a space as thousands separator and a dot as decimal separator: 10 000.00 RUB. Never use a comma as decimal separator.
+                  - Be concise. Use bullet points for lists.
 
-            """);
+                  """);
 
         sb.AppendLine("## Financial data");
         sb.AppendLine(FormatPeriodLine(query.From, query.To));
@@ -56,21 +56,24 @@ internal static class InsightsPromptBuilder
         sb.AppendLine();
         sb.AppendLine("---");
         sb.AppendLine("Respond in the same language the user used in their question.");
-        sb.AppendLine("If the question below is not about personal finances, spending, saving, income, or budgeting — do not answer it under any circumstances. Reply only that you assist exclusively with financial questions.");
+        sb.AppendLine(
+            "If the question below is not about personal finances, spending, saving, income, or budgeting — do not answer it under any circumstances. Reply only that you assist exclusively with financial questions.");
         sb.AppendLine($"Question: {query.Question}");
 
         return sb.ToString();
     }
 
-    private static string FormatPeriodLine(DateOnly? from, DateOnly? to) =>
-        (from, to) switch
+    private static string FormatPeriodLine(DateOnly? from, DateOnly? to)
+    {
+        return (from, to) switch
         {
             (not null, not null) =>
                 $"Period: {from:yyyy-MM-dd} to {to:yyyy-MM-dd} ({to.Value.DayNumber - from.Value.DayNumber} days).",
             (not null, null) => $"Period: from {from:yyyy-MM-dd} (no end date).",
             (null, not null) => $"Period: up to {to:yyyy-MM-dd} (no start date).",
-            _ => "Period: all time.",
+            _ => "Period: all time."
         };
+    }
 
     private static void AppendSummary(StringBuilder sb, IReadOnlyList<CurrencySummary> summary)
     {
@@ -93,25 +96,17 @@ internal static class InsightsPromptBuilder
 
     private static void AppendCategorySection(StringBuilder sb, string title, IReadOnlyList<BreakdownItem> items)
     {
-        if (items.Count == 0)
-        {
-            return;
-        }
+        if (items.Count == 0) return;
 
         sb.AppendLine();
         sb.AppendLine($"### {title}");
         foreach (var c in items.OrderByDescending(x => x.AmountMinor))
-        {
             sb.AppendLine($"  {c.Label ?? "Uncategorized"}: {Fmt(c.AmountMinor)} {c.Currency}");
-        }
     }
 
     private static void AppendAllTransactions(StringBuilder sb, IReadOnlyList<TransactionContext> transactions)
     {
-        if (transactions.Count == 0)
-        {
-            return;
-        }
+        if (transactions.Count == 0) return;
 
         sb.AppendLine();
         sb.AppendLine("### All transactions");
@@ -126,21 +121,18 @@ internal static class InsightsPromptBuilder
     private static void AppendCategoryMatrix(
         StringBuilder sb, IReadOnlyList<TransactionContext> transactions, TimeInterval interval)
     {
-        if (transactions.Count == 0)
-        {
-            return;
-        }
+        if (transactions.Count == 0) return;
 
         var intervalLabel = interval switch
         {
-            TimeInterval.Day  => "day",
+            TimeInterval.Day => "day",
             TimeInterval.Week => "week of",
-            _                 => "month",
+            _ => "month"
         };
 
         var byCategoryAndPeriod = transactions
             .GroupBy(t => (
-                Type: t.Type,
+                t.Type,
                 Category: t.CategoryLabel ?? "Uncategorized",
                 t.Currency,
                 Period: BucketStart(t.OccurredAt, interval)))
@@ -173,18 +165,16 @@ internal static class InsightsPromptBuilder
         }
     }
 
-    private static void AppendTimeSeries(StringBuilder sb, IReadOnlyList<TimeSeriesPoint> timeSeries, TimeInterval interval)
+    private static void AppendTimeSeries(StringBuilder sb, IReadOnlyList<TimeSeriesPoint> timeSeries,
+        TimeInterval interval)
     {
-        if (timeSeries.Count == 0)
-        {
-            return;
-        }
+        if (timeSeries.Count == 0) return;
 
         var label = interval switch
         {
-            TimeInterval.Day  => "Daily",
+            TimeInterval.Day => "Daily",
             TimeInterval.Week => "Weekly",
-            _                 => "Monthly",
+            _ => "Monthly"
         };
 
         sb.AppendLine();
@@ -195,18 +185,15 @@ internal static class InsightsPromptBuilder
 
         foreach (var g in byCurrency)
         {
-            if (multiCurrency)
-            {
-                sb.AppendLine($"Currency: {g.Key}");
-            }
+            if (multiCurrency) sb.AppendLine($"Currency: {g.Key}");
 
             foreach (var p in g.OrderBy(p => p.PeriodStart))
             {
                 var periodKey = interval switch
                 {
-                    TimeInterval.Day  => $"{p.PeriodStart:yyyy-MM-dd}",
+                    TimeInterval.Day => $"{p.PeriodStart:yyyy-MM-dd}",
                     TimeInterval.Week => $"week of {p.PeriodStart:yyyy-MM-dd}",
-                    _                 => $"{p.PeriodStart:yyyy-MM}",
+                    _ => $"{p.PeriodStart:yyyy-MM}"
                 };
                 sb.AppendLine($"  {periodKey}  income: {Fmt(p.IncomeMinor)}  expense: {Fmt(p.ExpensesMinor)}");
             }
@@ -215,26 +202,25 @@ internal static class InsightsPromptBuilder
 
     private static void AppendTopNames(StringBuilder sb, IReadOnlyList<BreakdownItem> names)
     {
-        if (names.Count == 0)
-        {
-            return;
-        }
+        if (names.Count == 0) return;
 
         sb.AppendLine();
         sb.AppendLine($"### Top {names.Count} transaction names (aggregated totals for the full period)");
-        foreach (var n in names)
-        {
-            sb.AppendLine($"  {n.Label}: {Fmt(n.AmountMinor)} {n.Currency}");
-        }
+        foreach (var n in names) sb.AppendLine($"  {n.Label}: {Fmt(n.AmountMinor)} {n.Currency}");
     }
 
-    private static string Fmt(long minor) =>
-        (minor / 100m).ToString("F2", CultureInfo.InvariantCulture);
-
-    private static DateOnly BucketStart(DateOnly day, TimeInterval interval) => interval switch
+    private static string Fmt(long minor)
     {
-        TimeInterval.Week  => day.AddDays(-(((int)day.DayOfWeek + 6) % 7)),
-        TimeInterval.Month => new DateOnly(day.Year, day.Month, 1),
-        _                  => day,
-    };
+        return (minor / 100m).ToString("F2", CultureInfo.InvariantCulture);
+    }
+
+    private static DateOnly BucketStart(DateOnly day, TimeInterval interval)
+    {
+        return interval switch
+        {
+            TimeInterval.Week => day.AddDays(-(((int)day.DayOfWeek + 6) % 7)),
+            TimeInterval.Month => new DateOnly(day.Year, day.Month, 1),
+            _ => day
+        };
+    }
 }

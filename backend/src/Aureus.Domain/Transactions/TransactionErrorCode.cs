@@ -10,5 +10,5 @@ public enum TransactionErrorCode
     ImportFileTooLarge = 6,
     ImportTooManyRows = 7,
     ImportInvalidFormat = 8,
-    ImportHasErrors = 9,
+    ImportHasErrors = 9
 }

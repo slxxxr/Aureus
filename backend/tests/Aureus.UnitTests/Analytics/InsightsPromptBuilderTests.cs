@@ -10,19 +10,25 @@ public sealed class InsightsPromptBuilderTests
     private const string CategoryName = "Продукты";
     private const string TopTransactionName = "Ашан";
 
-    private static GetInsightsQuery DefaultQuery(DateOnly? from = null, DateOnly? to = null) => new(
-        WorkspaceId: Guid.NewGuid(),
-        Question: "Test question",
-        From: from ?? new DateOnly(2025, 1, 1),
-        To: to ?? new DateOnly(2025, 1, 31));
+    private static GetInsightsQuery DefaultQuery(DateOnly? from = null, DateOnly? to = null)
+    {
+        return new GetInsightsQuery(
+            Guid.NewGuid(),
+            "Test question",
+            from ?? new DateOnly(2025, 1, 1),
+            to ?? new DateOnly(2025, 1, 31));
+    }
 
-    private static FinancialContext EmptyContext() => new(
-        Summary: [],
-        ExpenseCategories: [],
-        IncomeCategories: [],
-        Transactions: [],
-        TimeSeries: [],
-        TopNames: []);
+    private static FinancialContext EmptyContext()
+    {
+        return new FinancialContext(
+            [],
+            [],
+            [],
+            [],
+            [],
+            []);
+    }
 
     [Fact]
     public void Build_IncludesQuestion()
@@ -45,7 +51,7 @@ public sealed class InsightsPromptBuilderTests
         var from = new DateOnly(2025, 1, 1);
         var to = new DateOnly(2025, 1, 31);
         var expectedDayCount = to.DayNumber - from.DayNumber;
-        var query = DefaultQuery(from: from, to: to);
+        var query = DefaultQuery(from, to);
 
         // Act
         var prompt = InsightsPromptBuilder.Build(query, Tier.Large, TimeInterval.Month, 0, EmptyContext());
@@ -61,7 +67,7 @@ public sealed class InsightsPromptBuilderTests
         const long incomeMinor = 150000;
         var context = EmptyContext() with
         {
-            Summary = [new CurrencySummary("RUB", incomeMinor, 0)],
+            Summary = [new CurrencySummary("RUB", incomeMinor, 0)]
         };
 
         // Act
@@ -84,8 +90,8 @@ public sealed class InsightsPromptBuilderTests
             Transactions =
             [
                 new TransactionContext(txDate, TransactionName, CategoryName,
-                    TransactionType.Expense, txAmountMinor, "RUB"),
-            ],
+                    TransactionType.Expense, txAmountMinor, "RUB")
+            ]
         };
 
         // Act
@@ -123,9 +129,11 @@ public sealed class InsightsPromptBuilderTests
         {
             Transactions =
             [
-                new TransactionContext(new DateOnly(2025, 1, 7), TopTransactionName, CategoryName, TransactionType.Expense, topTxAmountMinor, "RUB"),
-                new TransactionContext(new DateOnly(2025, 1, 8), TransactionName, CategoryName, TransactionType.Expense, otherTxAmountMinor, "RUB"),
-            ],
+                new TransactionContext(new DateOnly(2025, 1, 7), TopTransactionName, CategoryName,
+                    TransactionType.Expense, topTxAmountMinor, "RUB"),
+                new TransactionContext(new DateOnly(2025, 1, 8), TransactionName, CategoryName, TransactionType.Expense,
+                    otherTxAmountMinor, "RUB")
+            ]
         };
 
         // Act
@@ -146,7 +154,8 @@ public sealed class InsightsPromptBuilderTests
         const int count = 1000;
         var context = EmptyContext() with
         {
-            TimeSeries = [new TimeSeriesPoint(new DateOnly(2025, 1, 1), "RUB", timeSeriesIncomeMinor, timeSeriesExpenseMinor)],
+            TimeSeries =
+            [new TimeSeriesPoint(new DateOnly(2025, 1, 1), "RUB", timeSeriesIncomeMinor, timeSeriesExpenseMinor)]
         };
 
         // Act
@@ -165,7 +174,7 @@ public sealed class InsightsPromptBuilderTests
         const int count = 1000;
         var context = EmptyContext() with
         {
-            TopNames = [new BreakdownItem("key", TransactionName, "RUB", topTransactionAmountMinor)],
+            TopNames = [new BreakdownItem("key", TransactionName, "RUB", topTransactionAmountMinor)]
         };
 
         // Act

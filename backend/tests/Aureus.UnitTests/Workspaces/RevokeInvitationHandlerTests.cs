@@ -6,15 +6,18 @@ namespace Aureus.UnitTests.Workspaces;
 
 public sealed class RevokeInvitationHandlerTests
 {
-    private static WorkspaceInvitation DefaultInvitation(Guid id, Guid workspaceId) => new()
+    private static WorkspaceInvitation DefaultInvitation(Guid id, Guid workspaceId)
     {
-        Id = id,
-        WorkspaceId = workspaceId,
-        Email = "invitee@test.local",
-        InvitedByUserId = Guid.NewGuid(),
-        ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new WorkspaceInvitation
+        {
+            Id = id,
+            WorkspaceId = workspaceId,
+            Email = "invitee@test.local",
+            InvitedByUserId = Guid.NewGuid(),
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     [Fact]
     public async Task Handle_InvitationNotFound_ThrowsNotFound()

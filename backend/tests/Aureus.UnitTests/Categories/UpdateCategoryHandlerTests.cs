@@ -7,15 +7,17 @@ namespace Aureus.UnitTests.Categories;
 
 public sealed class UpdateCategoryHandlerTests
 {
-    private static Category ExistingCategory(string name = "Groceries") =>
-        new()
+    private static Category ExistingCategory(string name = "Groceries")
+    {
+        return new Category
         {
             Id = Guid.NewGuid(),
             WorkspaceId = Guid.NewGuid(),
             Name = name,
             Type = TransactionType.Expense,
-            CreatedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-1)
         };
+    }
 
     [Fact]
     public async Task Handle_CategoryNotFound_ThrowsNotFound()
@@ -29,7 +31,7 @@ public sealed class UpdateCategoryHandlerTests
         // Act
         var exception = await Assert.ThrowsAsync<CategoryException>(() =>
             handler.Handle(
-                new UpdateCategoryCommand(categoryId, workspaceId, Name: "New name"),
+                new UpdateCategoryCommand(categoryId, workspaceId, "New name"),
                 CancellationToken.None));
 
         // Assert
@@ -40,14 +42,14 @@ public sealed class UpdateCategoryHandlerTests
     public async Task Handle_NameProvided_UpdatesName()
     {
         // Arrange
-        var category = ExistingCategory(name: "Old name");
+        var category = ExistingCategory("Old name");
         var repository = new CategoryRepositoryMock()
             .WithCategory(category.Id, category.WorkspaceId, category)
             .CapturingUpdate();
         var handler = new UpdateCategoryHandler(repository.Object);
 
         // Act
-        var command = new UpdateCategoryCommand(category.Id, category.WorkspaceId, Name: "New name");
+        var command = new UpdateCategoryCommand(category.Id, category.WorkspaceId, "New name");
         var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
@@ -58,7 +60,7 @@ public sealed class UpdateCategoryHandlerTests
     public async Task Handle_NameProvided_NormalizesWhitespace()
     {
         // Arrange
-        var category = ExistingCategory(name: "Old name");
+        var category = ExistingCategory("Old name");
         var repository = new CategoryRepositoryMock()
             .WithCategory(category.Id, category.WorkspaceId, category)
             .CapturingUpdate();
@@ -66,7 +68,7 @@ public sealed class UpdateCategoryHandlerTests
 
         // Act
         var result = await handler.Handle(
-            new UpdateCategoryCommand(category.Id, category.WorkspaceId, Name: "  Rent  "),
+            new UpdateCategoryCommand(category.Id, category.WorkspaceId, "  Rent  "),
             CancellationToken.None);
 
         // Assert
@@ -77,7 +79,7 @@ public sealed class UpdateCategoryHandlerTests
     public async Task Handle_NameNull_LeavesNameUnchanged()
     {
         // Arrange
-        var category = ExistingCategory(name: "Groceries");
+        var category = ExistingCategory("Groceries");
         var repository = new CategoryRepositoryMock()
             .WithCategory(category.Id, category.WorkspaceId, category)
             .CapturingUpdate();
@@ -85,7 +87,7 @@ public sealed class UpdateCategoryHandlerTests
 
         // Act
         var result = await handler.Handle(
-            new UpdateCategoryCommand(category.Id, category.WorkspaceId, Name: null),
+            new UpdateCategoryCommand(category.Id, category.WorkspaceId, null),
             CancellationToken.None);
 
         // Assert

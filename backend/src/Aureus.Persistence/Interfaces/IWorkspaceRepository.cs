@@ -18,7 +18,8 @@ public interface IWorkspaceRepository
 
     Task DeleteMemberAsync(Guid workspaceId, Guid userId, CancellationToken cancellationToken);
 
-    Task UpdateMemberRoleAsync(Guid workspaceId, Guid userId, WorkspaceRole newRole, CancellationToken cancellationToken);
+    Task UpdateMemberRoleAsync(Guid workspaceId, Guid userId, WorkspaceRole newRole,
+        CancellationToken cancellationToken);
 
     Task TransferOwnershipAsync(Guid workspaceId, Guid fromUserId, Guid toUserId, CancellationToken cancellationToken);
 

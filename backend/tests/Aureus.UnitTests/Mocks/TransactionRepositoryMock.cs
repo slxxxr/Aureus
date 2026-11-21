@@ -102,11 +102,15 @@ public sealed class TransactionRepositoryMock
         return this;
     }
 
-    public void VerifyDeleteCalledOnce() =>
+    public void VerifyDeleteCalledOnce()
+    {
         _mock.Verify(r => r.DeleteAsync(It.IsAny<Transaction>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
 
-    public void VerifyDeleteNotCalled() =>
+    public void VerifyDeleteNotCalled()
+    {
         _mock.Verify(r => r.DeleteAsync(It.IsAny<Transaction>(), It.IsAny<long>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
 }

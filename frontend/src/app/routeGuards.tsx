@@ -1,22 +1,22 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "@/features/auth/AuthContext";
+import {Navigate, Outlet} from "react-router-dom";
+import {useAuth} from "@/features/auth/AuthContext";
 
 export function ProtectedRoute() {
-  const { isAuthenticated } = useAuth();
+    const {isAuthenticated} = useAuth();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace/>;
+    }
 
-  return <Outlet />;
+    return <Outlet/>;
 }
 
 export function GuestRoute() {
-  const { isAuthenticated } = useAuth();
+    const {isAuthenticated} = useAuth();
 
-  if (isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
+    if (isAuthenticated) {
+        return <Navigate to="/" replace/>;
+    }
 
-  return <Outlet />;
+    return <Outlet/>;
 }

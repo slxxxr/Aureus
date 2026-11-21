@@ -1,24 +1,24 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\Aureus.Domain\Aureus.Domain.csproj" />
-    <ProjectReference Include="..\Aureus.Infrastructure\Aureus.Infrastructure.csproj" />
-    <ProjectReference Include="..\Aureus.Persistence\Aureus.Persistence.csproj" />
-    <ProjectReference Include="..\Aureus.LLM\Aureus.LLM.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Aureus.Domain\Aureus.Domain.csproj"/>
+        <ProjectReference Include="..\Aureus.Infrastructure\Aureus.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Aureus.Persistence\Aureus.Persistence.csproj"/>
+        <ProjectReference Include="..\Aureus.LLM\Aureus.LLM.csproj"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="33.1.0" />
-    <PackageReference Include="FluentValidation" Version="11.11.0" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0" />
-    <PackageReference Include="MediatR" Version="12.4.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="CsvHelper" Version="33.1.0"/>
+        <PackageReference Include="FluentValidation" Version="11.11.0"/>
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.11.0"/>
+        <PackageReference Include="MediatR" Version="12.4.1"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.14"/>
+    </ItemGroup>
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
 
 </Project>

@@ -21,7 +21,8 @@ public sealed class EmailVerificationCodeRepositoryMock
         return this;
     }
 
-    public EmailVerificationCodeRepositoryMock WithPendingCode(string email, string purpose, EmailVerificationCodeDb code)
+    public EmailVerificationCodeRepositoryMock WithPendingCode(string email, string purpose,
+        EmailVerificationCodeDb code)
     {
         _mock
             .Setup(r => r.FindAsync(email, purpose, It.IsAny<CancellationToken>()))
@@ -42,7 +43,8 @@ public sealed class EmailVerificationCodeRepositoryMock
 
     public void VerifyUpsertedOnce()
     {
-        _mock.Verify(r => r.UpsertAsync(It.IsAny<EmailVerificationCodeDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mock.Verify(r => r.UpsertAsync(It.IsAny<EmailVerificationCodeDb>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     public void VerifyDeletedOnce(string email, string purpose)

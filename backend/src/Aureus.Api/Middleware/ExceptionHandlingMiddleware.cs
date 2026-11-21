@@ -14,10 +14,7 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
         {
             logger.LogError(exception, "Unhandled API exception occurred.");
 
-            if (context.Response.HasStarted)
-            {
-                throw;
-            }
+            if (context.Response.HasStarted) throw;
 
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
             context.Response.ContentType = "application/problem+json";

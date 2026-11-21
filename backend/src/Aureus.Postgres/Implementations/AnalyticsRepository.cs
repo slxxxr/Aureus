@@ -1,7 +1,7 @@
-using Aureus.Domain.Transactions;
-using Aureus.Persistence.Entities;
 using Aureus.Domain.Analytics;
+using Aureus.Domain.Transactions;
 using Aureus.Persistence;
+using Aureus.Persistence.Entities;
 using Aureus.Persistence.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,81 +33,9 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
         {
             BreakdownDimension.Category => await CategoryBreakdownAsync(filtered, cancellationToken),
             BreakdownDimension.Account => await AccountBreakdownAsync(filtered, cancellationToken),
-            _ => await NameBreakdownAsync(filtered, cancellationToken),
+            _ => await NameBreakdownAsync(filtered, cancellationToken)
         };
     }
-
-    // Entity keys are stringified after materialization so every dimension shares a string Key — the name
-    // dimension groups by the raw name (already trimmed on write) and has no id to expose. The left join keeps
-    // transactions whose category was soft-deleted (rows survive the delete): null label, caller renders a fallback.
-    private async Task<IReadOnlyList<BreakdownItem>> CategoryBreakdownAsync(
-        IQueryable<TransactionDb> filtered, CancellationToken cancellationToken)
-    {
-        var rows = await (
-            from transaction in filtered
-            join category in dbContext.Categories
-                on transaction.CategoryId equals category.Id into categoryJoin
-            from category in categoryJoin.DefaultIfEmpty()
-            group transaction by new
-            {
-                Key = transaction.CategoryId,
-                Label = category != null ? category.Name : null,
-                transaction.Currency,
-            }
-            into grouped
-            select new
-            {
-                grouped.Key.Key,
-                grouped.Key.Label,
-                grouped.Key.Currency,
-                AmountMinor = grouped.Sum(transaction => transaction.AmountMinor),
-            })
-            .ToListAsync(cancellationToken);
-
-        return rows
-            .Select(row => new BreakdownItem(row.Key.ToString(), row.Label, row.Currency, row.AmountMinor))
-            .ToList();
-    }
-
-    private async Task<IReadOnlyList<BreakdownItem>> AccountBreakdownAsync(
-        IQueryable<TransactionDb> filtered, CancellationToken cancellationToken)
-    {
-        var rows = await (
-            from transaction in filtered
-            join account in dbContext.FinancialAccounts
-                on transaction.FinancialAccountId equals account.Id into accountJoin
-            from account in accountJoin.DefaultIfEmpty()
-            group transaction by new
-            {
-                Key = transaction.FinancialAccountId,
-                Label = account != null ? account.Name : null,
-                transaction.Currency,
-            }
-            into grouped
-            select new
-            {
-                grouped.Key.Key,
-                grouped.Key.Label,
-                grouped.Key.Currency,
-                AmountMinor = grouped.Sum(transaction => transaction.AmountMinor),
-            })
-            .ToListAsync(cancellationToken);
-
-        return rows
-            .Select(row => new BreakdownItem(row.Key.ToString(), row.Label, row.Currency, row.AmountMinor))
-            .ToList();
-    }
-
-    private async Task<IReadOnlyList<BreakdownItem>> NameBreakdownAsync(
-        IQueryable<TransactionDb> filtered, CancellationToken cancellationToken) =>
-        await filtered
-            .GroupBy(transaction => new { transaction.Name, transaction.Currency })
-            .Select(grouped => new BreakdownItem(
-                grouped.Key.Name,
-                grouped.Key.Name,
-                grouped.Key.Currency,
-                grouped.Sum(transaction => transaction.AmountMinor)))
-            .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<TimeSeriesPoint>> GetTimeSeriesAsync(
         AnalyticsFilter filter, TimeInterval interval, CancellationToken cancellationToken)
@@ -121,14 +49,14 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
             .GroupBy(transaction => new
             {
                 transaction.OccurredAt,
-                transaction.Currency,
+                transaction.Currency
             })
             .Select(group => new
             {
                 group.Key.OccurredAt,
                 group.Key.Currency,
                 IncomeMinor = group.Sum(transaction => transaction.Type == income ? transaction.AmountMinor : 0L),
-                ExpensesMinor = group.Sum(transaction => transaction.Type == expense ? transaction.AmountMinor : 0L),
+                ExpensesMinor = group.Sum(transaction => transaction.Type == expense ? transaction.AmountMinor : 0L)
             })
             .ToListAsync(cancellationToken);
 
@@ -136,7 +64,7 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
             .GroupBy(row => new
             {
                 PeriodStart = BucketStart(row.OccurredAt, interval),
-                row.Currency,
+                row.Currency
             })
             .Select(group => new TimeSeriesPoint(
                 group.Key.PeriodStart,
@@ -154,26 +82,26 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
         // Same day-in-SQL / roll-up-in-memory shape as GetTimeSeriesAsync, with category as an extra key.
         // Left join keeps transactions whose category was soft-deleted (null label, caller renders a fallback).
         var daily = await (
-            from transaction in ApplyFilter(dbContext.Transactions, filter)
-            join category in dbContext.Categories
-                on transaction.CategoryId equals category.Id into categoryJoin
-            from category in categoryJoin.DefaultIfEmpty()
-            group transaction by new
-            {
-                transaction.OccurredAt,
-                transaction.Currency,
-                transaction.CategoryId,
-                Label = category != null ? category.Name : null,
-            }
-            into grouped
-            select new
-            {
-                grouped.Key.OccurredAt,
-                grouped.Key.Currency,
-                grouped.Key.CategoryId,
-                grouped.Key.Label,
-                AmountMinor = grouped.Sum(transaction => transaction.AmountMinor),
-            })
+                from transaction in ApplyFilter(dbContext.Transactions, filter)
+                join category in dbContext.Categories
+                    on transaction.CategoryId equals category.Id into categoryJoin
+                from category in categoryJoin.DefaultIfEmpty()
+                group transaction by new
+                {
+                    transaction.OccurredAt,
+                    transaction.Currency,
+                    transaction.CategoryId,
+                    Label = category != null ? category.Name : null
+                }
+                into grouped
+                select new
+                {
+                    grouped.Key.OccurredAt,
+                    grouped.Key.Currency,
+                    grouped.Key.CategoryId,
+                    grouped.Key.Label,
+                    AmountMinor = grouped.Sum(transaction => transaction.AmountMinor)
+                })
             .ToListAsync(cancellationToken);
 
         return daily
@@ -182,7 +110,7 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
                 PeriodStart = BucketStart(row.OccurredAt, interval),
                 row.Currency,
                 row.CategoryId,
-                row.Label,
+                row.Label
             })
             .Select(group => new CategoryTimeSeriesPoint(
                 group.Key.PeriodStart,
@@ -195,8 +123,10 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
             .ToList();
     }
 
-    public Task<int> GetTransactionCountAsync(AnalyticsFilter filter, CancellationToken cancellationToken) =>
-        ApplyFilter(dbContext.Transactions, filter).CountAsync(cancellationToken);
+    public Task<int> GetTransactionCountAsync(AnalyticsFilter filter, CancellationToken cancellationToken)
+    {
+        return ApplyFilter(dbContext.Transactions, filter).CountAsync(cancellationToken);
+    }
 
     public async Task<IReadOnlyList<TransactionContext>> GetTransactionsForContextAsync(
         AnalyticsFilter filter, int limit, CancellationToken cancellationToken)
@@ -204,20 +134,20 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
         var income = nameof(TransactionType.Income);
 
         var rows = await (
-            from transaction in ApplyFilter(dbContext.Transactions, filter)
-            join category in dbContext.Categories
-                on transaction.CategoryId equals category.Id into categoryJoin
-            from category in categoryJoin.DefaultIfEmpty()
-            orderby transaction.OccurredAt, transaction.CreatedAt
-            select new
-            {
-                transaction.OccurredAt,
-                transaction.Name,
-                CategoryLabel = category != null ? category.Name : null,
-                transaction.Type,
-                transaction.AmountMinor,
-                transaction.Currency,
-            })
+                from transaction in ApplyFilter(dbContext.Transactions, filter)
+                join category in dbContext.Categories
+                    on transaction.CategoryId equals category.Id into categoryJoin
+                from category in categoryJoin.DefaultIfEmpty()
+                orderby transaction.OccurredAt, transaction.CreatedAt
+                select new
+                {
+                    transaction.OccurredAt,
+                    transaction.Name,
+                    CategoryLabel = category != null ? category.Name : null,
+                    transaction.Type,
+                    transaction.AmountMinor,
+                    transaction.Currency
+                })
             .Take(limit)
             .ToListAsync(cancellationToken);
 
@@ -232,36 +162,103 @@ public sealed class AnalyticsRepository(AureusDbContext dbContext) : IAnalyticsR
             .ToList();
     }
 
-    private static DateOnly BucketStart(DateOnly day, TimeInterval interval) => interval switch
+    // Entity keys are stringified after materialization so every dimension shares a string Key — the name
+    // dimension groups by the raw name (already trimmed on write) and has no id to expose. The left join keeps
+    // transactions whose category was soft-deleted (rows survive the delete): null label, caller renders a fallback.
+    private async Task<IReadOnlyList<BreakdownItem>> CategoryBreakdownAsync(
+        IQueryable<TransactionDb> filtered, CancellationToken cancellationToken)
     {
-        TimeInterval.Week => day.AddDays(-(((int)day.DayOfWeek + 6) % 7)),
-        TimeInterval.Month => new DateOnly(day.Year, day.Month, 1),
-        _ => day,
-    };
+        var rows = await (
+                from transaction in filtered
+                join category in dbContext.Categories
+                    on transaction.CategoryId equals category.Id into categoryJoin
+                from category in categoryJoin.DefaultIfEmpty()
+                group transaction by new
+                {
+                    Key = transaction.CategoryId,
+                    Label = category != null ? category.Name : null,
+                    transaction.Currency
+                }
+                into grouped
+                select new
+                {
+                    grouped.Key.Key,
+                    grouped.Key.Label,
+                    grouped.Key.Currency,
+                    AmountMinor = grouped.Sum(transaction => transaction.AmountMinor)
+                })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(row => new BreakdownItem(row.Key.ToString(), row.Label, row.Currency, row.AmountMinor))
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<BreakdownItem>> AccountBreakdownAsync(
+        IQueryable<TransactionDb> filtered, CancellationToken cancellationToken)
+    {
+        var rows = await (
+                from transaction in filtered
+                join account in dbContext.FinancialAccounts
+                    on transaction.FinancialAccountId equals account.Id into accountJoin
+                from account in accountJoin.DefaultIfEmpty()
+                group transaction by new
+                {
+                    Key = transaction.FinancialAccountId,
+                    Label = account != null ? account.Name : null,
+                    transaction.Currency
+                }
+                into grouped
+                select new
+                {
+                    grouped.Key.Key,
+                    grouped.Key.Label,
+                    grouped.Key.Currency,
+                    AmountMinor = grouped.Sum(transaction => transaction.AmountMinor)
+                })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .Select(row => new BreakdownItem(row.Key.ToString(), row.Label, row.Currency, row.AmountMinor))
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<BreakdownItem>> NameBreakdownAsync(
+        IQueryable<TransactionDb> filtered, CancellationToken cancellationToken)
+    {
+        return await filtered
+            .GroupBy(transaction => new { transaction.Name, transaction.Currency })
+            .Select(grouped => new BreakdownItem(
+                grouped.Key.Name,
+                grouped.Key.Name,
+                grouped.Key.Currency,
+                grouped.Sum(transaction => transaction.AmountMinor)))
+            .ToListAsync(cancellationToken);
+    }
+
+    private static DateOnly BucketStart(DateOnly day, TimeInterval interval)
+    {
+        return interval switch
+        {
+            TimeInterval.Week => day.AddDays(-(((int)day.DayOfWeek + 6) % 7)),
+            TimeInterval.Month => new DateOnly(day.Year, day.Month, 1),
+            _ => day
+        };
+    }
 
     private static IQueryable<TransactionDb> ApplyFilter(IQueryable<TransactionDb> source, AnalyticsFilter filter)
     {
         source = source.Where(transaction => transaction.WorkspaceId == filter.WorkspaceId);
 
-        if (filter.From is not null)
-        {
-            source = source.Where(transaction => transaction.OccurredAt >= filter.From.Value);
-        }
+        if (filter.From is not null) source = source.Where(transaction => transaction.OccurredAt >= filter.From.Value);
 
-        if (filter.To is not null)
-        {
-            source = source.Where(transaction => transaction.OccurredAt < filter.To.Value);
-        }
+        if (filter.To is not null) source = source.Where(transaction => transaction.OccurredAt < filter.To.Value);
 
         if (filter.AccountIds is { Count: > 0 })
-        {
             source = source.Where(transaction => filter.AccountIds.Contains(transaction.FinancialAccountId));
-        }
 
         if (filter.CategoryIds is { Count: > 0 })
-        {
             source = source.Where(transaction => filter.CategoryIds.Contains(transaction.CategoryId));
-        }
 
         if (filter.Type is not null)
         {

@@ -56,7 +56,7 @@ public sealed class DeleteFinancialAccountHandlerTests
             Currency = "RUB",
             InitialBalanceMinor = 1000_00,
             CurrentBalanceMinor = 1000_00,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
         var repository = new FinancialAccountRepositoryMock()
             .WithAccount(account.Id, account.WorkspaceId, account)

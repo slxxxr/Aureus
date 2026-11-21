@@ -6,8 +6,10 @@ namespace Aureus.UnitTests.Workspaces;
 
 public sealed class TransferOwnershipHandlerTests
 {
-    private static TransferOwnershipHandler BuildHandler(WorkspaceRepositoryMock workspaceRepo) =>
-        new(workspaceRepo.Object);
+    private static TransferOwnershipHandler BuildHandler(WorkspaceRepositoryMock workspaceRepo)
+    {
+        return new TransferOwnershipHandler(workspaceRepo.Object);
+    }
 
     [Fact]
     public async Task Handle_ValidTarget_TransfersOwnership()

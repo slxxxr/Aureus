@@ -28,7 +28,8 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
         [FromQuery] AnalyticsFilterRequest request,
         CancellationToken cancellationToken)
     {
-        var filter = new AnalyticsFilter(workspaceId, request.From, request.To, request.AccountIds, request.Type, request.CategoryIds);
+        var filter = new AnalyticsFilter(workspaceId, request.From, request.To, request.AccountIds, request.Type,
+            request.CategoryIds);
         var bytes = await sender.Send(new ExportTransactionsQuery(filter), cancellationToken);
         return File(bytes, "text/csv; charset=utf-8", "transactions.csv");
     }
@@ -143,7 +144,9 @@ public sealed class TransactionsController(ISender sender, IMapper mapper) : Api
         Guid transactionId,
         CancellationToken cancellationToken)
     {
-        await sender.Send(new DeleteTransactionCommand(transactionId, workspaceId, CurrentUserId, CurrentWorkspaceMembership.Role), cancellationToken);
+        await sender.Send(
+            new DeleteTransactionCommand(transactionId, workspaceId, CurrentUserId, CurrentWorkspaceMembership.Role),
+            cancellationToken);
 
         return NoContent();
     }

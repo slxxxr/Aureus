@@ -14,19 +14,15 @@ public sealed class DeleteTransactionHandler(ITransactionRepository transactionR
             command.TransactionId, command.WorkspaceId, cancellationToken);
 
         if (transaction is null)
-        {
             throw new TransactionException(
                 TransactionErrorCode.NotFound,
                 $"Transaction {command.TransactionId} not found.");
-        }
 
         if (command.RequestingUserRole < WorkspaceRole.Manager &&
             transaction.CreatedByUserId != command.RequestingUserId)
-        {
             throw new TransactionException(
                 TransactionErrorCode.Forbidden,
                 "Members can only delete their own transactions.");
-        }
 
         var balanceDelta = transaction.Type == TransactionType.Income
             ? -transaction.AmountMinor

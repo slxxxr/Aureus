@@ -13,8 +13,29 @@
       "placeholder": "Select date",
       "prevMonth": "Previous month",
       "nextMonth": "Next month",
-      "months": ["January","February","March","April","May","June","July","August","September","October","November","December"],
-      "days": ["Mo","Tu","We","Th","Fr","Sa","Su"]
+      "months": [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December"
+      ],
+      "days": [
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Su"
+      ]
     }
   },
   "language": {
@@ -100,6 +121,11 @@
   "financialAccounts": {
     "title": "Accounts",
     "addAccount": "Add account",
+    "reorderHandle": "Move account {{name}}",
+    "reorderInstructions": "Press Space to pick up the card. Use the arrow keys to move it, then press Space to drop it. Press Escape to cancel.",
+    "reorderStarted": "Picked up {{name}}.",
+    "reorderPosition": "Position {{position}} of {{total}}.",
+    "reorderCanceled": "Move canceled.",
     "emptyTitle": "No accounts yet",
     "emptyDescription": "Create your first account to start tracking your finances.",
     "createModal": {
@@ -125,6 +151,7 @@
     },
     "errors": {
       "nameTaken": "An account with this name already exists.",
+      "orderConflict": "The account list or order changed. Try moving the cards again.",
       "notFound": "Account not found.",
       "generic": "Something went wrong. Please try again."
     }

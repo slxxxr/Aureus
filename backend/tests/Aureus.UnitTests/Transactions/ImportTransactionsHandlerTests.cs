@@ -16,32 +16,43 @@ public sealed class ImportTransactionsHandlerTests
     private static readonly Guid ToAccountId = Guid.NewGuid();
     private static readonly Guid CategoryId = Guid.NewGuid();
 
-    private static FinancialAccount MakeAccount(string name = "Тинькофф", string currency = "RUB") => new()
+    private static FinancialAccount MakeAccount(string name = "Тинькофф", string currency = "RUB")
     {
-        Id = AccountId,
-        WorkspaceId = WorkspaceId,
-        Name = name,
-        Currency = currency,
-    };
+        return new FinancialAccount
+        {
+            Id = AccountId,
+            WorkspaceId = WorkspaceId,
+            Name = name,
+            Currency = currency
+        };
+    }
 
-    private static FinancialAccount MakeToAccount(string name = "Наличные", string currency = "RUB") => new()
+    private static FinancialAccount MakeToAccount(string name = "Наличные", string currency = "RUB")
     {
-        Id = ToAccountId,
-        WorkspaceId = WorkspaceId,
-        Name = name,
-        Currency = currency,
-    };
+        return new FinancialAccount
+        {
+            Id = ToAccountId,
+            WorkspaceId = WorkspaceId,
+            Name = name,
+            Currency = currency
+        };
+    }
 
-    private static Category MakeCategory(string name = "Продукты", TransactionType type = TransactionType.Expense) => new()
+    private static Category MakeCategory(string name = "Продукты", TransactionType type = TransactionType.Expense)
     {
-        Id = CategoryId,
-        WorkspaceId = WorkspaceId,
-        Name = name,
-        Type = type,
-    };
+        return new Category
+        {
+            Id = CategoryId,
+            WorkspaceId = WorkspaceId,
+            Name = name,
+            Type = type
+        };
+    }
 
-    private static byte[] Csv(string content) =>
-        Encoding.UTF8.GetBytes(content);
+    private static byte[] Csv(string content)
+    {
+        return Encoding.UTF8.GetBytes(content);
+    }
 
     private static ImportPreviewHandler BuildPreviewHandler(
         FinancialAccount? account = null, Category? category = null, FinancialAccount? toAccount = null)
@@ -72,7 +83,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_ValidRow_ReturnsIsValid()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,category,name,note\n2026-06-01,Expense,1500.00,Тинькофф,Продукты,Пятёрочка,");
+        var csv = Csv(
+            "date,type,amount,account,category,name,note\n2026-06-01,Expense,1500.00,Тинькофф,Продукты,Пятёрочка,");
         var handler = BuildPreviewHandler(MakeAccount(), MakeCategory());
 
         // Act
@@ -88,7 +100,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_InvalidDate_ReturnsError()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,category,name,note\n01/06/2026,Expense,1500.00,Тинькофф,Продукты,Пятёрочка,");
+        var csv = Csv(
+            "date,type,amount,account,category,name,note\n01/06/2026,Expense,1500.00,Тинькофф,Продукты,Пятёрочка,");
         var handler = BuildPreviewHandler(MakeAccount(), MakeCategory());
 
         // Act
@@ -105,8 +118,9 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_UnknownAccount_ReturnsError()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,category,name,note\n2026-06-01,Expense,1500.00,НеизвестныйСчёт,Продукты,Пятёрочка,");
-        var handler = BuildPreviewHandler(MakeAccount("Тинькофф"), MakeCategory());
+        var csv = Csv(
+            "date,type,amount,account,category,name,note\n2026-06-01,Expense,1500.00,НеизвестныйСчёт,Продукты,Пятёрочка,");
+        var handler = BuildPreviewHandler(MakeAccount(), MakeCategory());
 
         // Act
         var result = await handler.Handle(new ImportPreviewQuery(WorkspaceId, csv), CancellationToken.None);
@@ -121,8 +135,9 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_CategoryTypeMismatch_ReturnsError()
     {
         // Arrange — category is Expense, row is Income
-        var csv = Csv("date,type,amount,account,category,name,note\n2026-06-01,Income,1500.00,Тинькофф,Продукты,Зарплата,");
-        var handler = BuildPreviewHandler(MakeAccount(), MakeCategory("Продукты", TransactionType.Expense));
+        var csv = Csv(
+            "date,type,amount,account,category,name,note\n2026-06-01,Income,1500.00,Тинькофф,Продукты,Зарплата,");
+        var handler = BuildPreviewHandler(MakeAccount(), MakeCategory());
 
         // Act
         var result = await handler.Handle(new ImportPreviewQuery(WorkspaceId, csv), CancellationToken.None);
@@ -135,7 +150,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_SemicolonDelimiter_ParsesCorrectly()
     {
         // Arrange — semicolon-separated (RU Excel format)
-        var csv = Csv("date;type;amount;account;category;name;note\n2026-06-01;Expense;1500.00;Тинькофф;Продукты;Пятёрочка;");
+        var csv = Csv(
+            "date;type;amount;account;category;name;note\n2026-06-01;Expense;1500.00;Тинькофф;Продукты;Пятёрочка;");
         var handler = BuildPreviewHandler(MakeAccount(), MakeCategory());
 
         // Act
@@ -149,8 +165,9 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_WithCurrencyColumn_IgnoresCurrency()
     {
         // Arrange — file has currency column (exported format), should be ignored
-        var csv = Csv("date,type,amount,currency,account,category,name,note\n2026-06-01,Expense,1500.00,USD,Тинькофф,Продукты,Пятёрочка,");
-        var handler = BuildPreviewHandler(MakeAccount("Тинькофф", "RUB"), MakeCategory());
+        var csv = Csv(
+            "date,type,amount,currency,account,category,name,note\n2026-06-01,Expense,1500.00,USD,Тинькофф,Продукты,Пятёрочка,");
+        var handler = BuildPreviewHandler(MakeAccount(), MakeCategory());
 
         // Act
         var result = await handler.Handle(new ImportPreviewQuery(WorkspaceId, csv), CancellationToken.None);
@@ -163,7 +180,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_NegativeAmount_ReturnsError()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,category,name,note\n2026-06-01,Expense,-500.00,Тинькофф,Продукты,Тест,");
+        var csv = Csv(
+            "date,type,amount,account,category,name,note\n2026-06-01,Expense,-500.00,Тинькофф,Продукты,Тест,");
         var handler = BuildPreviewHandler(MakeAccount(), MakeCategory());
 
         // Act
@@ -198,7 +216,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_ValidTransferRow_ReturnsIsValid()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Наличные,,,");
+        var csv = Csv(
+            "date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Наличные,,,");
         var handler = BuildPreviewHandler(MakeAccount(), toAccount: MakeToAccount());
 
         // Act
@@ -214,7 +233,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_TransferMissingToAccount_ReturnsToAccountNotFound()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,НеизвестныйСчёт,,,");
+        var csv = Csv(
+            "date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,НеизвестныйСчёт,,,");
         var handler = BuildPreviewHandler(MakeAccount());
 
         // Act
@@ -230,7 +250,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_TransferSameAccount_ReturnsSameAccount()
     {
         // Arrange — account and toAccount both resolve to the same financial account
-        var csv = Csv("date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Тинькофф,,,");
+        var csv = Csv(
+            "date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Тинькофф,,,");
         var handler = BuildPreviewHandler(MakeAccount());
 
         // Act
@@ -245,7 +266,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Preview_TransferCurrencyMismatch_ReturnsCurrencyMismatch()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Наличные,,,");
+        var csv = Csv(
+            "date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Наличные,,,");
         var handler = BuildPreviewHandler(MakeAccount(currency: "RUB"), toAccount: MakeToAccount(currency: "USD"));
 
         // Act
@@ -262,7 +284,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Commit_ValidFile_SavesTransactionsAndReturnsCount()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,category,name,note\n2026-06-01,Expense,1500.00,Тинькофф,Продукты,Пятёрочка,");
+        var csv = Csv(
+            "date,type,amount,account,category,name,note\n2026-06-01,Expense,1500.00,Тинькофф,Продукты,Пятёрочка,");
         var (handler, importMock) = BuildImportHandler(MakeAccount(), MakeCategory());
 
         // Act
@@ -278,7 +301,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Commit_AmountConvertedToMinorUnits()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,category,name,note\n2026-06-01,Expense,1500.50,Тинькофф,Продукты,Тест,");
+        var csv = Csv(
+            "date,type,amount,account,category,name,note\n2026-06-01,Expense,1500.50,Тинькофф,Продукты,Тест,");
         var (handler, importMock) = BuildImportHandler(MakeAccount(), MakeCategory());
 
         // Act
@@ -292,8 +316,9 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Commit_CurrencyTakenFromAccount()
     {
         // Arrange
-        var csv = Csv("date,type,amount,currency,account,category,name,note\n2026-06-01,Expense,500.00,USD,Тинькофф,Продукты,Тест,");
-        var (handler, importMock) = BuildImportHandler(MakeAccount("Тинькофф", "RUB"), MakeCategory());
+        var csv = Csv(
+            "date,type,amount,currency,account,category,name,note\n2026-06-01,Expense,500.00,USD,Тинькофф,Продукты,Тест,");
+        var (handler, importMock) = BuildImportHandler(MakeAccount(), MakeCategory());
 
         // Act
         await handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None);
@@ -311,7 +336,8 @@ public sealed class ImportTransactionsHandlerTests
             "2026-06-01,Income,3000.00,Тинькофф,Продукты,Зарплата,\n" +
             "2026-06-02,Expense,1500.00,Тинькофф,Продукты,Еда,");
         var incomeCategory = MakeCategory("Продукты", TransactionType.Income);
-        var expenseCategory = new Category { Id = Guid.NewGuid(), WorkspaceId = WorkspaceId, Name = "Продукты", Type = TransactionType.Expense };
+        var expenseCategory = new Category
+            { Id = Guid.NewGuid(), WorkspaceId = WorkspaceId, Name = "Продукты", Type = TransactionType.Expense };
         var accRepo = new FinancialAccountRepositoryMock().WithAccounts(WorkspaceId, [MakeAccount()]);
         var catRepo = new CategoryRepositoryMock().WithCategories(WorkspaceId, [incomeCategory, expenseCategory]);
         var importMock = new ImportRepositoryMock().CapturingAddBulk();
@@ -332,8 +358,8 @@ public sealed class ImportTransactionsHandlerTests
         var (handler, _) = BuildImportHandler(MakeAccount(), MakeCategory());
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<TransactionException>(
-            () => handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None));
+        var ex = await Assert.ThrowsAsync<TransactionException>(() =>
+            handler.Handle(new ImportCommand(WorkspaceId, UserId, csv), CancellationToken.None));
         Assert.Equal(TransactionErrorCode.ImportHasErrors, ex.Code);
     }
 
@@ -360,7 +386,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Commit_ValidTransferFile_SavesTransferAndReturnsCount()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Наличные,,,");
+        var csv = Csv(
+            "date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Наличные,,,");
         var (handler, importMock) = BuildImportHandler(MakeAccount(), toAccount: MakeToAccount());
 
         // Act
@@ -379,7 +406,8 @@ public sealed class ImportTransactionsHandlerTests
     public async Task Handle_Commit_TransferBalanceDeltaCalculatedCorrectly()
     {
         // Arrange
-        var csv = Csv("date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Наличные,,,");
+        var csv = Csv(
+            "date,type,amount,account,toAccount,category,name,note\n2026-06-01,Transfer,5000.00,Тинькофф,Наличные,,,");
         var (handler, importMock) = BuildImportHandler(MakeAccount(), toAccount: MakeToAccount());
 
         // Act

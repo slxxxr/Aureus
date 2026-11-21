@@ -14,16 +14,11 @@ public sealed class UpdateFinancialAccountHandler(IFinancialAccountRepository re
         var account = await repository.FindByIdAsync(command.AccountId, command.WorkspaceId, cancellationToken);
 
         if (account is null)
-        {
             throw new FinancialAccountException(
                 FinancialAccountErrorCode.NotFound,
                 $"Financial account {command.AccountId} not found.");
-        }
 
-        if (command.Name is not null)
-        {
-            account.Name = command.Name.Trim();
-        }
+        if (command.Name is not null) account.Name = command.Name.Trim();
 
         if (command.InitialBalanceMinor is not null)
         {

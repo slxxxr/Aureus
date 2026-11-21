@@ -11,15 +11,9 @@ public sealed class UpdateWorkspaceHandler(IWorkspaceRepository workspaceReposit
     {
         var workspace = await workspaceRepository.FindByIdAsync(command.WorkspaceId, cancellationToken);
 
-        if (workspace is null)
-        {
-            throw new WorkspaceException(WorkspaceErrorCode.NotFound, "Workspace not found.");
-        }
+        if (workspace is null) throw new WorkspaceException(WorkspaceErrorCode.NotFound, "Workspace not found.");
 
-        if (command.Name is not null)
-        {
-            workspace.Name = command.Name.Trim();
-        }
+        if (command.Name is not null) workspace.Name = command.Name.Trim();
 
         workspace.UpdatedAt = DateTimeOffset.UtcNow;
 

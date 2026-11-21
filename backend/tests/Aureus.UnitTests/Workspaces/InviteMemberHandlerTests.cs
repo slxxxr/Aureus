@@ -12,29 +12,38 @@ public sealed class InviteMemberHandlerTests
     private static readonly IOptions<AppOptions> AppOptions =
         Options.Create(new AppOptions { BaseUrl = "https://aureus.life" });
 
-    private static Workspace DefaultWorkspace(Guid id) => new()
+    private static Workspace DefaultWorkspace(Guid id)
     {
-        Id = id,
-        Name = "Personal",
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new Workspace
+        {
+            Id = id,
+            Name = "Personal",
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
-    private static User DefaultInviter(Guid id) => new()
+    private static User DefaultInviter(Guid id)
     {
-        Id = id,
-        Email = "inviter@test.local",
-        Name = "Inviter Name",
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new User
+        {
+            Id = id,
+            Email = "inviter@test.local",
+            Name = "Inviter Name",
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     private static InviteMemberHandler BuildHandler(
         WorkspaceRepositoryMock workspaceRepo,
         WorkspaceInvitationRepositoryMock invitationRepo,
         UserRepositoryMock userRepo,
         WorkspaceDailyUsageRepositoryMock dailyUsageRepo,
-        EmailSenderMock emailSender) =>
-        new(workspaceRepo.Object, invitationRepo.Object, userRepo.Object, dailyUsageRepo.Object,
+        EmailSenderMock emailSender)
+    {
+        return new InviteMemberHandler(workspaceRepo.Object, invitationRepo.Object, userRepo.Object,
+            dailyUsageRepo.Object,
             emailSender.Object, AppOptions);
+    }
 
     [Fact]
     public async Task Handle_NewInvitee_PersistsInvitationAndSendsEmail()
@@ -49,7 +58,8 @@ public sealed class InviteMemberHandlerTests
             .WithPendingInvitation(workspaceId, "invitee@test.local", null)
             .WithActiveCount(workspaceId, 0)
             .CapturingUpsert();
-        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local").WithUserById(inviterId, DefaultInviter(inviterId));
+        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local")
+            .WithUserById(inviterId, DefaultInviter(inviterId));
         var dailyUsageRepo = new WorkspaceDailyUsageRepositoryMock().WithCurrentCount(1);
         var emailSender = new EmailSenderMock().CapturingSent();
         var handler = BuildHandler(workspaceRepo, invitationRepo, userRepo, dailyUsageRepo, emailSender);
@@ -78,7 +88,8 @@ public sealed class InviteMemberHandlerTests
             .WithPendingInvitation(workspaceId, "invitee@test.local", null)
             .WithActiveCount(workspaceId, 0)
             .CapturingUpsert();
-        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local").WithUserById(inviterId, DefaultInviter(inviterId));
+        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local")
+            .WithUserById(inviterId, DefaultInviter(inviterId));
         var dailyUsageRepo = new WorkspaceDailyUsageRepositoryMock().WithCurrentCount(1);
         var emailSender = new EmailSenderMock().CapturingSent();
         var handler = BuildHandler(workspaceRepo, invitationRepo, userRepo, dailyUsageRepo, emailSender);
@@ -106,7 +117,8 @@ public sealed class InviteMemberHandlerTests
             .WithPendingInvitation(workspaceId, "invitee@test.local", null)
             .WithActiveCount(workspaceId, 0)
             .CapturingUpsert();
-        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local").WithUserById(inviterId, DefaultInviter(inviterId));
+        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local")
+            .WithUserById(inviterId, DefaultInviter(inviterId));
         var dailyUsageRepo = new WorkspaceDailyUsageRepositoryMock().WithCurrentCount(1);
         var emailSender = new EmailSenderMock().CapturingSent();
         var handler = BuildHandler(workspaceRepo, invitationRepo, userRepo, dailyUsageRepo, emailSender);
@@ -128,7 +140,8 @@ public sealed class InviteMemberHandlerTests
         var workspaceId = Guid.NewGuid();
         var inviterId = Guid.NewGuid();
         var workspace = new Workspace { Id = workspaceId, Name = "Tom & Jerry", CreatedAt = DateTimeOffset.UtcNow };
-        var inviter = new User { Id = inviterId, Email = "inviter@test.local", Name = "A & B", CreatedAt = DateTimeOffset.UtcNow };
+        var inviter = new User
+            { Id = inviterId, Email = "inviter@test.local", Name = "A & B", CreatedAt = DateTimeOffset.UtcNow };
         var workspaceRepo = new WorkspaceRepositoryMock()
             .WithWorkspace(workspaceId, workspace)
             .WithActiveMemberCount(workspaceId, 1);
@@ -158,7 +171,8 @@ public sealed class InviteMemberHandlerTests
         // Arrange
         var workspaceId = Guid.NewGuid();
         var inviterId = Guid.NewGuid();
-        var existingUser = new User { Id = Guid.NewGuid(), Email = "member@test.local", CreatedAt = DateTimeOffset.UtcNow };
+        var existingUser = new User
+            { Id = Guid.NewGuid(), Email = "member@test.local", CreatedAt = DateTimeOffset.UtcNow };
         var workspaceRepo = new WorkspaceRepositoryMock()
             .WithWorkspace(workspaceId, DefaultWorkspace(workspaceId))
             .WithMembership(workspaceId, existingUser.Id, WorkspaceRole.Member);
@@ -172,7 +186,8 @@ public sealed class InviteMemberHandlerTests
 
         // Act
         var exception = await Assert.ThrowsAsync<WorkspaceInvitationException>(() =>
-            handler.Handle(new InviteMemberCommand(workspaceId, inviterId, "member@test.local", null), CancellationToken.None));
+            handler.Handle(new InviteMemberCommand(workspaceId, inviterId, "member@test.local", null),
+                CancellationToken.None));
 
         // Assert
         Assert.Equal(WorkspaceInvitationErrorCode.AlreadyMember, exception.Code);
@@ -192,14 +207,16 @@ public sealed class InviteMemberHandlerTests
         var invitationRepo = new WorkspaceInvitationRepositoryMock()
             .WithPendingInvitation(workspaceId, "invitee@test.local", null)
             .WithActiveCount(workspaceId, 0);
-        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local").WithUserById(inviterId, DefaultInviter(inviterId));
+        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local")
+            .WithUserById(inviterId, DefaultInviter(inviterId));
         var dailyUsageRepo = new WorkspaceDailyUsageRepositoryMock().WithCurrentCount(1);
         var emailSender = new EmailSenderMock();
         var handler = BuildHandler(workspaceRepo, invitationRepo, userRepo, dailyUsageRepo, emailSender);
 
         // Act
         var exception = await Assert.ThrowsAsync<WorkspaceInvitationException>(() =>
-            handler.Handle(new InviteMemberCommand(workspaceId, inviterId, "invitee@test.local", null), CancellationToken.None));
+            handler.Handle(new InviteMemberCommand(workspaceId, inviterId, "invitee@test.local", null),
+                CancellationToken.None));
 
         // Assert
         Assert.Equal(WorkspaceInvitationErrorCode.WorkspaceFull, exception.Code);
@@ -221,7 +238,7 @@ public sealed class InviteMemberHandlerTests
             Email = "invitee@test.local",
             InvitedByUserId = Guid.NewGuid(),
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(3),
-            CreatedAt = DateTimeOffset.UtcNow.AddDays(-4),
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-4)
         };
         var workspaceRepo = new WorkspaceRepositoryMock()
             .WithWorkspace(workspaceId, DefaultWorkspace(workspaceId))
@@ -229,7 +246,8 @@ public sealed class InviteMemberHandlerTests
         var invitationRepo = new WorkspaceInvitationRepositoryMock()
             .WithPendingInvitation(workspaceId, "invitee@test.local", existingInvitation)
             .CapturingUpsert();
-        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local").WithUserById(inviterId, DefaultInviter(inviterId));
+        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local")
+            .WithUserById(inviterId, DefaultInviter(inviterId));
         var dailyUsageRepo = new WorkspaceDailyUsageRepositoryMock().WithCurrentCount(1);
         var emailSender = new EmailSenderMock().CapturingSent();
         var handler = BuildHandler(workspaceRepo, invitationRepo, userRepo, dailyUsageRepo, emailSender);
@@ -258,7 +276,7 @@ public sealed class InviteMemberHandlerTests
             Email = "invitee@test.local",
             InvitedByUserId = Guid.NewGuid(),
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(-1),
-            CreatedAt = DateTimeOffset.UtcNow.AddDays(-8),
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-8)
         };
         var workspaceRepo = new WorkspaceRepositoryMock()
             .WithWorkspace(workspaceId, DefaultWorkspace(workspaceId))
@@ -267,14 +285,16 @@ public sealed class InviteMemberHandlerTests
             .WithPendingInvitation(workspaceId, "invitee@test.local", existingInvitation)
             .WithActiveCount(workspaceId, 0)
             .CapturingUpsert();
-        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local").WithUserById(inviterId, DefaultInviter(inviterId));
+        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local")
+            .WithUserById(inviterId, DefaultInviter(inviterId));
         var dailyUsageRepo = new WorkspaceDailyUsageRepositoryMock().WithCurrentCount(1);
         var emailSender = new EmailSenderMock();
         var handler = BuildHandler(workspaceRepo, invitationRepo, userRepo, dailyUsageRepo, emailSender);
 
         // Act
         var exception = await Assert.ThrowsAsync<WorkspaceInvitationException>(() =>
-            handler.Handle(new InviteMemberCommand(workspaceId, inviterId, "invitee@test.local", null), CancellationToken.None));
+            handler.Handle(new InviteMemberCommand(workspaceId, inviterId, "invitee@test.local", null),
+                CancellationToken.None));
 
         // Assert
         Assert.Equal(WorkspaceInvitationErrorCode.WorkspaceFull, exception.Code);
@@ -294,14 +314,16 @@ public sealed class InviteMemberHandlerTests
         var invitationRepo = new WorkspaceInvitationRepositoryMock()
             .WithPendingInvitation(workspaceId, "invitee@test.local", null)
             .WithActiveCount(workspaceId, 0);
-        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local").WithUserById(inviterId, DefaultInviter(inviterId));
+        var userRepo = new UserRepositoryMock().WithNoUser("invitee@test.local")
+            .WithUserById(inviterId, DefaultInviter(inviterId));
         var dailyUsageRepo = new WorkspaceDailyUsageRepositoryMock().WithCurrentCount(21);
         var emailSender = new EmailSenderMock();
         var handler = BuildHandler(workspaceRepo, invitationRepo, userRepo, dailyUsageRepo, emailSender);
 
         // Act
         var exception = await Assert.ThrowsAsync<WorkspaceInvitationException>(() =>
-            handler.Handle(new InviteMemberCommand(workspaceId, inviterId, "invitee@test.local", null), CancellationToken.None));
+            handler.Handle(new InviteMemberCommand(workspaceId, inviterId, "invitee@test.local", null),
+                CancellationToken.None));
 
         // Assert
         Assert.Equal(WorkspaceInvitationErrorCode.DailyQuotaExceeded, exception.Code);

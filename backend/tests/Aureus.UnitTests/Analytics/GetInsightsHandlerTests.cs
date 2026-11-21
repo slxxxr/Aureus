@@ -6,11 +6,14 @@ namespace Aureus.UnitTests.Analytics;
 
 public sealed class GetInsightsHandlerTests
 {
-    private static GetInsightsQuery DefaultQuery() => new(
-        WorkspaceId: Guid.NewGuid(),
-        Question: "What did I spend?",
-        From: new DateOnly(2025, 1, 1),
-        To: new DateOnly(2025, 1, 31));
+    private static GetInsightsQuery DefaultQuery()
+    {
+        return new GetInsightsQuery(
+            Guid.NewGuid(),
+            "What did I spend?",
+            new DateOnly(2025, 1, 1),
+            new DateOnly(2025, 1, 31));
+    }
 
     private static GetInsightsHandler BuildHandler(
         AnalyticsRepositoryMock? repository = null,
@@ -29,7 +32,7 @@ public sealed class GetInsightsHandlerTests
         // Arrange
         const int countInSmallTier = 50;
         var repository = new AnalyticsRepositoryMock().WithCount(countInSmallTier);
-        var handler = BuildHandler(repository: repository);
+        var handler = BuildHandler(repository);
 
         // Act
         await handler.Handle(DefaultQuery(), CancellationToken.None);
@@ -46,7 +49,7 @@ public sealed class GetInsightsHandlerTests
         // Arrange
         const int countAtSmallTierEdge = 100;
         var repository = new AnalyticsRepositoryMock().WithCount(countAtSmallTierEdge);
-        var handler = BuildHandler(repository: repository);
+        var handler = BuildHandler(repository);
 
         // Act
         await handler.Handle(DefaultQuery(), CancellationToken.None);
@@ -62,7 +65,7 @@ public sealed class GetInsightsHandlerTests
         // Arrange
         const int countInMediumTier = 250;
         var repository = new AnalyticsRepositoryMock().WithCount(countInMediumTier);
-        var handler = BuildHandler(repository: repository);
+        var handler = BuildHandler(repository);
 
         // Act
         await handler.Handle(DefaultQuery(), CancellationToken.None);
@@ -79,7 +82,7 @@ public sealed class GetInsightsHandlerTests
         // Arrange
         const int countAtMediumTierEdge = 500;
         var repository = new AnalyticsRepositoryMock().WithCount(countAtMediumTierEdge);
-        var handler = BuildHandler(repository: repository);
+        var handler = BuildHandler(repository);
 
         // Act
         await handler.Handle(DefaultQuery(), CancellationToken.None);
@@ -95,7 +98,7 @@ public sealed class GetInsightsHandlerTests
         // Arrange
         const int countInLargeTier = 501;
         var repository = new AnalyticsRepositoryMock().WithCount(countInLargeTier);
-        var handler = BuildHandler(repository: repository);
+        var handler = BuildHandler(repository);
 
         // Act
         await handler.Handle(DefaultQuery(), CancellationToken.None);

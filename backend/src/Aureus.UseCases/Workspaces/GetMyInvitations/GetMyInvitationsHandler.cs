@@ -13,7 +13,7 @@ public sealed class GetMyInvitationsHandler(
         GetMyInvitationsQuery query, CancellationToken cancellationToken)
     {
         var user = await userRepository.FindByIdAsync(query.UserId, cancellationToken)
-            ?? throw new InvalidOperationException($"Authenticated user {query.UserId} not found in database.");
+                   ?? throw new InvalidOperationException($"Authenticated user {query.UserId} not found in database.");
 
         return await invitationRepository.GetPendingForEmailAsync(user.Email, DateTimeOffset.UtcNow, cancellationToken);
     }

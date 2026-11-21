@@ -1,10 +1,11 @@
 using Aureus.Infrastructure.Email.Interfaces;
 using Microsoft.Extensions.Options;
+using Resend;
 using ResendMessage = Resend.EmailMessage;
 
 namespace Aureus.Infrastructure.Email.Implementations;
 
-public sealed class ResendEmailSender(Resend.IResend resend, IOptions<ResendOptions> options)
+public sealed class ResendEmailSender(IResend resend, IOptions<ResendOptions> options)
     : IEmailSender
 {
     private readonly ResendOptions _options = options.Value;
@@ -16,7 +17,7 @@ public sealed class ResendEmailSender(Resend.IResend resend, IOptions<ResendOpti
             From = $"{_options.FromName} <{_options.FromAddress}>",
             To = [message.To],
             Subject = message.Subject,
-            HtmlBody = message.HtmlBody,
+            HtmlBody = message.HtmlBody
         };
 
         await resend.EmailSendAsync(resendMessage, cancellationToken);

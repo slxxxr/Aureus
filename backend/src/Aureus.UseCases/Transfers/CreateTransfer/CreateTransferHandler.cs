@@ -1,4 +1,3 @@
-using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transfers;
 using Aureus.Persistence.Interfaces;
 using MediatR;
@@ -16,28 +15,22 @@ public sealed class CreateTransferHandler(
             command.FromAccountId, command.WorkspaceId, cancellationToken);
 
         if (fromAccount is null)
-        {
             throw new TransferException(
                 TransferErrorCode.AccountNotFound,
                 $"Financial account {command.FromAccountId} not found.");
-        }
 
         var toAccount = await accountRepository.FindByIdAsync(
             command.ToAccountId, command.WorkspaceId, cancellationToken);
 
         if (toAccount is null)
-        {
             throw new TransferException(
                 TransferErrorCode.AccountNotFound,
                 $"Financial account {command.ToAccountId} not found.");
-        }
 
         if (fromAccount.Currency != toAccount.Currency)
-        {
             throw new TransferException(
                 TransferErrorCode.CurrencyMismatch,
                 $"Cannot transfer between accounts with different currencies ({fromAccount.Currency} -> {toAccount.Currency}).");
-        }
 
         var transfer = new Transfer
         {
@@ -50,7 +43,7 @@ public sealed class CreateTransferHandler(
             Currency = fromAccount.Currency,
             OccurredAt = command.OccurredAt,
             Note = command.Note?.Trim(),
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
         await transferRepository.AddAsync(transfer, cancellationToken);

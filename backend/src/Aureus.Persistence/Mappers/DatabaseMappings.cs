@@ -1,4 +1,3 @@
-using AutoMapper;
 using Aureus.Domain.Categories;
 using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transactions;
@@ -6,6 +5,7 @@ using Aureus.Domain.Transfers;
 using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
 using Aureus.Persistence.Entities;
+using AutoMapper;
 
 namespace Aureus.Persistence.Mappers;
 
@@ -23,7 +23,8 @@ public sealed class DatabaseMappings : Profile
                 options => options.MapFrom(source => source.Role.ToString()));
         CreateMap<WorkspaceInvitation, WorkspaceInvitationDb>();
         CreateMap<WorkspaceInvitationDb, WorkspaceInvitation>();
-        CreateMap<FinancialAccount, FinancialAccountDb>();
+        CreateMap<FinancialAccount, FinancialAccountDb>()
+            .ForMember(account => account.SortOrder, options => options.Ignore());
         CreateMap<FinancialAccountDb, FinancialAccount>();
         CreateMap<Category, CategoryDb>()
             .ForMember(

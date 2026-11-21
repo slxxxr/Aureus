@@ -58,8 +58,10 @@ public sealed class WorkspaceRepositoryMock
         return this;
     }
 
-    public void VerifyUpdateNotCalled() =>
+    public void VerifyUpdateNotCalled()
+    {
         _mock.Verify(r => r.UpdateAsync(It.IsAny<Workspace>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 
     public WorkspaceRepositoryMock CapturingDelete()
     {
@@ -70,11 +72,15 @@ public sealed class WorkspaceRepositoryMock
         return this;
     }
 
-    public void VerifyDeleteCalledOnce() =>
+    public void VerifyDeleteCalledOnce()
+    {
         _mock.Verify(r => r.DeleteAsync(It.IsAny<Workspace>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 
-    public void VerifyDeleteNotCalled() =>
+    public void VerifyDeleteNotCalled()
+    {
         _mock.Verify(r => r.DeleteAsync(It.IsAny<Workspace>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 
     public WorkspaceRepositoryMock WithActiveMemberCount(Guid workspaceId, int count)
     {
@@ -113,12 +119,17 @@ public sealed class WorkspaceRepositoryMock
         return this;
     }
 
-    public void VerifyUpdateMemberRoleCalledOnce(Guid workspaceId, Guid userId, WorkspaceRole role) =>
-        _mock.Verify(r => r.UpdateMemberRoleAsync(workspaceId, userId, role, It.IsAny<CancellationToken>()), Times.Once);
+    public void VerifyUpdateMemberRoleCalledOnce(Guid workspaceId, Guid userId, WorkspaceRole role)
+    {
+        _mock.Verify(r => r.UpdateMemberRoleAsync(workspaceId, userId, role, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 
-    public void VerifyUpdateMemberRoleNotCalled() =>
+    public void VerifyUpdateMemberRoleNotCalled()
+    {
         _mock.Verify(r => r.UpdateMemberRoleAsync(
             It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<WorkspaceRole>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 
     public WorkspaceRepositoryMock CapturingTransferOwnership()
     {
@@ -130,12 +141,17 @@ public sealed class WorkspaceRepositoryMock
         return this;
     }
 
-    public void VerifyTransferOwnershipCalledOnce(Guid workspaceId, Guid fromUserId, Guid toUserId) =>
-        _mock.Verify(r => r.TransferOwnershipAsync(workspaceId, fromUserId, toUserId, It.IsAny<CancellationToken>()), Times.Once);
+    public void VerifyTransferOwnershipCalledOnce(Guid workspaceId, Guid fromUserId, Guid toUserId)
+    {
+        _mock.Verify(r => r.TransferOwnershipAsync(workspaceId, fromUserId, toUserId, It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
 
-    public void VerifyTransferOwnershipNotCalled() =>
+    public void VerifyTransferOwnershipNotCalled()
+    {
         _mock.Verify(r => r.TransferOwnershipAsync(
             It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 
     public WorkspaceRepositoryMock CapturingDeleteMember()
     {
@@ -146,9 +162,14 @@ public sealed class WorkspaceRepositoryMock
         return this;
     }
 
-    public void VerifyDeleteMemberCalledOnce(Guid workspaceId, Guid userId) =>
+    public void VerifyDeleteMemberCalledOnce(Guid workspaceId, Guid userId)
+    {
         _mock.Verify(r => r.DeleteMemberAsync(workspaceId, userId, It.IsAny<CancellationToken>()), Times.Once);
+    }
 
-    public void VerifyDeleteMemberNotCalled() =>
-        _mock.Verify(r => r.DeleteMemberAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    public void VerifyDeleteMemberNotCalled()
+    {
+        _mock.Verify(r => r.DeleteMemberAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }

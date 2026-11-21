@@ -76,7 +76,9 @@ public sealed class TransfersController(ISender sender, IMapper mapper) : ApiCon
         Guid transferId,
         CancellationToken cancellationToken)
     {
-        await sender.Send(new DeleteTransferCommand(transferId, workspaceId, CurrentUserId, CurrentWorkspaceMembership.Role), cancellationToken);
+        await sender.Send(
+            new DeleteTransferCommand(transferId, workspaceId, CurrentUserId, CurrentWorkspaceMembership.Role),
+            cancellationToken);
 
         return NoContent();
     }
