@@ -2,12 +2,14 @@ using System.Text;
 using Aureus.Infrastructure.Email;
 using Aureus.Infrastructure.Email.Implementations;
 using Aureus.Infrastructure.Email.Interfaces;
+using Aureus.Infrastructure.ExchangeRates;
 using Aureus.Infrastructure.Security;
 using Aureus.Infrastructure.Security.Implementations;
 using Aureus.Infrastructure.Security.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using Resend;
 
@@ -20,6 +22,13 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IRegistrationTokenService, RegistrationTokenService>();
+
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddHttpClient<IExchangeRateProvider, CbrExchangeRateProvider>(client =>
+        {
+            client.BaseAddress = new Uri("https://www.cbr.ru/");
+            client.Timeout = TimeSpan.FromSeconds(5);
+        });
 
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         services.Configure<ResendOptions>(configuration.GetSection(ResendOptions.SectionName));
