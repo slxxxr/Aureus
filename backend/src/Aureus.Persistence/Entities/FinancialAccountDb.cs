@@ -14,6 +14,8 @@ public sealed class FinancialAccountDb
 
     public long CurrentBalanceMinor { get; set; }
 
+    public short? SortOrder { get; set; }
+
     public bool IsDeleted { get; set; }
 
     public DateTimeOffset? DeletedAt { get; set; }

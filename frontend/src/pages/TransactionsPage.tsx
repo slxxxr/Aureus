@@ -1472,8 +1472,9 @@ export function TransactionsPage() {
         )}
       </div>
 
-      {showCreate && activeWorkspace && (
+      {showCreate && activeWorkspace && !accLoading && (
         <CreateTransactionModal
+          key={activeWorkspace.id}
           workspaceId={activeWorkspace.id}
           accounts={accounts}
           categories={categories}

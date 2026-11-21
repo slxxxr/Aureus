@@ -4,6 +4,7 @@ using Aureus.Domain.Workspaces;
 using Aureus.UseCases.FinancialAccounts.CreateFinancialAccount;
 using Aureus.UseCases.FinancialAccounts.DeleteFinancialAccount;
 using Aureus.UseCases.FinancialAccounts.GetFinancialAccounts;
+using Aureus.UseCases.FinancialAccounts.ReorderFinancialAccounts;
 using Aureus.UseCases.FinancialAccounts.UpdateFinancialAccount;
 using AutoMapper;
 using MediatR;
@@ -38,6 +39,20 @@ public sealed class FinancialAccountsController(ISender sender, IMapper mapper) 
         var account = await sender.Send(command, cancellationToken);
 
         return StatusCode(StatusCodes.Status201Created, mapper.Map<FinancialAccountResponse>(account));
+    }
+
+    [HttpPut("order")]
+    [RequireWorkspaceRole(WorkspaceRole.Manager)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> ReorderAsync(
+        Guid workspaceId,
+        [FromBody] ReorderFinancialAccountsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var command = new ReorderFinancialAccountsCommand(workspaceId, request.AccountIds, request.ExpectedAccountIds);
+        await sender.Send(command, cancellationToken);
+        return NoContent();
     }
 
     [HttpPatch("{accountId:guid}")]

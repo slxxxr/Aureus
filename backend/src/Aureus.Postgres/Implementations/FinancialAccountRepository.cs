@@ -1,6 +1,7 @@
+using System.Data;
 using Aureus.Domain.FinancialAccounts;
-using Aureus.Persistence.Entities;
 using Aureus.Persistence;
+using Aureus.Persistence.Entities;
 using Aureus.Persistence.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -15,13 +16,48 @@ public sealed class FinancialAccountRepository(AureusDbContext dbContext, IMappe
         Guid workspaceId,
         CancellationToken cancellationToken)
     {
-        var entities = await dbContext.FinancialAccounts
+        var entities = await GetOrderedAccounts(workspaceId)
             .AsNoTracking()
-            .Where(a => a.WorkspaceId == workspaceId)
-            .OrderBy(a => a.CreatedAt)
             .ToListAsync(cancellationToken);
 
         return mapper.Map<List<FinancialAccount>>(entities);
+    }
+
+    public async Task ReorderAsync(
+        Guid workspaceId,
+        IReadOnlyList<Guid> accountIds,
+        IReadOnlyList<Guid> expectedAccountIds,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable, cancellationToken);
+
+        try
+        {
+            var accounts = await GetOrderedAccounts(workspaceId)
+                .AsTracking()
+                .ToListAsync(cancellationToken);
+
+            if (!accounts.Select(account => account.Id).SequenceEqual(expectedAccountIds))
+            {
+                throw new FinancialAccountException(
+                    FinancialAccountErrorCode.OrderConflict, "The list or order of financial accounts changed.");
+            }
+
+            var accountsById = accounts.ToDictionary(account => account.Id);
+            for (var position = 0; position < accountIds.Count; position++)
+            {
+                accountsById[accountIds[position]].SortOrder = (short)position;
+            }
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch (Exception exception) when (IsConcurrentUpdate(exception))
+        {
+            throw new FinancialAccountException(
+                FinancialAccountErrorCode.OrderConflict, "The list or order of financial accounts changed.");
+        }
     }
 
     public async Task<FinancialAccount?> FindByIdAsync(
@@ -100,4 +136,18 @@ public sealed class FinancialAccountRepository(AureusDbContext dbContext, IMappe
     private static bool IsUniqueViolation(Exception ex) =>
         ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } ||
         ex is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } };
+
+    private IOrderedQueryable<FinancialAccountDb> GetOrderedAccounts(Guid workspaceId) =>
+        dbContext.FinancialAccounts
+            .Where(account => account.WorkspaceId == workspaceId)
+            .OrderBy(account => account.SortOrder == null)
+            .ThenBy(account => account.SortOrder)
+            .ThenBy(account => account.CreatedAt)
+            .ThenBy(account => account.Id);
+
+    private static bool IsConcurrentUpdate(Exception exception) =>
+        exception.GetBaseException() is PostgresException
+        {
+            SqlState: PostgresErrorCodes.SerializationFailure or PostgresErrorCodes.DeadlockDetected
+        };
 }

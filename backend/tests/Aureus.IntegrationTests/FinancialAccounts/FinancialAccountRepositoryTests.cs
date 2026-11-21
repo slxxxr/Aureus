@@ -253,6 +253,114 @@ public sealed class FinancialAccountRepositoryTests(PostgresFixture fixture)
         Assert.Equal([olderId, newerId], accounts.Select(account => account.Id));
     }
 
+    [Fact]
+    public async Task ReorderAsync_PersistsWorkspaceOrder_AndAppendsNewAccounts()
+    {
+        // Arrange
+        var (workspaceId, _) = await TestData.SeedWorkspaceAsync(fixture);
+        var now = DateTimeOffset.UtcNow;
+        var cashId = await AddAccountAsync(workspaceId, "Cash", now.AddDays(-2));
+        var cardId = await AddAccountAsync(workspaceId, "Card", now.AddDays(-1));
+
+        // Act
+        await using (var db = fixture.CreateDbContext())
+        {
+            var repository = new FinancialAccountRepository(db, fixture.Mapper);
+            await repository.ReorderAsync(workspaceId, [cardId, cashId], [cashId, cardId], CancellationToken.None);
+        }
+
+        var newId = await AddAccountAsync(workspaceId, "New account", now);
+        await using var readDb = fixture.CreateDbContext();
+        var readRepository = new FinancialAccountRepository(readDb, fixture.Mapper);
+        var accounts = await readRepository.GetByWorkspaceIdAsync(workspaceId, CancellationToken.None);
+
+        // Assert
+        Assert.Equal([cardId, cashId, newId], accounts.Select(account => account.Id));
+        Assert.Equal(1000_00, accounts[0].CurrentBalanceMinor);
+
+        await SoftDeleteAccountAsync(cardId);
+        var remainingAccounts = await readRepository.GetByWorkspaceIdAsync(workspaceId, CancellationToken.None);
+        Assert.Equal([cashId, newId], remainingAccounts.Select(account => account.Id));
+    }
+
+    [Fact]
+    public async Task ReorderAsync_RejectsAnOutdatedOrder()
+    {
+        // Arrange
+        var (workspaceId, _) = await TestData.SeedWorkspaceAsync(fixture);
+        var now = DateTimeOffset.UtcNow;
+        var cashId = await AddAccountAsync(workspaceId, "Cash", now.AddDays(-2));
+        var cardId = await AddAccountAsync(workspaceId, "Card", now.AddDays(-1));
+        var depositId = await AddAccountAsync(workspaceId, "Deposit", now);
+        var initialOrder = new[] { cashId, cardId, depositId };
+
+        await using (var db = fixture.CreateDbContext())
+        {
+            var repository = new FinancialAccountRepository(db, fixture.Mapper);
+            await repository.ReorderAsync(workspaceId, [cardId, cashId, depositId], initialOrder,
+                CancellationToken.None);
+        }
+
+        // Act
+        await using var staleDb = fixture.CreateDbContext();
+        var staleRepository = new FinancialAccountRepository(staleDb, fixture.Mapper);
+        var exception = await Assert.ThrowsAsync<FinancialAccountException>(() => staleRepository.ReorderAsync(
+            workspaceId, [depositId, cardId, cashId], initialOrder, CancellationToken.None));
+
+        // Assert
+        Assert.Equal(FinancialAccountErrorCode.OrderConflict, exception.Code);
+
+        var accounts = await staleRepository.GetByWorkspaceIdAsync(workspaceId, CancellationToken.None);
+        Assert.Equal([cardId, cashId, depositId], accounts.Select(account => account.Id));
+    }
+
+    [Fact]
+    public async Task ReorderAsync_ConcurrentRequestsFromTheSameOrder_OnlyOneWins()
+    {
+        // Arrange
+        var (workspaceId, _) = await TestData.SeedWorkspaceAsync(fixture);
+        var now = DateTimeOffset.UtcNow;
+        var cashId = await AddAccountAsync(workspaceId, "Cash", now.AddDays(-3));
+        var cardId = await AddAccountAsync(workspaceId, "Card", now.AddDays(-2));
+        var depositId = await AddAccountAsync(workspaceId, "Deposit", now.AddDays(-1));
+        var savingsId = await AddAccountAsync(workspaceId, "Savings", now);
+        var initialOrder = new[] { cashId, cardId, depositId, savingsId };
+        var firstOrder = new[] { cardId, cashId, depositId, savingsId };
+        var secondOrder = new[] { cashId, cardId, savingsId, depositId };
+
+        await using (var db = fixture.CreateDbContext())
+        {
+            var repository = new FinancialAccountRepository(db, fixture.Mapper);
+            await repository.ReorderAsync(workspaceId, initialOrder, initialOrder, CancellationToken.None);
+        }
+
+        // Act
+        var saved = await Task.WhenAll(TryReorderAsync(firstOrder), TryReorderAsync(secondOrder));
+
+        // Assert
+        Assert.Single(saved, result => result);
+
+        await using var readDb = fixture.CreateDbContext();
+        var accounts = await new FinancialAccountRepository(readDb, fixture.Mapper)
+            .GetByWorkspaceIdAsync(workspaceId, CancellationToken.None);
+        Assert.Equal(saved[0] ? firstOrder : secondOrder, accounts.Select(account => account.Id));
+
+        async Task<bool> TryReorderAsync(Guid[] order)
+        {
+            await using var db = fixture.CreateDbContext();
+            var repository = new FinancialAccountRepository(db, fixture.Mapper);
+            try
+            {
+                await repository.ReorderAsync(workspaceId, order, initialOrder, CancellationToken.None);
+                return true;
+            }
+            catch (FinancialAccountException exception) when (exception.Code == FinancialAccountErrorCode.OrderConflict)
+            {
+                return false;
+            }
+        }
+    }
+
     private static FinancialAccount NewAccount(Guid workspaceId, string name, DateTimeOffset? createdAt = null) =>
         new()
         {

@@ -10,7 +10,7 @@ public sealed class FinancialAccountException(FinancialAccountErrorCode code, st
 
     public override ErrorType ErrorType => Code switch
     {
-        FinancialAccountErrorCode.NameTaken => ErrorType.Conflict,
+        FinancialAccountErrorCode.NameTaken or FinancialAccountErrorCode.OrderConflict => ErrorType.Conflict,
         FinancialAccountErrorCode.NotFound => ErrorType.NotFound,
         _ => ErrorType.Validation
     };

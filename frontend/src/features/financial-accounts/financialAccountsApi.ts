@@ -21,8 +21,23 @@ export type UpdateFinancialAccountPayload = {
   initialBalanceMinor?: number;
 };
 
+export type ReorderFinancialAccountsPayload = {
+  accountIds: string[];
+  expectedAccountIds: string[];
+};
+
 export function getFinancialAccounts(workspaceId: string): Promise<FinancialAccount[]> {
   return apiFetch<FinancialAccount[]>(`/workspaces/${workspaceId}/financial-accounts`);
+}
+
+export function reorderFinancialAccounts(
+  workspaceId: string,
+  payload: ReorderFinancialAccountsPayload,
+): Promise<void> {
+  return apiFetch<void>(`/workspaces/${workspaceId}/financial-accounts/order`, {
+    method: "PUT",
+    body: payload,
+  });
 }
 
 export function createFinancialAccount(

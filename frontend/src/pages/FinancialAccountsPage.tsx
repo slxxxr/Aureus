@@ -1,17 +1,37 @@
 import { InputLimits } from "@/lib/inputLimits";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus } from "lucide-react";
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type UniqueIdentifier,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  rectSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, Pencil, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/features/workspaces/WorkspaceContext";
 import {
   createFinancialAccount,
   deleteFinancialAccount,
   getFinancialAccounts,
+  reorderFinancialAccounts,
   updateFinancialAccount,
   type FinancialAccount,
+  type ReorderFinancialAccountsPayload,
 } from "@/features/financial-accounts/financialAccountsApi";
 import { resolveFinancialAccountError } from "@/features/financial-accounts/resolveFinancialAccountError";
 import { formatMoney } from "@/lib/formatMoney";
@@ -306,45 +326,76 @@ function AccountCard({
   account,
   workspaceId,
   canManage,
+  canReorder,
+  isSavingOrder,
 }: {
   account: FinancialAccount;
   workspaceId: string;
   canManage: boolean;
+  canReorder: boolean;
+  isSavingOrder: boolean;
 }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const tapHandlers = useTapToEdit(() => setEditing(true), canManage);
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } =
+    useSortable({ id: account.id, disabled: !canReorder || isSavingOrder });
 
   return (
     <>
       <div
-        {...tapHandlers}
-        className={cn(
-          "group rounded-lg border border-border bg-card p-5 transition-shadow hover:shadow-sm",
-          canManage && "cursor-pointer",
-        )}
+        ref={setNodeRef}
+        style={{ transform: CSS.Transform.toString(transform), transition }}
+        className={cn("group relative", isDragging && "z-10")}
       >
-        <div className="mb-1 flex items-start justify-between gap-2">
-          <p className="truncate text-sm font-medium text-foreground" title={account.name}>
-            {account.name}
-          </p>
-          {canManage && (
-            <span
-              aria-hidden="true"
-              className="hidden shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 sm:block"
-            >
-              <Pencil className="h-3.5 w-3.5" />
-            </span>
+        <div
+          {...tapHandlers}
+          className={cn(
+            "h-full rounded-lg border border-border bg-card p-5 transition-shadow hover:shadow-sm",
+            canManage && "cursor-pointer",
+            isDragging && "shadow-md",
           )}
+        >
+          <div className={cn("mb-1 flex items-start justify-between gap-2", canReorder && "pr-8")}>
+            <p className="truncate text-sm font-medium text-foreground" title={account.name}>
+              {account.name}
+            </p>
+            {canManage && (
+              <span
+                aria-hidden="true"
+                className="hidden shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 sm:block"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </span>
+            )}
+          </div>
+
+          <p className="text-2xl font-semibold tabular-nums">
+            {formatMoney(account.currentBalanceMinor, account.currency)}
+          </p>
+
+          <span className="mt-2 inline-block rounded-sm bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+            {account.currency}
+          </span>
         </div>
 
-        <p className="text-2xl font-semibold tabular-nums">
-          {formatMoney(account.currentBalanceMinor, account.currency)}
-        </p>
-
-        <span className="mt-2 inline-block rounded-sm bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
-          {account.currency}
-        </span>
+        {canReorder && (
+          <button
+            type="button"
+            ref={setActivatorNodeRef}
+            {...attributes}
+            {...listeners}
+            aria-label={t("financialAccounts.reorderHandle", { name: account.name })}
+            className={cn(
+              "absolute right-3 top-3 flex h-9 w-9 touch-none cursor-grab items-center justify-center rounded-md text-muted-foreground",
+              "opacity-0 transition-opacity group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100",
+              "hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              "active:cursor-grabbing aria-disabled:cursor-default aria-disabled:text-muted-foreground/50",
+            )}
+          >
+            <GripVertical className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {editing && (
@@ -356,11 +407,24 @@ function AccountCard({
 
 // ─── page ─────────────────────────────────────────────────────────────────────
 
+function applyAccountOrder(accounts: FinancialAccount[], accountIds: string[]): FinancialAccount[] {
+  const positions = new Map(accountIds.map((id, index) => [id, index]));
+  return [...accounts].sort((left, right) =>
+    (positions.get(left.id) ?? positions.size) - (positions.get(right.id) ?? positions.size),
+  );
+}
+
 export function FinancialAccountsPage() {
   const { t } = useTranslation();
   const { activeWorkspace } = useWorkspace();
+  const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
+  const dragStart = useRef<{ workspaceId: string; accountIds: string[] } | null>(null);
   const canManage = activeWorkspace?.role !== "Member";
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const { data: accounts, isLoading } = useQuery({
     queryKey: ["financial-accounts", activeWorkspace?.id],
@@ -368,6 +432,62 @@ export function FinancialAccountsPage() {
     enabled: activeWorkspace !== null,
     staleTime: 30_000,
   });
+  const accountIds = accounts?.map((account) => account.id) ?? [];
+  const canReorder = canManage && accountIds.length > 1;
+
+  const announcePosition = (id: UniqueIdentifier) => {
+    const index = accountIds.indexOf(String(id));
+    return index < 0 ? undefined : t("financialAccounts.reorderPosition", {
+      position: index + 1,
+      total: accountIds.length,
+    });
+  };
+
+  const reorder = useMutation({
+    mutationFn: ({ workspaceId, ...payload }: ReorderFinancialAccountsPayload & { workspaceId: string }) =>
+      reorderFinancialAccounts(workspaceId, payload),
+    onMutate: async ({ workspaceId, accountIds: nextIds, expectedAccountIds }) => {
+      const queryKey = ["financial-accounts", workspaceId];
+      await queryClient.cancelQueries({ queryKey });
+      const currentAccounts = queryClient.getQueryData<FinancialAccount[]>(queryKey);
+      if (currentAccounts?.length !== expectedAccountIds.length ||
+          !currentAccounts.every((account, index) => account.id === expectedAccountIds[index])) {
+        return false;
+      }
+
+      queryClient.setQueryData(queryKey, applyAccountOrder(currentAccounts, nextIds));
+      return true;
+    },
+    onError: (_error, { workspaceId, accountIds: nextIds, expectedAccountIds }, applied) => {
+      if (applied) {
+        queryClient.setQueryData<FinancialAccount[]>(["financial-accounts", workspaceId], (current) => {
+          if (current?.length === nextIds.length && current.every((account, index) => account.id === nextIds[index])) {
+            return applyAccountOrder(current, expectedAccountIds);
+          }
+
+          return current;
+        });
+      }
+    },
+    onSettled: (_data, _error, { workspaceId }) =>
+      queryClient.invalidateQueries({ queryKey: ["financial-accounts", workspaceId] }),
+  });
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    const start = dragStart.current;
+    dragStart.current = null;
+    if (!start || !over || start.workspaceId !== activeWorkspace?.id || !canReorder || reorder.isPending) return;
+
+    const from = start.accountIds.indexOf(String(active.id));
+    const to = start.accountIds.indexOf(String(over.id));
+    if (from < 0 || to < 0 || from === to) return;
+
+    reorder.mutate({
+      workspaceId: start.workspaceId,
+      expectedAccountIds: start.accountIds,
+      accountIds: arrayMove(start.accountIds, from, to),
+    });
+  };
 
   return (
     <div>
@@ -396,17 +516,47 @@ export function FinancialAccountsPage() {
         </div>
       )}
 
-      {!isLoading && accounts && accounts.length > 0 && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {accounts.map((account) => (
-            <AccountCard
-              key={account.id}
-              account={account}
-              workspaceId={activeWorkspace!.id}
-              canManage={canManage}
-            />
-          ))}
-        </div>
+      {reorder.isError && reorder.variables?.workspaceId === activeWorkspace?.id && (
+        <p className="mb-3 text-sm text-destructive" role="alert">
+          {resolveFinancialAccountError(reorder.error, t as TFunction)}
+        </p>
+      )}
+
+      {!isLoading && activeWorkspace && accounts && accounts.length > 0 && (
+        <DndContext
+          key={activeWorkspace.id}
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          accessibility={{
+            screenReaderInstructions: { draggable: t("financialAccounts.reorderInstructions") },
+            announcements: {
+              onDragStart: ({ active }) => t("financialAccounts.reorderStarted", {
+                name: accounts.find((account) => account.id === active.id)?.name,
+              }),
+              onDragOver: ({ over }) => over ? announcePosition(over.id) : undefined,
+              onDragEnd: ({ over }) => over ? announcePosition(over.id) : undefined,
+              onDragCancel: () => t("financialAccounts.reorderCanceled"),
+            },
+          }}
+          onDragStart={() => { dragStart.current = { workspaceId: activeWorkspace.id, accountIds }; }}
+          onDragCancel={() => { dragStart.current = null; }}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={accountIds} strategy={rectSortingStrategy}>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {accounts.map((account) => (
+                <AccountCard
+                  key={account.id}
+                  account={account}
+                  workspaceId={activeWorkspace.id}
+                  canManage={canManage}
+                  canReorder={canReorder}
+                  isSavingOrder={reorder.isPending}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {showCreate && activeWorkspace && (

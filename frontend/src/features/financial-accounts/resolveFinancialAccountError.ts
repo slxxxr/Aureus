@@ -4,6 +4,8 @@ import { ApiError } from "@/lib/apiClient";
 const codeToTranslationKey: Record<string, string> = {
   NameTaken: "financialAccounts.errors.nameTaken",
   NotFound: "financialAccounts.errors.notFound",
+  InvalidOrder: "common.validation.invalidInput",
+  OrderConflict: "financialAccounts.errors.orderConflict",
   ValidationFailed: "common.validation.invalidInput",
 };
 
