@@ -13,28 +13,24 @@ internal sealed record DefaultWorkspaceBundle(
 
 internal static class DefaultWorkspaceSeeds
 {
-    private sealed record SeedData(
-        string WorkspaceName,
-        string Currency,
-        string[] AccountNames,
-        string[] ExpenseNames,
-        string[] IncomeNames);
-
     private static readonly Dictionary<string, SeedData> Seeds = new()
     {
         ["ru"] = new SeedData(
-            WorkspaceName: "Личное",
-            Currency: "RUB",
-            AccountNames: ["Наличные", "Карта"],
-            ExpenseNames: ["Продукты", "Кафе и рестораны", "Транспорт", "Жильё", "Здоровье", "Развлечения", "Одежда", "Связь"],
-            IncomeNames: ["Зарплата", "Прочее"]),
+            "Личное",
+            "RUB",
+            ["Наличные", "Карта"],
+            ["Продукты", "Кафе и рестораны", "Транспорт", "Жильё", "Здоровье", "Развлечения", "Одежда", "Связь"],
+            ["Зарплата", "Прочее"]),
 
         ["en"] = new SeedData(
-            WorkspaceName: "Personal",
-            Currency: "USD",
-            AccountNames: ["Cash", "Debit Card"],
-            ExpenseNames: ["Groceries", "Dining Out", "Transport", "Housing", "Health", "Entertainment", "Clothing", "Communications"],
-            IncomeNames: ["Salary", "Other"]),
+            "Personal",
+            "USD",
+            ["Cash", "Debit Card"],
+            [
+                "Groceries", "Dining Out", "Transport", "Housing", "Health", "Entertainment", "Clothing",
+                "Communications"
+            ],
+            ["Salary", "Other"])
     };
 
     private static readonly SeedData Fallback = Seeds["ru"];
@@ -48,7 +44,7 @@ internal static class DefaultWorkspaceSeeds
         {
             Id = workspaceId,
             Name = data.WorkspaceName,
-            CreatedAt = now,
+            CreatedAt = now
         };
 
         var member = new WorkspaceMember
@@ -57,14 +53,16 @@ internal static class DefaultWorkspaceSeeds
             WorkspaceId = workspaceId,
             UserId = userId,
             Role = WorkspaceRole.Owner,
-            JoinedAt = now,
+            JoinedAt = now
         };
 
-        return new DefaultWorkspaceBundle(workspace, member, BuildAccounts(workspaceId, data, now), BuildCategories(workspaceId, data, now));
+        return new DefaultWorkspaceBundle(workspace, member, BuildAccounts(workspaceId, data, now),
+            BuildCategories(workspaceId, data, now));
     }
 
-    private static List<FinancialAccount> BuildAccounts(Guid workspaceId, SeedData data, DateTimeOffset now) =>
-        data.AccountNames.Select(name => new FinancialAccount
+    private static List<FinancialAccount> BuildAccounts(Guid workspaceId, SeedData data, DateTimeOffset now)
+    {
+        return data.AccountNames.Select(name => new FinancialAccount
         {
             Id = Guid.NewGuid(),
             WorkspaceId = workspaceId,
@@ -72,8 +70,9 @@ internal static class DefaultWorkspaceSeeds
             Currency = data.Currency,
             InitialBalanceMinor = 0,
             CurrentBalanceMinor = 0,
-            CreatedAt = now,
+            CreatedAt = now
         }).ToList();
+    }
 
     private static List<Category> BuildCategories(Guid workspaceId, SeedData data, DateTimeOffset now)
     {
@@ -83,7 +82,7 @@ internal static class DefaultWorkspaceSeeds
             WorkspaceId = workspaceId,
             Name = name,
             Type = TransactionType.Expense,
-            CreatedAt = now,
+            CreatedAt = now
         }).ToList();
 
         categories.AddRange(data.IncomeNames.Select(name => new Category
@@ -92,9 +91,16 @@ internal static class DefaultWorkspaceSeeds
             WorkspaceId = workspaceId,
             Name = name,
             Type = TransactionType.Income,
-            CreatedAt = now,
+            CreatedAt = now
         }));
 
         return categories;
     }
+
+    private sealed record SeedData(
+        string WorkspaceName,
+        string Currency,
+        string[] AccountNames,
+        string[] ExpenseNames,
+        string[] IncomeNames);
 }

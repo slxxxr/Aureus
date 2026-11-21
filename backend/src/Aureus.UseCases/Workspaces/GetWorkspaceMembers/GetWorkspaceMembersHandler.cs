@@ -8,6 +8,8 @@ public sealed class GetWorkspaceMembersHandler(IWorkspaceRepository workspaceRep
     : IRequestHandler<GetWorkspaceMembersQuery, IReadOnlyList<WorkspaceMemberDetail>>
 {
     public Task<IReadOnlyList<WorkspaceMemberDetail>> Handle(
-        GetWorkspaceMembersQuery query, CancellationToken cancellationToken) =>
-        workspaceRepository.GetMembersAsync(query.WorkspaceId, cancellationToken);
+        GetWorkspaceMembersQuery query, CancellationToken cancellationToken)
+    {
+        return workspaceRepository.GetMembersAsync(query.WorkspaceId, cancellationToken);
+    }
 }

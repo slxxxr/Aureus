@@ -35,21 +35,14 @@ public sealed class ImportRepository(AureusDbContext dbContext, IMapper mapper) 
 
         var combinedDeltas = new Dictionary<Guid, long>();
         foreach (var (accountId, delta) in transactionAccountDeltas)
-        {
             combinedDeltas[accountId] = combinedDeltas.GetValueOrDefault(accountId) + delta;
-        }
 
         foreach (var (accountId, delta) in transferAccountDeltas)
-        {
             combinedDeltas[accountId] = combinedDeltas.GetValueOrDefault(accountId) + delta;
-        }
 
         foreach (var (accountId, delta) in combinedDeltas)
         {
-            if (delta == 0)
-            {
-                continue;
-            }
+            if (delta == 0) continue;
 
             await dbContext.FinancialAccounts
                 .Where(a => a.Id == accountId)

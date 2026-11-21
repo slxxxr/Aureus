@@ -24,9 +24,9 @@ public sealed class JwtTokenGenerator(IOptions<JwtOptions> options) : IJwtTokenG
         };
 
         var token = new JwtSecurityToken(
-            issuer: _options.Issuer,
-            audience: _options.Audience,
-            claims: claims,
+            _options.Issuer,
+            _options.Audience,
+            claims,
             expires: DateTime.UtcNow.AddMinutes(_options.ExpiresInMinutes),
             signingCredentials: credentials);
 

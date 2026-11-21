@@ -1,6 +1,6 @@
-using Aureus.Postgres.Implementations;
 using Aureus.Domain.Transfers;
 using Aureus.IntegrationTests.Common;
+using Aureus.Postgres.Implementations;
 
 namespace Aureus.IntegrationTests.Transfers;
 
@@ -12,9 +12,9 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 100_00);
+        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, 100_00);
         var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var transfer = NewTransfer(workspaceId, fromAccountId, toAccountId, userId, amountMinor: 50_00, note: "moved money");
+        var transfer = NewTransfer(workspaceId, fromAccountId, toAccountId, userId, 50_00, "moved money");
 
         // Act
         await using (var db = fixture.CreateDbContext())
@@ -43,9 +43,9 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
         const long amountMinor = 30_00;
 
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: fromInitialBalance);
-        var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: toInitialBalance);
-        var transfer = NewTransfer(workspaceId, fromAccountId, toAccountId, userId, amountMinor: amountMinor);
+        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, fromInitialBalance);
+        var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, toInitialBalance);
+        var transfer = NewTransfer(workspaceId, fromAccountId, toAccountId, userId, amountMinor);
 
         // Act
         await using (var db = fixture.CreateDbContext())
@@ -63,7 +63,7 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 100_00);
+        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, 100_00);
         var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId);
         var transferId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId);
 
@@ -83,7 +83,7 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var (otherWorkspaceId, _) = await TestData.SeedWorkspaceAsync(fixture);
-        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 100_00);
+        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, 100_00);
         var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId);
         var transferId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId);
 
@@ -101,7 +101,7 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 100_00);
+        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, 100_00);
         var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId);
         var liveId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId);
         var deletedId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId);
@@ -122,10 +122,11 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 100_00);
+        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, 100_00);
         var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId);
         var now = DateOnly.FromDateTime(DateTime.UtcNow);
-        var olderId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId, occurredAt: now.AddDays(-2));
+        var olderId =
+            await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId, occurredAt: now.AddDays(-2));
         var newerId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId, occurredAt: now);
 
         // Act
@@ -142,7 +143,7 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 100_00);
+        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, 100_00);
         var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId);
         var transferId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId);
 
@@ -174,9 +175,9 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
         var amountDelta = newAmountMinor - oldAmountMinor;
 
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: fromInitialBalance);
-        var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: toInitialBalance);
-        var transferId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId, amountMinor: oldAmountMinor);
+        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, fromInitialBalance);
+        var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, toInitialBalance);
+        var transferId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId, oldAmountMinor);
 
         // Act
         await using (var db = fixture.CreateDbContext())
@@ -190,8 +191,10 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
         }
 
         // Assert
-        Assert.Equal(fromInitialBalance - oldAmountMinor - amountDelta, await GetAccountBalanceAsync(fromAccountId, workspaceId));
-        Assert.Equal(toInitialBalance + oldAmountMinor + amountDelta, await GetAccountBalanceAsync(toAccountId, workspaceId));
+        Assert.Equal(fromInitialBalance - oldAmountMinor - amountDelta,
+            await GetAccountBalanceAsync(fromAccountId, workspaceId));
+        Assert.Equal(toInitialBalance + oldAmountMinor + amountDelta,
+            await GetAccountBalanceAsync(toAccountId, workspaceId));
     }
 
     [Fact]
@@ -204,10 +207,10 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
         const long amountMinor = 30_00;
 
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var oldFromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: oldFromInitialBalance);
-        var newFromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: newFromInitialBalance);
-        var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: toInitialBalance);
-        var transferId = await AddTransferAsync(workspaceId, oldFromAccountId, toAccountId, userId, amountMinor: amountMinor);
+        var oldFromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, oldFromInitialBalance);
+        var newFromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, newFromInitialBalance);
+        var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, toInitialBalance);
+        var transferId = await AddTransferAsync(workspaceId, oldFromAccountId, toAccountId, userId, amountMinor);
 
         // Act — move the transfer's source from oldFromAccount to newFromAccount, amount unchanged
         await using (var db = fixture.CreateDbContext())
@@ -218,9 +221,9 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
             transfer.UpdatedAt = DateTimeOffset.UtcNow;
             var deltas = new Dictionary<Guid, long>
             {
-                [oldFromAccountId] = amountMinor,   // reverse old debit
-                [newFromAccountId] = -amountMinor,  // apply new debit
-                [toAccountId] = 0,
+                [oldFromAccountId] = amountMinor, // reverse old debit
+                [newFromAccountId] = -amountMinor, // apply new debit
+                [toAccountId] = 0
             };
             await repo.UpdateAsync(transfer, deltas, CancellationToken.None);
         }
@@ -236,7 +239,7 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 100_00);
+        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, 100_00);
         var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId);
         var transferId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId);
 
@@ -259,9 +262,9 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
         const long amountMinor = 30_00;
 
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: fromInitialBalance);
-        var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: toInitialBalance);
-        var transferId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId, amountMinor: amountMinor);
+        var fromAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, fromInitialBalance);
+        var toAccountId = await TestData.SeedAccountAsync(fixture, workspaceId, toInitialBalance);
+        var transferId = await AddTransferAsync(workspaceId, fromAccountId, toAccountId, userId, amountMinor);
 
         // Act
         await DeleteTransferAsync(transferId, workspaceId);
@@ -278,19 +281,22 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
         Guid createdByUserId,
         long amountMinor = 10_00,
         string? note = null,
-        DateOnly? occurredAt = null) => new()
+        DateOnly? occurredAt = null)
     {
-        Id = Guid.NewGuid(),
-        WorkspaceId = workspaceId,
-        FromAccountId = fromAccountId,
-        ToAccountId = toAccountId,
-        CreatedByUserId = createdByUserId,
-        AmountMinor = amountMinor,
-        Currency = "RUB",
-        OccurredAt = occurredAt ?? DateOnly.FromDateTime(DateTime.UtcNow),
-        Note = note,
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new Transfer
+        {
+            Id = Guid.NewGuid(),
+            WorkspaceId = workspaceId,
+            FromAccountId = fromAccountId,
+            ToAccountId = toAccountId,
+            CreatedByUserId = createdByUserId,
+            AmountMinor = amountMinor,
+            Currency = "RUB",
+            OccurredAt = occurredAt ?? DateOnly.FromDateTime(DateTime.UtcNow),
+            Note = note,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     private async Task<Guid> AddTransferAsync(
         Guid workspaceId,
@@ -300,7 +306,8 @@ public sealed class TransferRepositoryTests(PostgresFixture fixture)
         long amountMinor = 10_00,
         DateOnly? occurredAt = null)
     {
-        var transfer = NewTransfer(workspaceId, fromAccountId, toAccountId, createdByUserId, amountMinor, occurredAt: occurredAt);
+        var transfer = NewTransfer(workspaceId, fromAccountId, toAccountId, createdByUserId, amountMinor,
+            occurredAt: occurredAt);
 
         await using var db = fixture.CreateDbContext();
         await new TransferRepository(db, fixture.Mapper).AddAsync(transfer, CancellationToken.None);

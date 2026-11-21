@@ -16,7 +16,8 @@ public sealed class WorkspaceInvitationConfiguration : IEntityTypeConfiguration<
 
         builder.Property(invitation => invitation.Id).HasColumnName("id");
         builder.Property(invitation => invitation.WorkspaceId).HasColumnName("workspace_id").IsRequired();
-        builder.Property(invitation => invitation.Email).HasColumnName("email").HasMaxLength(MaxEmailLength).IsRequired();
+        builder.Property(invitation => invitation.Email).HasColumnName("email").HasMaxLength(MaxEmailLength)
+            .IsRequired();
         builder.Property(invitation => invitation.InvitedByUserId).HasColumnName("invited_by_user_id").IsRequired();
         builder.Property(invitation => invitation.ExpiresAt).HasColumnName("expires_at").IsRequired();
         builder.Property(invitation => invitation.CreatedAt).HasColumnName("created_at").IsRequired();

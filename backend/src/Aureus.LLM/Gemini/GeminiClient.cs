@@ -22,22 +22,18 @@ internal sealed class GeminiClient(
         var response = await httpClient.PostAsJsonAsync(url, request, JsonOptions, cancellationToken);
 
         if (response.StatusCode == HttpStatusCode.TooManyRequests)
-        {
             throw new LlmRateLimitedException("Gemini rate limit exceeded.");
-        }
 
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<GeminiResponse>(JsonOptions, cancellationToken);
 
         if (result?.UsageMetadata is { } usage)
-        {
             logger.LogInformation(
                 "Gemini tokens — prompt: {PromptTokens}, output: {OutputTokens}, total: {TotalTokens}",
                 usage.PromptTokenCount,
                 usage.CandidatesTokenCount,
                 usage.TotalTokenCount);
-        }
 
         return result?.Candidates?.FirstOrDefault()?.Content.Parts.FirstOrDefault()?.Text
                ?? throw new InvalidOperationException("Gemini returned an empty response.");

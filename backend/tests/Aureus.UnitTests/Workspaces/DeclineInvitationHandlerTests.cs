@@ -7,15 +7,18 @@ namespace Aureus.UnitTests.Workspaces;
 
 public sealed class DeclineInvitationHandlerTests
 {
-    private static WorkspaceInvitation DefaultInvitation(Guid id, string email = "invitee@test.local") => new()
+    private static WorkspaceInvitation DefaultInvitation(Guid id, string email = "invitee@test.local")
     {
-        Id = id,
-        WorkspaceId = Guid.NewGuid(),
-        Email = email,
-        InvitedByUserId = Guid.NewGuid(),
-        ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new WorkspaceInvitation
+        {
+            Id = id,
+            WorkspaceId = Guid.NewGuid(),
+            Email = email,
+            InvitedByUserId = Guid.NewGuid(),
+            ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     [Fact]
     public async Task Handle_InvitationNotFound_ThrowsNotFound()
@@ -40,10 +43,11 @@ public sealed class DeclineInvitationHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var invitationId = Guid.NewGuid();
-        var invitation = DefaultInvitation(invitationId, email: "invitee@test.local");
+        var invitation = DefaultInvitation(invitationId, "invitee@test.local");
         var user = new User { Id = userId, Email = "someone-else@test.local", CreatedAt = DateTimeOffset.UtcNow };
 
-        var invitationRepo = new WorkspaceInvitationRepositoryMock().WithInvitation(invitationId, invitation).CapturingDelete();
+        var invitationRepo = new WorkspaceInvitationRepositoryMock().WithInvitation(invitationId, invitation)
+            .CapturingDelete();
         var userRepo = new UserRepositoryMock().WithUserById(userId, user);
         var handler = new DeclineInvitationHandler(invitationRepo.Object, userRepo.Object);
 
@@ -62,10 +66,11 @@ public sealed class DeclineInvitationHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var invitationId = Guid.NewGuid();
-        var invitation = DefaultInvitation(invitationId, email: "invitee@test.local");
+        var invitation = DefaultInvitation(invitationId, "invitee@test.local");
         var user = new User { Id = userId, Email = "invitee@test.local", CreatedAt = DateTimeOffset.UtcNow };
 
-        var invitationRepo = new WorkspaceInvitationRepositoryMock().WithInvitation(invitationId, invitation).CapturingDelete();
+        var invitationRepo = new WorkspaceInvitationRepositoryMock().WithInvitation(invitationId, invitation)
+            .CapturingDelete();
         var userRepo = new UserRepositoryMock().WithUserById(userId, user);
         var handler = new DeclineInvitationHandler(invitationRepo.Object, userRepo.Object);
 

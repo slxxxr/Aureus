@@ -82,13 +82,20 @@ public sealed class TransferRepositoryMock
         return this;
     }
 
-    public void VerifyDeleteCalledOnce() =>
+    public void VerifyDeleteCalledOnce()
+    {
         _mock.Verify(r => r.DeleteAsync(It.IsAny<Transfer>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 
-    public void VerifyDeleteNotCalled() =>
+    public void VerifyDeleteNotCalled()
+    {
         _mock.Verify(r => r.DeleteAsync(It.IsAny<Transfer>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 
-    public void VerifyUpdateNotCalled() =>
+    public void VerifyUpdateNotCalled()
+    {
         _mock.Verify(r => r.UpdateAsync(
-            It.IsAny<Transfer>(), It.IsAny<IReadOnlyDictionary<Guid, long>>(), It.IsAny<CancellationToken>()), Times.Never);
+                It.IsAny<Transfer>(), It.IsAny<IReadOnlyDictionary<Guid, long>>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }

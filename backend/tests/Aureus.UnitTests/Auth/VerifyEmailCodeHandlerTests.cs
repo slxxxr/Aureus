@@ -11,12 +11,15 @@ public sealed class VerifyEmailCodeHandlerTests
 {
     private const string Purpose = "Registration";
 
-    private static string Sha256(string input) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
+    private static string Sha256(string input)
+    {
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(input))).ToLowerInvariant();
+    }
 
     private static EmailVerificationCodeDb MakeRecord(string email, string code, int attemptsLeft = 10,
-        DateTimeOffset? expiresAt = null) =>
-        new()
+        DateTimeOffset? expiresAt = null)
+    {
+        return new EmailVerificationCodeDb
         {
             Id = Guid.NewGuid(),
             Email = email,
@@ -25,8 +28,9 @@ public sealed class VerifyEmailCodeHandlerTests
             ExpiresAt = expiresAt ?? DateTimeOffset.UtcNow.AddHours(1),
             AttemptsLeft = attemptsLeft,
             SentAt = DateTimeOffset.UtcNow,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
+    }
 
     [Fact]
     public async Task Handle_ValidCode_ReturnsRegistrationToken()
@@ -93,7 +97,7 @@ public sealed class VerifyEmailCodeHandlerTests
     {
         // Arrange
         const string email = "user@example.com";
-        var record = MakeRecord(email, "correct", attemptsLeft: 5);
+        var record = MakeRecord(email, "correct", 5);
 
         var codeRepository = new EmailVerificationCodeRepositoryMock().WithPendingCode(email, Purpose, record);
         var tokenService = new RegistrationTokenServiceMock();
@@ -113,7 +117,7 @@ public sealed class VerifyEmailCodeHandlerTests
     {
         // Arrange
         const string email = "user@example.com";
-        var record = MakeRecord(email, "correct", attemptsLeft: 1);
+        var record = MakeRecord(email, "correct", 1);
 
         var codeRepository = new EmailVerificationCodeRepositoryMock().WithPendingCode(email, Purpose, record);
         var tokenService = new RegistrationTokenServiceMock();

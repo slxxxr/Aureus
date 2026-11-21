@@ -15,12 +15,12 @@ public static class SwaggerExtensions
                 Type = SecuritySchemeType.Http,
                 Scheme = "bearer",
                 BearerFormat = "JWT",
-                In = ParameterLocation.Header,
+                In = ParameterLocation.Header
             });
 
             options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
-                [new OpenApiSecuritySchemeReference("Bearer", document)] = [],
+                [new OpenApiSecuritySchemeReference("Bearer", document)] = []
             });
         });
 

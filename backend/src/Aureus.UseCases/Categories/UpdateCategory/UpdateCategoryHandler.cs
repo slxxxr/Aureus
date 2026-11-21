@@ -12,16 +12,11 @@ public sealed class UpdateCategoryHandler(ICategoryRepository repository)
         var category = await repository.FindByIdAsync(command.CategoryId, command.WorkspaceId, cancellationToken);
 
         if (category is null)
-        {
             throw new CategoryException(
                 CategoryErrorCode.NotFound,
                 $"Category {command.CategoryId} not found.");
-        }
 
-        if (command.Name is not null)
-        {
-            category.Name = command.Name.Trim();
-        }
+        if (command.Name is not null) category.Name = command.Name.Trim();
 
         category.UpdatedAt = DateTimeOffset.UtcNow;
 

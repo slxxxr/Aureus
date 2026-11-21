@@ -26,9 +26,7 @@ public sealed class LoginUserHandler(
             {
                 var pending = await codeRepository.FindAsync(email, RegistrationPurpose, cancellationToken);
                 if (pending is not null)
-                {
                     throw new LoginException(LoginErrorCode.EmailNotConfirmed, "Email is not confirmed.");
-                }
             }
 
             throw new LoginException(LoginErrorCode.InvalidCredentials, "Invalid email or password.");

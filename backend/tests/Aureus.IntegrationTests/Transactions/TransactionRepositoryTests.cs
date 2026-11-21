@@ -1,7 +1,6 @@
-using Aureus.Postgres.Implementations;
 using Aureus.Domain.Transactions;
 using Aureus.IntegrationTests.Common;
-
+using Aureus.Postgres.Implementations;
 
 namespace Aureus.IntegrationTests.Transactions;
 
@@ -15,7 +14,8 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
         var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
-        var transaction = NewTransaction(workspaceId, accountId, categoryId, userId, "Bought bread", TransactionType.Expense, 50_00);
+        var transaction = NewTransaction(workspaceId, accountId, categoryId, userId, "Bought bread",
+            TransactionType.Expense, 50_00);
 
         // Act
         await using (var db = fixture.CreateDbContext())
@@ -45,7 +45,7 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 100_00);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId, 100_00);
         var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var balanceDelta = type == TransactionType.Income ? amountMinor : -amountMinor;
         var transaction = NewTransaction(workspaceId, accountId, categoryId, userId, "Transaction", type, amountMinor);
@@ -129,7 +129,8 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
         var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var now = DateOnly.FromDateTime(DateTime.UtcNow);
-        var olderId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: now.AddDays(-2));
+        var olderId =
+            await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: now.AddDays(-2));
         var newerId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: now);
 
         // Act
@@ -173,9 +174,11 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         var earlierDay = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-1);
         var laterDay = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        var earlierFirst = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: earlierDay);
+        var earlierFirst =
+            await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: earlierDay);
         var laterFirst = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: laterDay);
-        var earlierSecond = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: earlierDay);
+        var earlierSecond =
+            await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: earlierDay);
         var laterSecond = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, occurredAt: laterDay);
 
         // Act
@@ -197,7 +200,7 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
         var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var newCategoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
-        var transactionId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, name: "Bought bread");
+        var transactionId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, "Bought bread");
 
         // Act
         await using (var db = fixture.CreateDbContext())
@@ -226,7 +229,7 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 0);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId, 0);
         var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var transactionId = await AddTransactionAsync(
             workspaceId, accountId, categoryId, userId,
@@ -240,7 +243,8 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
             transaction!.AmountMinor = 200_00;
             transaction.UpdatedAt = DateTimeOffset.UtcNow;
             // Income 100→200: old effect +100 (oldDelta=-100), new effect +200 (newDelta=+200), total=+100
-            await repo.UpdateAsync(transaction, transaction.FinancialAccountId, -100_00, 200_00, CancellationToken.None);
+            await repo.UpdateAsync(transaction, transaction.FinancialAccountId, -100_00, 200_00,
+                CancellationToken.None);
         }
 
         // Assert
@@ -253,8 +257,8 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var accountAId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 0);
-        var accountBId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 0);
+        var accountAId = await TestData.SeedAccountAsync(fixture, workspaceId, 0);
+        var accountBId = await TestData.SeedAccountAsync(fixture, workspaceId, 0);
         var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var transactionId = await AddTransactionAsync(
             workspaceId, accountAId, categoryId, userId,
@@ -275,7 +279,7 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         // Assert
         var balanceA = await GetAccountBalanceAsync(accountAId, workspaceId);
         var balanceB = await GetAccountBalanceAsync(accountBId, workspaceId);
-        Assert.Equal(0, balanceA);      // restored
+        Assert.Equal(0, balanceA); // restored
         Assert.Equal(-100_00, balanceB); // expense applied
     }
 
@@ -303,10 +307,12 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
-        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId, initialBalance: 0);
+        var accountId = await TestData.SeedAccountAsync(fixture, workspaceId, 0);
         var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
-        await AddTransactionAsync(workspaceId, accountId, categoryId, userId, type: TransactionType.Income, amountMinor: 100_00);
-        var transactionId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId, type: TransactionType.Income, amountMinor: 100_00);
+        await AddTransactionAsync(workspaceId, accountId, categoryId, userId, type: TransactionType.Income,
+            amountMinor: 100_00);
+        var transactionId = await AddTransactionAsync(workspaceId, accountId, categoryId, userId,
+            type: TransactionType.Income, amountMinor: 100_00);
 
         // Act
         await DeleteTransactionAsync(transactionId, workspaceId);
@@ -324,20 +330,23 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         string name = "Transaction",
         TransactionType type = TransactionType.Expense,
         long amountMinor = 10_00,
-        DateOnly? occurredAt = null) => new()
+        DateOnly? occurredAt = null)
     {
-        Id = Guid.NewGuid(),
-        WorkspaceId = workspaceId,
-        FinancialAccountId = accountId,
-        CategoryId = categoryId,
-        CreatedByUserId = createdByUserId,
-        Name = name,
-        Type = type,
-        AmountMinor = amountMinor,
-        Currency = "RUB",
-        OccurredAt = occurredAt ?? DateOnly.FromDateTime(DateTime.UtcNow),
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new Transaction
+        {
+            Id = Guid.NewGuid(),
+            WorkspaceId = workspaceId,
+            FinancialAccountId = accountId,
+            CategoryId = categoryId,
+            CreatedByUserId = createdByUserId,
+            Name = name,
+            Type = type,
+            AmountMinor = amountMinor,
+            Currency = "RUB",
+            OccurredAt = occurredAt ?? DateOnly.FromDateTime(DateTime.UtcNow),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     private async Task<Guid> AddTransactionAsync(
         Guid workspaceId,
@@ -349,7 +358,8 @@ public sealed class TransactionRepositoryTests(PostgresFixture fixture)
         long amountMinor = 10_00,
         DateOnly? occurredAt = null)
     {
-        var transaction = NewTransaction(workspaceId, accountId, categoryId, createdByUserId, name, type, amountMinor, occurredAt);
+        var transaction = NewTransaction(workspaceId, accountId, categoryId, createdByUserId, name, type, amountMinor,
+            occurredAt);
         var balanceDelta = type == TransactionType.Income ? amountMinor : -amountMinor;
 
         await using var db = fixture.CreateDbContext();

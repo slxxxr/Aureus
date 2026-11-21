@@ -1,9 +1,7 @@
-using Aureus.Postgres.Implementations;
+using Aureus.Domain.Analytics;
 using Aureus.Domain.Transactions;
 using Aureus.IntegrationTests.Common;
-
-
-using Aureus.Domain.Analytics;
+using Aureus.Postgres.Implementations;
 
 namespace Aureus.IntegrationTests.Analytics;
 
@@ -18,14 +16,17 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var expenseCategory = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var expenseCategory = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var incomeCategory = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Income);
         const long firstExpense = 100_00;
         const long secondExpense = 50_00;
         const long income = 200_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, expenseCategory, userId, TransactionType.Expense, firstExpense);
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, expenseCategory, userId, TransactionType.Expense, secondExpense);
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, incomeCategory, userId, TransactionType.Income, income);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, expenseCategory, userId,
+            TransactionType.Expense, firstExpense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, expenseCategory, userId,
+            TransactionType.Expense, secondExpense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, incomeCategory, userId,
+            TransactionType.Income, income);
 
         // Act
         await using var db = fixture.CreateDbContext();
@@ -46,13 +47,15 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const string rub = "RUB";
         const string usd = "USD";
         const long rubExpense = 100_00;
         const long usdExpense = 30_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, rubExpense, rub);
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, usdExpense, usd);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            rubExpense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            usdExpense, usd);
 
         // Act
         await using var db = fixture.CreateDbContext();
@@ -71,16 +74,18 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long insidePeriod = 100_00;
         const long outsidePeriod = 999_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, insidePeriod, occurredAt: March.AddDays(14));
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, outsidePeriod, occurredAt: March.AddMonths(1));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            insidePeriod, occurredAt: March.AddDays(14));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            outsidePeriod, occurredAt: March.AddMonths(1));
 
         // Act — half-open [from, to): the April 1 transaction must be excluded
         await using var db = fixture.CreateDbContext();
         var summary = await new AnalyticsRepository(db)
-            .GetSummaryAsync(Filter(workspaceId, from: March, to: March.AddMonths(1)), CancellationToken.None);
+            .GetSummaryAsync(Filter(workspaceId, March, March.AddMonths(1)), CancellationToken.None);
 
         // Assert
         Assert.Equal(insidePeriod, Assert.Single(summary).ExpensesMinor);
@@ -93,11 +98,13 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountA = await TestData.SeedAccountAsync(fixture, workspaceId);
         var accountB = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long selectedAccountExpense = 100_00;
         const long otherAccountExpense = 50_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountA, category, userId, TransactionType.Expense, selectedAccountExpense);
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountB, category, userId, TransactionType.Expense, otherAccountExpense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountA, category, userId, TransactionType.Expense,
+            selectedAccountExpense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountB, category, userId, TransactionType.Expense,
+            otherAccountExpense);
 
         // Act
         await using var db = fixture.CreateDbContext();
@@ -114,12 +121,14 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var selectedCategory = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
-        var otherCategory = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var selectedCategory = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        var otherCategory = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long selectedCategoryExpense = 100_00;
         const long otherCategoryExpense = 50_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, selectedCategory, userId, TransactionType.Expense, selectedCategoryExpense);
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, otherCategory, userId, TransactionType.Expense, otherCategoryExpense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, selectedCategory, userId,
+            TransactionType.Expense, selectedCategoryExpense);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, otherCategory, userId,
+            TransactionType.Expense, otherCategoryExpense);
 
         // Act
         await using var db = fixture.CreateDbContext();
@@ -136,14 +145,17 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var categoryA = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
-        var categoryB = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var categoryA = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        var categoryB = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long firstA = 100_00;
         const long secondA = 50_00;
         const long amountB = 20_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense, firstA);
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense, secondA);
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryB, userId, TransactionType.Expense, amountB);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense,
+            firstA);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense,
+            secondA);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryB, userId, TransactionType.Expense,
+            amountB);
 
         // Act
         await using var db = fixture.CreateDbContext();
@@ -162,9 +174,10 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long amount = 40_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryId, userId, TransactionType.Expense, amount);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryId, userId,
+            TransactionType.Expense, amount);
 
         await using (var deleteDb = fixture.CreateDbContext())
         {
@@ -190,13 +203,16 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long firstTaxi = 300_00;
         const long secondTaxi = 200_00;
         const long metro = 50_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, firstTaxi, name: "Такси");
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, secondTaxi, name: "Такси");
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, metro, name: "Метро");
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            firstTaxi, name: "Такси");
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            secondTaxi, name: "Такси");
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            metro, name: "Метро");
 
         // Act
         await using var db = fixture.CreateDbContext();
@@ -217,9 +233,11 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, 100_00, name: "Такси");
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, 50_00, name: "такси");
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            100_00, name: "Такси");
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            50_00, name: "такси");
 
         // Act
         await using var db = fixture.CreateDbContext();
@@ -236,16 +254,19 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var transport = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
-        var food = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var transport = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        var food = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long taxi = 300_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, transport, userId, TransactionType.Expense, taxi, name: "Такси");
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, food, userId, TransactionType.Expense, 80_00, name: "Кофе");
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, transport, userId, TransactionType.Expense,
+            taxi, name: "Такси");
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, food, userId, TransactionType.Expense,
+            80_00, name: "Кофе");
 
         // Act — drill-down into a single category
         await using var db = fixture.CreateDbContext();
         var breakdown = await new AnalyticsRepository(db)
-            .GetBreakdownAsync(Filter(workspaceId, categoryIds: [transport]), BreakdownDimension.Name, CancellationToken.None);
+            .GetBreakdownAsync(Filter(workspaceId, categoryIds: [transport]), BreakdownDimension.Name,
+                CancellationToken.None);
 
         // Assert
         var item = Assert.Single(breakdown);
@@ -259,13 +280,16 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long firstMarchExpense = 100_00;
         const long secondMarchExpense = 50_00;
         const long aprilExpense = 30_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, firstMarchExpense, occurredAt: March.AddDays(9));
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, secondMarchExpense, occurredAt: March.AddDays(19));
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense, aprilExpense, occurredAt: March.AddMonths(1).AddDays(4));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            firstMarchExpense, occurredAt: March.AddDays(9));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            secondMarchExpense, occurredAt: March.AddDays(19));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, TransactionType.Expense,
+            aprilExpense, occurredAt: March.AddMonths(1).AddDays(4));
 
         // Act
         await using var db = fixture.CreateDbContext();
@@ -286,13 +310,15 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var expenseCategory = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var expenseCategory = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var incomeCategory = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Income);
         var day = March.AddDays(9);
         const long expense = 100_00;
         const long income = 70_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, expenseCategory, userId, TransactionType.Expense, expense, occurredAt: day);
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, incomeCategory, userId, TransactionType.Income, income, occurredAt: day);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, expenseCategory, userId,
+            TransactionType.Expense, expense, occurredAt: day);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, incomeCategory, userId,
+            TransactionType.Income, income, occurredAt: day);
 
         // Act
         await using var db = fixture.CreateDbContext();
@@ -312,29 +338,37 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var categoryA = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
-        var categoryB = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var categoryA = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        var categoryB = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long firstMarchA = 100_00;
         const long secondMarchA = 50_00;
         const long marchB = 20_00;
         const long aprilA = 30_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense, firstMarchA, occurredAt: March.AddDays(9));
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense, secondMarchA, occurredAt: March.AddDays(19));
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryB, userId, TransactionType.Expense, marchB, occurredAt: March.AddDays(9));
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense, aprilA, occurredAt: March.AddMonths(1).AddDays(4));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense,
+            firstMarchA, occurredAt: March.AddDays(9));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense,
+            secondMarchA, occurredAt: March.AddDays(19));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryB, userId, TransactionType.Expense,
+            marchB, occurredAt: March.AddDays(9));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryA, userId, TransactionType.Expense,
+            aprilA, occurredAt: March.AddMonths(1).AddDays(4));
 
         // Act
         await using var db = fixture.CreateDbContext();
         var series = await new AnalyticsRepository(db)
-            .GetCategoryTimeSeriesAsync(Filter(workspaceId, type: TransactionType.Expense), TimeInterval.Month, CancellationToken.None);
+            .GetCategoryTimeSeriesAsync(Filter(workspaceId, type: TransactionType.Expense), TimeInterval.Month,
+                CancellationToken.None);
 
         // Assert
         Assert.Equal(3, series.Count);
         var marchAPoint = Assert.Single(series, point => point.PeriodStart == March && point.CategoryId == categoryA);
         Assert.Equal(firstMarchA + secondMarchA, marchAPoint.AmountMinor);
         Assert.NotNull(marchAPoint.Label);
-        Assert.Equal(marchB, Assert.Single(series, point => point.PeriodStart == March && point.CategoryId == categoryB).AmountMinor);
-        Assert.Equal(aprilA, Assert.Single(series, point => point.PeriodStart == March.AddMonths(1) && point.CategoryId == categoryA).AmountMinor);
+        Assert.Equal(marchB,
+            Assert.Single(series, point => point.PeriodStart == March && point.CategoryId == categoryB).AmountMinor);
+        Assert.Equal(aprilA,
+            Assert.Single(series, point => point.PeriodStart == March.AddMonths(1) && point.CategoryId == categoryA)
+                .AmountMinor);
     }
 
     [Fact]
@@ -343,9 +377,10 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long amount = 40_00;
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryId, userId, TransactionType.Expense, amount, occurredAt: March.AddDays(9));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryId, userId,
+            TransactionType.Expense, amount, occurredAt: March.AddDays(9));
 
         await using (var deleteDb = fixture.CreateDbContext())
         {
@@ -356,7 +391,8 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Act
         await using var db = fixture.CreateDbContext();
         var series = await new AnalyticsRepository(db)
-            .GetCategoryTimeSeriesAsync(Filter(workspaceId, type: TransactionType.Expense), TimeInterval.Month, CancellationToken.None);
+            .GetCategoryTimeSeriesAsync(Filter(workspaceId, type: TransactionType.Expense), TimeInterval.Month,
+                CancellationToken.None);
 
         // Assert
         var point = Assert.Single(series);
@@ -371,7 +407,7 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
         await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId);
         await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId);
         await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId);
@@ -391,14 +427,16 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, occurredAt: March.AddDays(5));
-        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, occurredAt: March.AddMonths(1));
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId,
+            occurredAt: March.AddDays(5));
+        await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId,
+            occurredAt: March.AddMonths(1));
 
         // Act — half-open [from, to): April transaction excluded
         await using var db = fixture.CreateDbContext();
         var count = await new AnalyticsRepository(db)
-            .GetTransactionCountAsync(Filter(workspaceId, from: March, to: March.AddMonths(1)), CancellationToken.None);
+            .GetTransactionCountAsync(Filter(workspaceId, March, March.AddMonths(1)), CancellationToken.None);
 
         // Assert
         Assert.Equal(1, count);
@@ -410,7 +448,7 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
         const long amount = 500_00;
         await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId,
             TransactionType.Expense, amount, name: "Такси");
@@ -418,7 +456,7 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Act
         await using var db = fixture.CreateDbContext();
         var result = await new AnalyticsRepository(db)
-            .GetTransactionsForContextAsync(Filter(workspaceId), limit: 100, CancellationToken.None);
+            .GetTransactionsForContextAsync(Filter(workspaceId), 100, CancellationToken.None);
 
         // Assert
         var tx = Assert.Single(result);
@@ -435,7 +473,7 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var categoryId = await TestData.SeedCategoryAsync(fixture, workspaceId);
         await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, categoryId, userId);
 
         await using (var deleteDb = fixture.CreateDbContext())
@@ -447,7 +485,7 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Act
         await using var db = fixture.CreateDbContext();
         var result = await new AnalyticsRepository(db)
-            .GetTransactionsForContextAsync(Filter(workspaceId), limit: 100, CancellationToken.None);
+            .GetTransactionsForContextAsync(Filter(workspaceId), 100, CancellationToken.None);
 
         // Assert
         Assert.Null(Assert.Single(result).CategoryLabel);
@@ -459,16 +497,14 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
         for (var i = 0; i < 5; i++)
-        {
             await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId);
-        }
 
         // Act
         await using var db = fixture.CreateDbContext();
         var result = await new AnalyticsRepository(db)
-            .GetTransactionsForContextAsync(Filter(workspaceId), limit: 3, CancellationToken.None);
+            .GetTransactionsForContextAsync(Filter(workspaceId), 3, CancellationToken.None);
 
         // Assert
         Assert.Equal(3, result.Count);
@@ -480,7 +516,7 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, userId) = await TestData.SeedWorkspaceAsync(fixture);
         var accountId = await TestData.SeedAccountAsync(fixture, workspaceId);
-        var category = await TestData.SeedCategoryAsync(fixture, workspaceId, TransactionType.Expense);
+        var category = await TestData.SeedCategoryAsync(fixture, workspaceId);
         var later = March.AddDays(10);
         var earlier = March.AddDays(1);
         await TestData.SeedTransactionAsync(fixture, workspaceId, accountId, category, userId, occurredAt: later);
@@ -489,7 +525,7 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         // Act
         await using var db = fixture.CreateDbContext();
         var result = await new AnalyticsRepository(db)
-            .GetTransactionsForContextAsync(Filter(workspaceId), limit: 100, CancellationToken.None);
+            .GetTransactionsForContextAsync(Filter(workspaceId), 100, CancellationToken.None);
 
         // Assert
         Assert.Equal(earlier, result[0].OccurredAt);
@@ -502,5 +538,8 @@ public sealed class AnalyticsRepositoryTests(PostgresFixture fixture)
         DateOnly? to = null,
         IReadOnlyList<Guid>? accountIds = null,
         TransactionType? type = null,
-        IReadOnlyList<Guid>? categoryIds = null) => new(workspaceId, from, to, accountIds, type, categoryIds);
+        IReadOnlyList<Guid>? categoryIds = null)
+    {
+        return new AnalyticsFilter(workspaceId, from, to, accountIds, type, categoryIds);
+    }
 }

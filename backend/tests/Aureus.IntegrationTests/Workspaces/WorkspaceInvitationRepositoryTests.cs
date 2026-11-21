@@ -10,16 +10,18 @@ public sealed class WorkspaceInvitationRepositoryTests(PostgresFixture fixture)
     private static readonly DateTimeOffset Now = new(2026, 6, 1, 0, 0, 0, TimeSpan.Zero);
 
     private static WorkspaceInvitation NewInvitation(
-        Guid workspaceId, Guid invitedByUserId, string? email = null, DateTimeOffset? expiresAt = null) =>
-        new()
+        Guid workspaceId, Guid invitedByUserId, string? email = null, DateTimeOffset? expiresAt = null)
+    {
+        return new WorkspaceInvitation
         {
             Id = Guid.NewGuid(),
             WorkspaceId = workspaceId,
             Email = email ?? $"{Guid.NewGuid():N}@test.local",
             InvitedByUserId = invitedByUserId,
             ExpiresAt = expiresAt ?? Now.AddDays(7),
-            CreatedAt = Now,
+            CreatedAt = Now
         };
+    }
 
     [Fact]
     public async Task UpsertAsync_NewInvitation_PersistsIt()
@@ -50,10 +52,10 @@ public sealed class WorkspaceInvitationRepositoryTests(PostgresFixture fixture)
         var email = $"{Guid.NewGuid():N}@test.local";
         await using var db = fixture.CreateDbContext();
         var repository = new WorkspaceInvitationRepository(db, fixture.Mapper);
-        var original = NewInvitation(workspaceId, ownerId, email: email, expiresAt: Now.AddDays(7));
+        var original = NewInvitation(workspaceId, ownerId, email, Now.AddDays(7));
         await repository.UpsertAsync(original, CancellationToken.None);
 
-        var resend = NewInvitation(workspaceId, ownerId, email: email, expiresAt: Now.AddDays(14));
+        var resend = NewInvitation(workspaceId, ownerId, email, Now.AddDays(14));
 
         // Act
         await repository.UpsertAsync(resend, CancellationToken.None);
@@ -83,7 +85,7 @@ public sealed class WorkspaceInvitationRepositoryTests(PostgresFixture fixture)
     {
         // Arrange
         var (workspaceId, ownerId) = await TestData.SeedWorkspaceAsync(fixture);
-        var invitation = NewInvitation(workspaceId, ownerId, email: "invitee@test.local");
+        var invitation = NewInvitation(workspaceId, ownerId, "invitee@test.local");
         await using var db = fixture.CreateDbContext();
         var repository = new WorkspaceInvitationRepository(db, fixture.Mapper);
         await repository.UpsertAsync(invitation, CancellationToken.None);
@@ -105,7 +107,7 @@ public sealed class WorkspaceInvitationRepositoryTests(PostgresFixture fixture)
         // Arrange
         var (workspaceId, ownerId) = await TestData.SeedWorkspaceAsync(fixture);
         var email = $"{Guid.NewGuid():N}@test.local";
-        var invitation = NewInvitation(workspaceId, ownerId, email: email, expiresAt: Now.AddDays(-1));
+        var invitation = NewInvitation(workspaceId, ownerId, email, Now.AddDays(-1));
         await using var db = fixture.CreateDbContext();
         var repository = new WorkspaceInvitationRepository(db, fixture.Mapper);
         await repository.UpsertAsync(invitation, CancellationToken.None);
@@ -140,10 +142,10 @@ public sealed class WorkspaceInvitationRepositoryTests(PostgresFixture fixture)
         await using var db = fixture.CreateDbContext();
         var repository = new WorkspaceInvitationRepository(db, fixture.Mapper);
         await repository.UpsertAsync(
-            NewInvitation(workspaceId, ownerId, email: "active@test.local", expiresAt: Now.AddDays(7)),
+            NewInvitation(workspaceId, ownerId, "active@test.local", Now.AddDays(7)),
             CancellationToken.None);
         await repository.UpsertAsync(
-            NewInvitation(workspaceId, ownerId, email: "expired@test.local", expiresAt: Now.AddDays(-1)),
+            NewInvitation(workspaceId, ownerId, "expired@test.local", Now.AddDays(-1)),
             CancellationToken.None);
 
         // Act
@@ -164,7 +166,7 @@ public sealed class WorkspaceInvitationRepositoryTests(PostgresFixture fixture)
         var workspace = await new WorkspaceRepository(db, fixture.Mapper)
             .FindByIdAsync(workspaceId, CancellationToken.None);
         var repository = new WorkspaceInvitationRepository(db, fixture.Mapper);
-        await repository.UpsertAsync(NewInvitation(workspaceId, ownerId, email: email), CancellationToken.None);
+        await repository.UpsertAsync(NewInvitation(workspaceId, ownerId, email), CancellationToken.None);
 
         // Act
         var pending = await repository.GetPendingForEmailAsync(email, Now, CancellationToken.None);
@@ -183,10 +185,10 @@ public sealed class WorkspaceInvitationRepositoryTests(PostgresFixture fixture)
         await using var db = fixture.CreateDbContext();
         var repository = new WorkspaceInvitationRepository(db, fixture.Mapper);
         await repository.UpsertAsync(
-            NewInvitation(workspaceId, ownerId, email: "active@test.local", expiresAt: Now.AddDays(7)),
+            NewInvitation(workspaceId, ownerId, "active@test.local", Now.AddDays(7)),
             CancellationToken.None);
         await repository.UpsertAsync(
-            NewInvitation(workspaceId, ownerId, email: "expired@test.local", expiresAt: Now.AddDays(-1)),
+            NewInvitation(workspaceId, ownerId, "expired@test.local", Now.AddDays(-1)),
             CancellationToken.None);
 
         // Act

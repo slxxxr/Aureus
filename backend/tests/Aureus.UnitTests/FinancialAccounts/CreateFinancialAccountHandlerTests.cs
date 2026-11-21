@@ -8,8 +8,10 @@ public sealed class CreateFinancialAccountHandlerTests
     private static CreateFinancialAccountCommand DefaultCommand(
         string name = "Cash",
         string currency = "RUB",
-        long initialBalanceMinor = 100_00) =>
-        new(WorkspaceId: Guid.NewGuid(), Name: name, Currency: currency, InitialBalanceMinor: initialBalanceMinor);
+        long initialBalanceMinor = 100_00)
+    {
+        return new CreateFinancialAccountCommand(Guid.NewGuid(), name, currency, initialBalanceMinor);
+    }
 
     [Fact]
     public async Task Handle_ValidCommand_SetsCurrentBalanceEqualToInitialBalance()
@@ -33,7 +35,7 @@ public sealed class CreateFinancialAccountHandlerTests
         // Arrange
         var repository = new FinancialAccountRepositoryMock().CapturingAdd();
         var handler = new CreateFinancialAccountHandler(repository.Object);
-        var command = DefaultCommand(name: "  Cash  ");
+        var command = DefaultCommand("  Cash  ");
 
         // Act
         var result = await handler.Handle(command, CancellationToken.None);

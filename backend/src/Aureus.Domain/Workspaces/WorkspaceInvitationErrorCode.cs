@@ -6,5 +6,5 @@ public enum WorkspaceInvitationErrorCode
     AlreadyMember = 2,
     WorkspaceFull = 3,
     DailyQuotaExceeded = 4,
-    Forbidden = 5,
+    Forbidden = 5
 }

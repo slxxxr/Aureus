@@ -81,7 +81,7 @@ public sealed class EmailVerificationCodeRepositoryTests(PostgresFixture fixture
         // Arrange
         var email = UniqueEmail();
         var original = await SeedCodeAsync(email, codeHash: "oldhash");
-        var updated = NewCode(email, id: original.Id, codeHash: "newhash");
+        var updated = NewCode(email, original.Id, "newhash");
 
         // Act
         await using (var db = fixture.CreateDbContext())
@@ -105,7 +105,7 @@ public sealed class EmailVerificationCodeRepositoryTests(PostgresFixture fixture
     {
         // Arrange
         var email = UniqueEmail();
-        await SeedCodeAsync(email, purpose: "Registration");
+        await SeedCodeAsync(email, "Registration");
         var other = NewCode(email, purpose: "PasswordReset");
 
         // Act
@@ -172,8 +172,8 @@ public sealed class EmailVerificationCodeRepositoryTests(PostgresFixture fixture
     {
         // Arrange
         var email = UniqueEmail();
-        await SeedCodeAsync(email, purpose: "Registration");
-        await SeedCodeAsync(email, purpose: "PasswordReset");
+        await SeedCodeAsync(email, "Registration");
+        await SeedCodeAsync(email, "PasswordReset");
 
         // Act
         await using (var db = fixture.CreateDbContext())
@@ -192,7 +192,10 @@ public sealed class EmailVerificationCodeRepositoryTests(PostgresFixture fixture
         Assert.Equal("PasswordReset", remaining[0].Purpose);
     }
 
-    private static string UniqueEmail() => $"{Guid.NewGuid():N}@test.local";
+    private static string UniqueEmail()
+    {
+        return $"{Guid.NewGuid():N}@test.local";
+    }
 
     private static EmailVerificationCodeDb NewCode(
         string email,
@@ -211,7 +214,7 @@ public sealed class EmailVerificationCodeRepositoryTests(PostgresFixture fixture
             ExpiresAt = now.AddHours(1),
             AttemptsLeft = attemptsLeft,
             SentAt = now,
-            CreatedAt = now,
+            CreatedAt = now
         };
     }
 

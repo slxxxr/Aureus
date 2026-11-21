@@ -84,7 +84,7 @@ public sealed class StartRegistrationHandlerTests
             ExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
             AttemptsLeft = 10,
             SentAt = DateTimeOffset.UtcNow.AddSeconds(-30),
-            CreatedAt = DateTimeOffset.UtcNow.AddSeconds(-30),
+            CreatedAt = DateTimeOffset.UtcNow.AddSeconds(-30)
         };
 
         var userRepository = new UserRepositoryMock().WithAvailableEmail(email);

@@ -15,34 +15,43 @@ public sealed class UpdateTransferHandlerTests
         Guid? toAccountId = null,
         Guid? createdByUserId = null,
         long amountMinor = 100_00,
-        string currency = "RUB") => new()
+        string currency = "RUB")
     {
-        Id = id ?? Guid.NewGuid(),
-        WorkspaceId = workspaceId ?? Guid.NewGuid(),
-        FromAccountId = fromAccountId ?? Guid.NewGuid(),
-        ToAccountId = toAccountId ?? Guid.NewGuid(),
-        CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
-        AmountMinor = amountMinor,
-        Currency = currency,
-        OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new Transfer
+        {
+            Id = id ?? Guid.NewGuid(),
+            WorkspaceId = workspaceId ?? Guid.NewGuid(),
+            FromAccountId = fromAccountId ?? Guid.NewGuid(),
+            ToAccountId = toAccountId ?? Guid.NewGuid(),
+            CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
+            AmountMinor = amountMinor,
+            Currency = currency,
+            OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
-    private static FinancialAccount DefaultAccount(Guid? id = null, Guid? workspaceId = null, string currency = "RUB") => new()
+    private static FinancialAccount DefaultAccount(Guid? id = null, Guid? workspaceId = null, string currency = "RUB")
     {
-        Id = id ?? Guid.NewGuid(),
-        WorkspaceId = workspaceId ?? Guid.NewGuid(),
-        Name = "Cash",
-        Currency = currency,
-        InitialBalanceMinor = 0,
-        CurrentBalanceMinor = 10_000_00,
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new FinancialAccount
+        {
+            Id = id ?? Guid.NewGuid(),
+            WorkspaceId = workspaceId ?? Guid.NewGuid(),
+            Name = "Cash",
+            Currency = currency,
+            InitialBalanceMinor = 0,
+            CurrentBalanceMinor = 10_000_00,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     private static UpdateTransferHandler BuildHandler(
         TransferRepositoryMock transferRepo,
-        FinancialAccountRepositoryMock? accountRepo = null) =>
-        new(transferRepo.Object, (accountRepo ?? new FinancialAccountRepositoryMock()).Object);
+        FinancialAccountRepositoryMock? accountRepo = null)
+    {
+        return new UpdateTransferHandler(transferRepo.Object,
+            (accountRepo ?? new FinancialAccountRepositoryMock()).Object);
+    }
 
     private static UpdateTransferCommand OwnerCommand(
         Guid transferId,
@@ -51,9 +60,11 @@ public sealed class UpdateTransferHandlerTests
         Guid? toAccountId = null,
         long? amountMinor = null,
         DateOnly? occurredAt = null,
-        string? note = null) =>
-        new(transferId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner,
+        string? note = null)
+    {
+        return new UpdateTransferCommand(transferId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner,
             fromAccountId, toAccountId, amountMinor, occurredAt, note);
+    }
 
     [Fact]
     public async Task Handle_TransferNotFound_ThrowsNotFound()
@@ -176,7 +187,7 @@ public sealed class UpdateTransferHandlerTests
         // Act
         var exception = await Assert.ThrowsAsync<TransferException>(() =>
             handler.Handle(
-                OwnerCommand(transfer.Id, workspaceId, fromAccountId: newAccountId),
+                OwnerCommand(transfer.Id, workspaceId, newAccountId),
                 CancellationToken.None));
 
         // Assert
@@ -218,7 +229,7 @@ public sealed class UpdateTransferHandlerTests
         // Act — set FromAccountId to the transfer's own (unchanged) ToAccountId
         var exception = await Assert.ThrowsAsync<TransferException>(() =>
             handler.Handle(
-                OwnerCommand(transfer.Id, workspaceId, fromAccountId: transfer.ToAccountId),
+                OwnerCommand(transfer.Id, workspaceId, transfer.ToAccountId),
                 CancellationToken.None));
 
         // Assert
@@ -242,7 +253,7 @@ public sealed class UpdateTransferHandlerTests
         // Act — new FromAccount is USD, but ToAccount (unchanged) stays RUB
         var exception = await Assert.ThrowsAsync<TransferException>(() =>
             handler.Handle(
-                OwnerCommand(transfer.Id, workspaceId, fromAccountId: newFromAccount.Id),
+                OwnerCommand(transfer.Id, workspaceId, newFromAccount.Id),
                 CancellationToken.None));
 
         // Assert
@@ -268,15 +279,15 @@ public sealed class UpdateTransferHandlerTests
 
         // Act
         var result = await handler.Handle(
-            OwnerCommand(transfer.Id, workspaceId, fromAccountId: newFromAccount.Id),
+            OwnerCommand(transfer.Id, workspaceId, newFromAccount.Id),
             CancellationToken.None);
 
         // Assert
         Assert.Equal(newFromAccount.Id, result.FromAccountId);
         var deltas = transferRepo.UpdatedAccountDeltas!;
-        Assert.Equal(100_00, deltas[oldFromAccountId]);   // reverse old debit
+        Assert.Equal(100_00, deltas[oldFromAccountId]); // reverse old debit
         Assert.Equal(-100_00, deltas[newFromAccount.Id]); // apply new debit
-        Assert.Equal(0, deltas[toAccountId]);              // to-account unaffected
+        Assert.Equal(0, deltas[toAccountId]); // to-account unaffected
     }
 
     [Fact]
@@ -288,8 +299,8 @@ public sealed class UpdateTransferHandlerTests
         var accountB = Guid.NewGuid();
         var transfer = DefaultTransfer(
             workspaceId: workspaceId, fromAccountId: accountA, toAccountId: accountB, amountMinor: 100_00);
-        var accountBEntity = DefaultAccount(id: accountB, workspaceId: workspaceId, currency: "RUB");
-        var accountAEntity = DefaultAccount(id: accountA, workspaceId: workspaceId, currency: "RUB");
+        var accountBEntity = DefaultAccount(accountB, workspaceId, "RUB");
+        var accountAEntity = DefaultAccount(accountA, workspaceId, "RUB");
         var transferRepo = new TransferRepositoryMock()
             .WithTransfer(transfer.Id, workspaceId, transfer)
             .CapturingUpdate();
@@ -300,7 +311,7 @@ public sealed class UpdateTransferHandlerTests
 
         // Act
         var result = await handler.Handle(
-            OwnerCommand(transfer.Id, workspaceId, fromAccountId: accountB, toAccountId: accountA),
+            OwnerCommand(transfer.Id, workspaceId, accountB, accountA),
             CancellationToken.None);
 
         // Assert
@@ -326,7 +337,8 @@ public sealed class UpdateTransferHandlerTests
         // Act
         var exception = await Assert.ThrowsAsync<TransferException>(() =>
             handler.Handle(
-                new UpdateTransferCommand(transfer.Id, workspaceId, memberId, WorkspaceRole.Member, null, null, null, null, "note"),
+                new UpdateTransferCommand(transfer.Id, workspaceId, memberId, WorkspaceRole.Member, null, null, null,
+                    null, "note"),
                 CancellationToken.None));
 
         // Assert
@@ -348,7 +360,8 @@ public sealed class UpdateTransferHandlerTests
 
         // Act
         var result = await handler.Handle(
-            new UpdateTransferCommand(transfer.Id, workspaceId, memberId, WorkspaceRole.Member, null, null, null, null, "note"),
+            new UpdateTransferCommand(transfer.Id, workspaceId, memberId, WorkspaceRole.Member, null, null, null, null,
+                "note"),
             CancellationToken.None);
 
         // Assert
@@ -368,7 +381,8 @@ public sealed class UpdateTransferHandlerTests
 
         // Act
         var result = await handler.Handle(
-            new UpdateTransferCommand(transfer.Id, workspaceId, Guid.NewGuid(), WorkspaceRole.Manager, null, null, null, null, "note"),
+            new UpdateTransferCommand(transfer.Id, workspaceId, Guid.NewGuid(), WorkspaceRole.Manager, null, null, null,
+                null, "note"),
             CancellationToken.None);
 
         // Assert

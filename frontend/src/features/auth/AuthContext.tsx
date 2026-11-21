@@ -1,82 +1,82 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { TOKEN_STORAGE_KEY, ACTIVE_WORKSPACE_KEY } from "@/lib/constants";
+import {createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useState} from "react";
+import {useQueryClient} from "@tanstack/react-query";
+import {ACTIVE_WORKSPACE_KEY, TOKEN_STORAGE_KEY} from "@/lib/constants";
 
 type AuthContextValue = {
-  token: string | null;
-  isAuthenticated: boolean;
-  signIn: (token: string) => void;
-  signOut: () => void;
+    token: string | null;
+    isAuthenticated: boolean;
+    signIn: (token: string) => void;
+    signOut: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 function readValidToken(): string | null {
-  const stored = localStorage.getItem(TOKEN_STORAGE_KEY);
-  if (!stored) {
-    return null;
-  }
-  try {
-    const payload = JSON.parse(atob(stored.split(".")[1]));
-    if (typeof payload.exp === "number" && payload.exp * 1000 < Date.now()) {
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
-      localStorage.removeItem(ACTIVE_WORKSPACE_KEY);
-      return null;
+    const stored = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (!stored) {
+        return null;
     }
-  } catch {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
-    return null;
-  }
-  return stored;
+    try {
+        const payload = JSON.parse(atob(stored.split(".")[1]));
+        if (typeof payload.exp === "number" && payload.exp * 1000 < Date.now()) {
+            localStorage.removeItem(TOKEN_STORAGE_KEY);
+            localStorage.removeItem(ACTIVE_WORKSPACE_KEY);
+            return null;
+        }
+    } catch {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        return null;
+    }
+    return stored;
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const queryClient = useQueryClient();
-  const [token, setToken] = useState<string | null>(readValidToken);
+export function AuthProvider({children}: { children: ReactNode }) {
+    const queryClient = useQueryClient();
+    const [token, setToken] = useState<string | null>(readValidToken);
 
-  const resetSession = useCallback(() => {
-    localStorage.removeItem(ACTIVE_WORKSPACE_KEY);
-    queryClient.clear();
-  }, [queryClient]);
+    const resetSession = useCallback(() => {
+        localStorage.removeItem(ACTIVE_WORKSPACE_KEY);
+        queryClient.clear();
+    }, [queryClient]);
 
-  useEffect(() => {
-    const handleUnauthorized = () => {
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
-      resetSession();
-      setToken(null);
-    };
+    useEffect(() => {
+        const handleUnauthorized = () => {
+            localStorage.removeItem(TOKEN_STORAGE_KEY);
+            resetSession();
+            setToken(null);
+        };
 
-    window.addEventListener("aureus:unauthorized", handleUnauthorized);
-    return () => window.removeEventListener("aureus:unauthorized", handleUnauthorized);
-  }, [resetSession]);
+        window.addEventListener("aureus:unauthorized", handleUnauthorized);
+        return () => window.removeEventListener("aureus:unauthorized", handleUnauthorized);
+    }, [resetSession]);
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      token,
-      isAuthenticated: token !== null,
-      signIn: (newToken: string) => {
-        resetSession();
-        localStorage.setItem(TOKEN_STORAGE_KEY, newToken);
-        setToken(newToken);
-      },
-      signOut: () => {
-        localStorage.removeItem(TOKEN_STORAGE_KEY);
-        resetSession();
-        setToken(null);
-      },
-    }),
-    [token, resetSession],
-  );
+    const value = useMemo<AuthContextValue>(
+        () => ({
+            token,
+            isAuthenticated: token !== null,
+            signIn: (newToken: string) => {
+                resetSession();
+                localStorage.setItem(TOKEN_STORAGE_KEY, newToken);
+                setToken(newToken);
+            },
+            signOut: () => {
+                localStorage.removeItem(TOKEN_STORAGE_KEY);
+                resetSession();
+                setToken(null);
+            },
+        }),
+        [token, resetSession],
+    );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext);
+    const context = useContext(AuthContext);
 
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+    if (context === undefined) {
+        throw new Error("useAuth must be used within an AuthProvider");
+    }
 
-  return context;
+    return context;
 }

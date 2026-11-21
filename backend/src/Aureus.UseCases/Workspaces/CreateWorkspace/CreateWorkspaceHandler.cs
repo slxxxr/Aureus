@@ -13,7 +13,7 @@ public sealed class CreateWorkspaceHandler(IWorkspaceRepository workspaceReposit
         {
             Id = Guid.NewGuid(),
             Name = command.Name.Trim(),
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
         var member = new WorkspaceMember
@@ -22,7 +22,7 @@ public sealed class CreateWorkspaceHandler(IWorkspaceRepository workspaceReposit
             WorkspaceId = workspace.Id,
             UserId = command.UserId,
             Role = WorkspaceRole.Owner,
-            JoinedAt = workspace.CreatedAt,
+            JoinedAt = workspace.CreatedAt
         };
 
         await workspaceRepository.AddAsync(workspace, member, cancellationToken);

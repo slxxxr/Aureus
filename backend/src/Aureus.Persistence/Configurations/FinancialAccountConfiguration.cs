@@ -18,7 +18,8 @@ public sealed class FinancialAccountConfiguration : IEntityTypeConfiguration<Fin
         builder.Property(account => account.Id).HasColumnName("id");
         builder.Property(account => account.WorkspaceId).HasColumnName("workspace_id").IsRequired();
         builder.Property(account => account.Name).HasColumnName("name").HasMaxLength(NameMaxLength).IsRequired();
-        builder.Property(account => account.Currency).HasColumnName("currency").HasMaxLength(CurrencyCodeMaxLength).IsRequired();
+        builder.Property(account => account.Currency).HasColumnName("currency").HasMaxLength(CurrencyCodeMaxLength)
+            .IsRequired();
         builder.Property(account => account.InitialBalanceMinor).HasColumnName("initial_balance_minor").IsRequired();
         builder.Property(account => account.CurrentBalanceMinor).HasColumnName("current_balance_minor").IsRequired();
         builder.Property(account => account.SortOrder).HasColumnName("sort_order");

@@ -43,41 +43,46 @@ public static class RateLimitingExtensions
             });
 
             options.AddPolicy(AuthLogin, context =>
-                RateLimitPartition.GetSlidingWindowLimiter(GetClientIp(context), _ => new SlidingWindowRateLimiterOptions
-                {
-                    PermitLimit = 10,
-                    Window = TimeSpan.FromMinutes(5),
-                    SegmentsPerWindow = 5,
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                    QueueLimit = 0
-                }));
+                RateLimitPartition.GetSlidingWindowLimiter(GetClientIp(context), _ =>
+                    new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 10,
+                        Window = TimeSpan.FromMinutes(5),
+                        SegmentsPerWindow = 5,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
 
             options.AddPolicy(AuthRegisterStart, context =>
-                RateLimitPartition.GetSlidingWindowLimiter(GetClientIp(context), _ => new SlidingWindowRateLimiterOptions
-                {
-                    PermitLimit = 5,
-                    Window = TimeSpan.FromMinutes(5),
-                    SegmentsPerWindow = 5,
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                    QueueLimit = 0
-                }));
+                RateLimitPartition.GetSlidingWindowLimiter(GetClientIp(context), _ =>
+                    new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(5),
+                        SegmentsPerWindow = 5,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
 
             options.AddPolicy(Import, context =>
-                RateLimitPartition.GetSlidingWindowLimiter(GetClientIp(context), _ => new SlidingWindowRateLimiterOptions
-                {
-                    PermitLimit = 5,
-                    Window = TimeSpan.FromMinutes(1),
-                    SegmentsPerWindow = 6,
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                    QueueLimit = 0
-                }));
+                RateLimitPartition.GetSlidingWindowLimiter(GetClientIp(context), _ =>
+                    new SlidingWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(1),
+                        SegmentsPerWindow = 6,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0
+                    }));
         });
 
         return services;
     }
 
-    private static string GetClientIp(HttpContext context) =>
-        context.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
-        ?? context.Connection.RemoteIpAddress?.ToString()
-        ?? "unknown";
+    private static string GetClientIp(HttpContext context)
+    {
+        return context.Request.Headers["CF-Connecting-IP"].FirstOrDefault()
+               ?? context.Connection.RemoteIpAddress?.ToString()
+               ?? "unknown";
+    }
 }

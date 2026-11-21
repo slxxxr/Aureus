@@ -10,21 +10,26 @@ public sealed class DeleteTransferHandlerTests
     private static Transfer DefaultTransfer(
         Guid? id = null,
         Guid? workspaceId = null,
-        Guid? createdByUserId = null) => new()
+        Guid? createdByUserId = null)
     {
-        Id = id ?? Guid.NewGuid(),
-        WorkspaceId = workspaceId ?? Guid.NewGuid(),
-        FromAccountId = Guid.NewGuid(),
-        ToAccountId = Guid.NewGuid(),
-        CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
-        AmountMinor = 100_00,
-        Currency = "RUB",
-        OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new Transfer
+        {
+            Id = id ?? Guid.NewGuid(),
+            WorkspaceId = workspaceId ?? Guid.NewGuid(),
+            FromAccountId = Guid.NewGuid(),
+            ToAccountId = Guid.NewGuid(),
+            CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
+            AmountMinor = 100_00,
+            Currency = "RUB",
+            OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
-    private static DeleteTransferCommand OwnerCommand(Guid transferId, Guid workspaceId) =>
-        new(transferId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner);
+    private static DeleteTransferCommand OwnerCommand(Guid transferId, Guid workspaceId)
+    {
+        return new DeleteTransferCommand(transferId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner);
+    }
 
     [Fact]
     public async Task Handle_TransferNotFound_ThrowsNotFound()

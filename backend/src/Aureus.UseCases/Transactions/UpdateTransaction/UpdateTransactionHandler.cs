@@ -18,19 +18,15 @@ public sealed class UpdateTransactionHandler(
             command.TransactionId, command.WorkspaceId, cancellationToken);
 
         if (transaction is null)
-        {
             throw new TransactionException(
                 TransactionErrorCode.NotFound,
                 $"Transaction {command.TransactionId} not found.");
-        }
 
         if (command.RequestingUserRole < WorkspaceRole.Manager &&
             transaction.CreatedByUserId != command.RequestingUserId)
-        {
             throw new TransactionException(
                 TransactionErrorCode.Forbidden,
                 "Members can only edit their own transactions.");
-        }
 
         var oldAccountId = transaction.FinancialAccountId;
         var oldType = transaction.Type;
@@ -39,11 +35,9 @@ public sealed class UpdateTransactionHandler(
         if (command.Type is not null)
         {
             if (command.CategoryId is null)
-            {
                 throw new TransactionException(
                     TransactionErrorCode.CategoryRequiredOnTypeChange,
                     "CategoryId is required when changing transaction type.");
-            }
 
             transaction.Type = command.Type.Value;
         }
@@ -54,18 +48,14 @@ public sealed class UpdateTransactionHandler(
                 command.CategoryId.Value, command.WorkspaceId, cancellationToken);
 
             if (category is null)
-            {
                 throw new CategoryException(
                     CategoryErrorCode.NotFound,
                     $"Category {command.CategoryId} not found.");
-            }
 
             if (category.Type != transaction.Type)
-            {
                 throw new TransactionException(
                     TransactionErrorCode.CategoryTypeMismatch,
                     $"Category type {category.Type} does not match transaction type {transaction.Type}.");
-            }
 
             transaction.CategoryId = command.CategoryId.Value;
         }
@@ -76,35 +66,21 @@ public sealed class UpdateTransactionHandler(
                 command.FinancialAccountId.Value, command.WorkspaceId, cancellationToken);
 
             if (account is null)
-            {
                 throw new TransactionException(
                     TransactionErrorCode.AccountNotFound,
                     $"Financial account {command.FinancialAccountId} not found.");
-            }
 
             transaction.FinancialAccountId = command.FinancialAccountId.Value;
             transaction.Currency = account.Currency;
         }
 
-        if (command.Name is not null)
-        {
-            transaction.Name = command.Name.Trim();
-        }
+        if (command.Name is not null) transaction.Name = command.Name.Trim();
 
-        if (command.AmountMinor is not null)
-        {
-            transaction.AmountMinor = command.AmountMinor.Value;
-        }
+        if (command.AmountMinor is not null) transaction.AmountMinor = command.AmountMinor.Value;
 
-        if (command.OccurredAt is not null)
-        {
-            transaction.OccurredAt = command.OccurredAt.Value;
-        }
+        if (command.OccurredAt is not null) transaction.OccurredAt = command.OccurredAt.Value;
 
-        if (command.Note is not null)
-        {
-            transaction.Note = command.Note.Trim();
-        }
+        if (command.Note is not null) transaction.Note = command.Note.Trim();
 
         transaction.UpdatedAt = DateTimeOffset.UtcNow;
 
@@ -114,8 +90,8 @@ public sealed class UpdateTransactionHandler(
         await transactionRepository.UpdateAsync(
             transaction,
             oldAccountId,
-            oldAccountDelta: -oldEffect,
-            newAccountDelta: newEffect,
+            -oldEffect,
+            newEffect,
             cancellationToken);
 
         return transaction;

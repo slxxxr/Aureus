@@ -12,9 +12,7 @@ public sealed class RevokeInvitationHandler(IWorkspaceInvitationRepository invit
         var invitation = await invitationRepository.FindByIdAsync(command.InvitationId, cancellationToken);
 
         if (invitation is null || invitation.WorkspaceId != command.WorkspaceId)
-        {
             throw new WorkspaceInvitationException(WorkspaceInvitationErrorCode.NotFound, "Invitation not found.");
-        }
 
         await invitationRepository.DeleteAsync(invitation.Id, cancellationToken);
     }

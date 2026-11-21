@@ -14,19 +14,15 @@ public sealed class DeleteTransferHandler(ITransferRepository transferRepository
             command.TransferId, command.WorkspaceId, cancellationToken);
 
         if (transfer is null)
-        {
             throw new TransferException(
                 TransferErrorCode.NotFound,
                 $"Transfer {command.TransferId} not found.");
-        }
 
         if (command.RequestingUserRole < WorkspaceRole.Manager &&
             transfer.CreatedByUserId != command.RequestingUserId)
-        {
             throw new TransferException(
                 TransferErrorCode.Forbidden,
                 "Members can only delete their own transfers.");
-        }
 
         await transferRepository.DeleteAsync(transfer, cancellationToken);
     }

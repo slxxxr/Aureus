@@ -1,7 +1,7 @@
 using Aureus.Domain.Analytics;
 using Aureus.Domain.Transactions;
-using Aureus.Persistence.Entities;
 using Aureus.Persistence;
+using Aureus.Persistence.Entities;
 using Aureus.Persistence.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -32,15 +32,9 @@ public sealed class TransactionRepository(AureusDbContext dbContext, IMapper map
             .AsNoTracking()
             .Where(t => t.WorkspaceId == filter.WorkspaceId);
 
-        if (filter.From.HasValue)
-        {
-            query = query.Where(t => t.OccurredAt >= filter.From.Value);
-        }
+        if (filter.From.HasValue) query = query.Where(t => t.OccurredAt >= filter.From.Value);
 
-        if (filter.To.HasValue)
-        {
-            query = query.Where(t => t.OccurredAt < filter.To.Value);
-        }
+        if (filter.To.HasValue) query = query.Where(t => t.OccurredAt < filter.To.Value);
 
         if (filter.Type.HasValue)
         {
@@ -49,14 +43,9 @@ public sealed class TransactionRepository(AureusDbContext dbContext, IMapper map
         }
 
         if (filter.AccountIds is { Count: > 0 })
-        {
             query = query.Where(t => filter.AccountIds.Contains(t.FinancialAccountId));
-        }
 
-        if (filter.CategoryIds is { Count: > 0 })
-        {
-            query = query.Where(t => filter.CategoryIds.Contains(t.CategoryId));
-        }
+        if (filter.CategoryIds is { Count: > 0 }) query = query.Where(t => filter.CategoryIds.Contains(t.CategoryId));
 
         var entities = await query
             .OrderByDescending(t => t.OccurredAt)
@@ -119,22 +108,18 @@ public sealed class TransactionRepository(AureusDbContext dbContext, IMapper map
                 cancellationToken);
 
         if (oldAccountDelta != 0)
-        {
             await dbContext.FinancialAccounts
                 .Where(a => a.Id == oldAccountId)
                 .ExecuteUpdateAsync(
                     s => s.SetProperty(a => a.CurrentBalanceMinor, a => a.CurrentBalanceMinor + oldAccountDelta),
                     cancellationToken);
-        }
 
         if (newAccountDelta != 0)
-        {
             await dbContext.FinancialAccounts
                 .Where(a => a.Id == transaction.FinancialAccountId)
                 .ExecuteUpdateAsync(
                     s => s.SetProperty(a => a.CurrentBalanceMinor, a => a.CurrentBalanceMinor + newAccountDelta),
                     cancellationToken);
-        }
 
         await dbTransaction.CommitAsync(cancellationToken);
     }

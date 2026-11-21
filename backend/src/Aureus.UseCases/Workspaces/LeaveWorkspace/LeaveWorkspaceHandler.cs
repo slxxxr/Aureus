@@ -10,11 +10,9 @@ public sealed class LeaveWorkspaceHandler(IWorkspaceRepository workspaceReposito
     public async Task Handle(LeaveWorkspaceCommand command, CancellationToken cancellationToken)
     {
         if (command.UserRole == WorkspaceRole.Owner)
-        {
             throw new WorkspaceMemberException(
                 WorkspaceMemberErrorCode.CannotLeaveAsOwner,
                 "Workspace Owners cannot leave. Transfer ownership first.");
-        }
 
         await workspaceRepository.DeleteMemberAsync(
             command.WorkspaceId, command.UserId, cancellationToken);

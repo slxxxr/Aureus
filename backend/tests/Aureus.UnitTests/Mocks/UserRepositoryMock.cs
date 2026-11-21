@@ -67,9 +67,13 @@ public sealed class UserRepositoryMock
         return this;
     }
 
-    public void VerifyAddCalledOnce() =>
+    public void VerifyAddCalledOnce()
+    {
         _mock.Verify(db => db.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 
-    public void VerifyAddNotCalled() =>
+    public void VerifyAddNotCalled()
+    {
         _mock.Verify(db => db.AddAsync(It.IsAny<User>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

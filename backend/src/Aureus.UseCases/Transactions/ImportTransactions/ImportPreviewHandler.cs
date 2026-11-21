@@ -11,9 +11,7 @@ public sealed class ImportPreviewHandler(
     public async Task<ImportPreviewResult> Handle(ImportPreviewQuery query, CancellationToken cancellationToken)
     {
         if (query.FileContent.Length > TransactionCsvParser.MaxFileSizeBytes)
-        {
             throw new TransactionException(TransactionErrorCode.ImportFileTooLarge, "File exceeds 5 MB.");
-        }
 
         var accounts = await accountRepository.GetByWorkspaceIdAsync(query.WorkspaceId, cancellationToken);
         var categories = await categoryRepository.GetByWorkspaceIdAsync(query.WorkspaceId, cancellationToken);
@@ -29,9 +27,8 @@ public sealed class ImportPreviewHandler(
         }
 
         if (parsed.Count > TransactionCsvParser.MaxRows)
-        {
-            throw new TransactionException(TransactionErrorCode.ImportTooManyRows, $"File contains more than {TransactionCsvParser.MaxRows} rows.");
-        }
+            throw new TransactionException(TransactionErrorCode.ImportTooManyRows,
+                $"File contains more than {TransactionCsvParser.MaxRows} rows.");
 
         var rows = parsed.Select(r => new ImportRowPreview(
             r.RowNumber, r.IsValid, r.ErrorCode, r.ErrorSubject,

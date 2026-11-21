@@ -1,6 +1,5 @@
 using Aureus.Domain.Transactions;
 
-
 namespace Aureus.Api.Contracts.Transactions;
 
 public sealed record UpdateTransactionRequest(

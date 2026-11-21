@@ -18,8 +18,9 @@ public sealed class CompleteRegistrationHandlerTests
         WorkspaceInvitationRepositoryMock? invitationRepository = null,
         WorkspaceRepositoryMock? workspaceRepository = null,
         FinancialAccountRepositoryMock? accountRepository = null,
-        CategoryRepositoryMock? categoryRepository = null) =>
-        new(tokenService.Object,
+        CategoryRepositoryMock? categoryRepository = null)
+    {
+        return new CompleteRegistrationHandler(tokenService.Object,
             registrationRepository.Object,
             passwordHasher.Object,
             jwtGenerator.Object,
@@ -29,6 +30,7 @@ public sealed class CompleteRegistrationHandlerTests
             (accountRepository ?? new FinancialAccountRepositoryMock()).Object,
             (categoryRepository ?? new CategoryRepositoryMock()).Object,
             NullLogger<CompleteRegistrationHandler>.Instance);
+    }
 
     [Fact]
     public async Task Handle_ValidToken_RegistersUserAndReturnsAccessToken()
@@ -43,7 +45,8 @@ public sealed class CompleteRegistrationHandlerTests
         var passwordHasher = new PasswordHasherMock().WithHash("securepass", "hashed:securepass");
         var jwtGenerator = new JwtTokenGeneratorMock().WithAnyToken(accessToken);
         var invitationRepository = new WorkspaceInvitationRepositoryMock().WithPendingForEmail(email, []);
-        var handler = BuildHandler(tokenService, registrationRepository, passwordHasher, jwtGenerator, invitationRepository);
+        var handler = BuildHandler(tokenService, registrationRepository, passwordHasher, jwtGenerator,
+            invitationRepository);
 
         // Act
         var result = await handler.Handle(
@@ -74,14 +77,20 @@ public sealed class CompleteRegistrationHandlerTests
         var passwordHasher = new PasswordHasherMock().WithHash("securepass", "hashed:securepass");
         var jwtGenerator = new JwtTokenGeneratorMock().WithAnyToken("jwt.access.token");
         var invitationRepository = new WorkspaceInvitationRepositoryMock()
-            .WithPendingForEmail(email, [new PendingInvitationSummary(invitationId, invitationWorkspaceId, "Shared", DateTimeOffset.UtcNow.AddDays(7))])
+            .WithPendingForEmail(email,
+            [
+                new PendingInvitationSummary(invitationId, invitationWorkspaceId, "Shared",
+                    DateTimeOffset.UtcNow.AddDays(7))
+            ])
             .CapturingAccept();
         var workspaceRepository = new WorkspaceRepositoryMock().WithActiveMemberCount(invitationWorkspaceId, 1);
         var handler = BuildHandler(
-            tokenService, registrationRepository, passwordHasher, jwtGenerator, invitationRepository, workspaceRepository);
+            tokenService, registrationRepository, passwordHasher, jwtGenerator, invitationRepository,
+            workspaceRepository);
 
         // Act
-        await handler.Handle(new CompleteRegistrationCommand(token, "Test User", "securepass", null), CancellationToken.None);
+        await handler.Handle(new CompleteRegistrationCommand(token, "Test User", "securepass", null),
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(invitationId, invitationRepository.AcceptedInvitationId);
@@ -103,15 +112,21 @@ public sealed class CompleteRegistrationHandlerTests
         var passwordHasher = new PasswordHasherMock().WithHash("securepass", "hashed:securepass");
         var jwtGenerator = new JwtTokenGeneratorMock().WithAnyToken("jwt.access.token");
         var invitationRepository = new WorkspaceInvitationRepositoryMock()
-            .WithPendingForEmail(email, [new PendingInvitationSummary(invitationId, invitationWorkspaceId, "Shared", DateTimeOffset.UtcNow.AddDays(7))])
+            .WithPendingForEmail(email,
+            [
+                new PendingInvitationSummary(invitationId, invitationWorkspaceId, "Shared",
+                    DateTimeOffset.UtcNow.AddDays(7))
+            ])
             .CapturingAccept();
         var workspaceRepository = new WorkspaceRepositoryMock()
             .WithActiveMemberCount(invitationWorkspaceId, WorkspaceLimits.MaxMembers);
         var handler = BuildHandler(
-            tokenService, registrationRepository, passwordHasher, jwtGenerator, invitationRepository, workspaceRepository);
+            tokenService, registrationRepository, passwordHasher, jwtGenerator, invitationRepository,
+            workspaceRepository);
 
         // Act
-        await handler.Handle(new CompleteRegistrationCommand(token, "Test User", "securepass", null), CancellationToken.None);
+        await handler.Handle(new CompleteRegistrationCommand(token, "Test User", "securepass", null),
+            CancellationToken.None);
 
         // Assert
         invitationRepository.VerifyAcceptNotCalled();
@@ -129,7 +144,8 @@ public sealed class CompleteRegistrationHandlerTests
         var passwordHasher = new PasswordHasherMock().WithHash("securepass", "hashed:securepass");
         var jwtGenerator = new JwtTokenGeneratorMock().WithAnyToken("token");
         var invitationRepository = new WorkspaceInvitationRepositoryMock().WithPendingForEmail(email, []);
-        var handler = BuildHandler(tokenService, registrationRepository, passwordHasher, jwtGenerator, invitationRepository);
+        var handler = BuildHandler(tokenService, registrationRepository, passwordHasher, jwtGenerator,
+            invitationRepository);
 
         // Act
         await handler.Handle(
@@ -151,7 +167,8 @@ public sealed class CompleteRegistrationHandlerTests
         var passwordHasher = new PasswordHasherMock().WithHash("securepass", "hashed:securepass");
         var jwtGenerator = new JwtTokenGeneratorMock().WithAnyToken("token");
         var invitationRepository = new WorkspaceInvitationRepositoryMock().WithPendingForEmail(email, []);
-        var handler = BuildHandler(tokenService, registrationRepository, passwordHasher, jwtGenerator, invitationRepository);
+        var handler = BuildHandler(tokenService, registrationRepository, passwordHasher, jwtGenerator,
+            invitationRepository);
 
         // Act
         await handler.Handle(
@@ -175,7 +192,8 @@ public sealed class CompleteRegistrationHandlerTests
 
         // Act
         var exception = await Assert.ThrowsAsync<EmailVerificationException>(() =>
-            handler.Handle(new CompleteRegistrationCommand(token, "Test User", "securepass", null), CancellationToken.None));
+            handler.Handle(new CompleteRegistrationCommand(token, "Test User", "securepass", null),
+                CancellationToken.None));
 
         // Assert
         Assert.Equal(EmailVerificationErrorCode.RegistrationTokenInvalid, exception.Code);

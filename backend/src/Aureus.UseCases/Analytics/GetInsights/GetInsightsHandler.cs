@@ -30,17 +30,15 @@ public sealed class GetInsightsHandler(
             query.WorkspaceId, DailyUsageFeature.Insights, today, cancellationToken);
 
         if (usageCount > InsightsDailyLimit)
-        {
             throw new AnalyticsException(AnalyticsErrorCode.DailyQuotaExceeded,
                 $"Daily insights limit of {InsightsDailyLimit} requests per workspace exceeded.");
-        }
 
         var filter = new AnalyticsFilter(
-            WorkspaceId: query.WorkspaceId,
-            From: query.From,
-            To: query.To,
-            AccountIds: null,
-            Type: null);
+            query.WorkspaceId,
+            query.From,
+            query.To,
+            null,
+            null);
 
         var count = await analyticsRepository.GetTransactionCountAsync(filter, cancellationToken);
         var tier = count switch { <= SmallTierMax => Tier.Small, <= MediumTierMax => Tier.Medium, _ => Tier.Large };
@@ -62,10 +60,7 @@ public sealed class GetInsightsHandler(
 
     private static TimeInterval SelectInterval(DateOnly? from, DateOnly? to)
     {
-        if (from is null || to is null)
-        {
-            return TimeInterval.Month;
-        }
+        if (from is null || to is null) return TimeInterval.Month;
 
         var days = to.Value.DayNumber - from.Value.DayNumber;
         return days switch { <= 31 => TimeInterval.Day, <= 92 => TimeInterval.Week, _ => TimeInterval.Month };
@@ -88,28 +83,26 @@ public sealed class GetInsightsHandler(
             var names = await analyticsRepository.GetBreakdownAsync(filter, BreakdownDimension.Name, ct);
             return new FinancialContext(
                 summary, expenseCategories, incomeCategories,
-                Transactions: [],
-                TimeSeries: timeSeries,
-                TopNames: names.OrderByDescending(n => n.AmountMinor).Take(50).ToList());
+                [],
+                timeSeries,
+                names.OrderByDescending(n => n.AmountMinor).Take(50).ToList());
         }
 
         var transactions = await analyticsRepository.GetTransactionsForContextAsync(filter, MediumTierMax, ct);
 
         if (tier == Tier.Small)
-        {
             return new FinancialContext(
                 summary, expenseCategories, incomeCategories,
-                Transactions: transactions,
-                TimeSeries: [],
-                TopNames: []);
-        }
+                transactions,
+                [],
+                []);
 
         var mediumTimeSeries = await analyticsRepository.GetTimeSeriesAsync(filter, interval, ct);
         return new FinancialContext(
             summary, expenseCategories, incomeCategories,
-            Transactions: transactions,
-            TimeSeries: mediumTimeSeries,
-            TopNames: []);
+            transactions,
+            mediumTimeSeries,
+            []);
     }
 }
 

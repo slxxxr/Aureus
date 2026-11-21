@@ -13,18 +13,15 @@ public sealed class DeclineInvitationHandler(
         var invitation = await invitationRepository.FindByIdAsync(command.InvitationId, cancellationToken);
 
         if (invitation is null)
-        {
             throw new WorkspaceInvitationException(WorkspaceInvitationErrorCode.NotFound, "Invitation not found.");
-        }
 
         var user = await userRepository.FindByIdAsync(command.UserId, cancellationToken)
-            ?? throw new InvalidOperationException($"Authenticated user {command.UserId} not found in database.");
+                   ?? throw new InvalidOperationException(
+                       $"Authenticated user {command.UserId} not found in database.");
 
         if (invitation.Email != user.Email)
-        {
             throw new WorkspaceInvitationException(
                 WorkspaceInvitationErrorCode.Forbidden, "This invitation does not belong to you.");
-        }
 
         await invitationRepository.DeleteAsync(invitation.Id, cancellationToken);
     }

@@ -19,7 +19,7 @@ public sealed class CreateFinancialAccountHandler(IFinancialAccountRepository re
             Currency = command.Currency,
             InitialBalanceMinor = command.InitialBalanceMinor,
             CurrentBalanceMinor = command.InitialBalanceMinor,
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
 
         await repository.AddAsync(account, cancellationToken);

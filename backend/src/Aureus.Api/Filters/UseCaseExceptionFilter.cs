@@ -29,10 +29,7 @@ public sealed class UseCaseExceptionFilter : IExceptionFilter
             return;
         }
 
-        if (context.Exception is not DomainException exception)
-        {
-            return;
-        }
+        if (context.Exception is not DomainException exception) return;
 
         var statusCode = exception.ErrorType switch
         {

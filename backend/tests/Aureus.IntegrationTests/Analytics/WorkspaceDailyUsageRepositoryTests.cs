@@ -19,7 +19,8 @@ public sealed class WorkspaceDailyUsageRepositoryTests(PostgresFixture fixture)
         var repository = new WorkspaceDailyUsageRepository(db);
 
         // Act
-        var count = await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Today, CancellationToken.None);
+        var count = await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Today,
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(1, count);
@@ -35,7 +36,8 @@ public sealed class WorkspaceDailyUsageRepositoryTests(PostgresFixture fixture)
 
         // Act
         await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Today, CancellationToken.None);
-        var count = await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Today, CancellationToken.None);
+        var count = await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Today,
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(2, count);
@@ -51,7 +53,8 @@ public sealed class WorkspaceDailyUsageRepositoryTests(PostgresFixture fixture)
 
         // Act
         await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Today, CancellationToken.None);
-        var count = await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Tomorrow, CancellationToken.None);
+        var count = await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Tomorrow,
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(1, count);
@@ -67,7 +70,9 @@ public sealed class WorkspaceDailyUsageRepositoryTests(PostgresFixture fixture)
 
         // Act — increment Insights twice, other feature once
         await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Today, CancellationToken.None);
-        var insightsCount = await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Today, CancellationToken.None);
+        var insightsCount =
+            await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.Insights, Today,
+                CancellationToken.None);
 
         // Assert — Insights has its own counter
         Assert.Equal(2, insightsCount);
@@ -85,7 +90,9 @@ public sealed class WorkspaceDailyUsageRepositoryTests(PostgresFixture fixture)
         // Act
         await repository.IncrementAndGetAsync(workspaceA, DailyUsageFeature.Insights, Today, CancellationToken.None);
         await repository.IncrementAndGetAsync(workspaceA, DailyUsageFeature.Insights, Today, CancellationToken.None);
-        var countB = await repository.IncrementAndGetAsync(workspaceB, DailyUsageFeature.Insights, Today, CancellationToken.None);
+        var countB =
+            await repository.IncrementAndGetAsync(workspaceB, DailyUsageFeature.Insights, Today,
+                CancellationToken.None);
 
         // Assert
         Assert.Equal(1, countB);
@@ -100,7 +107,8 @@ public sealed class WorkspaceDailyUsageRepositoryTests(PostgresFixture fixture)
         var repository = new WorkspaceDailyUsageRepository(db);
 
         // Act
-        var count = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
+        var count = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today,
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(0, count);
@@ -113,12 +121,16 @@ public sealed class WorkspaceDailyUsageRepositoryTests(PostgresFixture fixture)
         var (workspaceId, _) = await TestData.SeedWorkspaceAsync(fixture);
         await using var db = fixture.CreateDbContext();
         var repository = new WorkspaceDailyUsageRepository(db);
-        await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
-        await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
+        await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today,
+            CancellationToken.None);
+        await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today,
+            CancellationToken.None);
 
         // Act
-        var firstRead = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
-        var secondRead = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
+        var firstRead = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today,
+            CancellationToken.None);
+        var secondRead = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today,
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(2, firstRead);
@@ -132,10 +144,12 @@ public sealed class WorkspaceDailyUsageRepositoryTests(PostgresFixture fixture)
         var (workspaceId, _) = await TestData.SeedWorkspaceAsync(fixture);
         await using var db = fixture.CreateDbContext();
         var repository = new WorkspaceDailyUsageRepository(db);
-        await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today, CancellationToken.None);
+        await repository.IncrementAndGetAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Today,
+            CancellationToken.None);
 
         // Act
-        var count = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Tomorrow, CancellationToken.None);
+        var count = await repository.GetCountAsync(workspaceId, DailyUsageFeature.WorkspaceInvitations, Tomorrow,
+            CancellationToken.None);
 
         // Assert
         Assert.Equal(0, count);

@@ -6,13 +6,15 @@ namespace Aureus.UnitTests.Workspaces;
 
 public sealed class UpdateWorkspaceHandlerTests
 {
-    private static Workspace ExistingWorkspace(string name = "My Workspace") =>
-        new()
+    private static Workspace ExistingWorkspace(string name = "My Workspace")
+    {
+        return new Workspace
         {
             Id = Guid.NewGuid(),
             Name = name,
-            CreatedAt = DateTimeOffset.UtcNow.AddDays(-1),
+            CreatedAt = DateTimeOffset.UtcNow.AddDays(-1)
         };
+    }
 
     [Fact]
     public async Task Handle_WorkspaceNotFound_ThrowsNotFound()
@@ -24,7 +26,7 @@ public sealed class UpdateWorkspaceHandlerTests
 
         // Act
         var exception = await Assert.ThrowsAsync<WorkspaceException>(() =>
-            handler.Handle(new UpdateWorkspaceCommand(workspaceId, Name: "New Name"), CancellationToken.None));
+            handler.Handle(new UpdateWorkspaceCommand(workspaceId, "New Name"), CancellationToken.None));
 
         // Assert
         Assert.Equal(WorkspaceErrorCode.NotFound, exception.Code);
@@ -34,14 +36,14 @@ public sealed class UpdateWorkspaceHandlerTests
     public async Task Handle_NameProvided_UpdatesName()
     {
         // Arrange
-        var workspace = ExistingWorkspace(name: "Old Name");
+        var workspace = ExistingWorkspace("Old Name");
         var repository = new WorkspaceRepositoryMock()
             .WithWorkspace(workspace.Id, workspace)
             .CapturingUpdate();
         var handler = new UpdateWorkspaceHandler(repository.Object);
 
         // Act
-        var command = new UpdateWorkspaceCommand(workspace.Id, Name: "New Name");
+        var command = new UpdateWorkspaceCommand(workspace.Id, "New Name");
         var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
@@ -52,7 +54,7 @@ public sealed class UpdateWorkspaceHandlerTests
     public async Task Handle_NameProvided_NormalizesWhitespace()
     {
         // Arrange
-        var workspace = ExistingWorkspace(name: "Old Name");
+        var workspace = ExistingWorkspace("Old Name");
         var repository = new WorkspaceRepositoryMock()
             .WithWorkspace(workspace.Id, workspace)
             .CapturingUpdate();
@@ -60,7 +62,7 @@ public sealed class UpdateWorkspaceHandlerTests
 
         // Act
         var result = await handler.Handle(
-            new UpdateWorkspaceCommand(workspace.Id, Name: "  New Name  "),
+            new UpdateWorkspaceCommand(workspace.Id, "  New Name  "),
             CancellationToken.None);
 
         // Assert
@@ -71,7 +73,7 @@ public sealed class UpdateWorkspaceHandlerTests
     public async Task Handle_NameNull_LeavesNameUnchanged()
     {
         // Arrange
-        var workspace = ExistingWorkspace(name: "Original");
+        var workspace = ExistingWorkspace("Original");
         var repository = new WorkspaceRepositoryMock()
             .WithWorkspace(workspace.Id, workspace)
             .CapturingUpdate();
@@ -79,7 +81,7 @@ public sealed class UpdateWorkspaceHandlerTests
 
         // Act
         var result = await handler.Handle(
-            new UpdateWorkspaceCommand(workspace.Id, Name: null),
+            new UpdateWorkspaceCommand(workspace.Id, null),
             CancellationToken.None);
 
         // Assert

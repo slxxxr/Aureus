@@ -73,15 +73,23 @@ public sealed class FinancialAccountRepositoryMock
         return this;
     }
 
-    public void VerifyAddCalledOnce() =>
+    public void VerifyAddCalledOnce()
+    {
         _mock.Verify(r => r.AddAsync(It.IsAny<FinancialAccount>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 
-    public void VerifyUpdateCalledOnce() =>
+    public void VerifyUpdateCalledOnce()
+    {
         _mock.Verify(r => r.UpdateAsync(It.IsAny<FinancialAccount>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 
-    public void VerifyDeleteCalledOnce() =>
+    public void VerifyDeleteCalledOnce()
+    {
         _mock.Verify(r => r.DeleteAsync(It.IsAny<FinancialAccount>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
 
-    public void VerifyDeleteNotCalled() =>
+    public void VerifyDeleteNotCalled()
+    {
         _mock.Verify(r => r.DeleteAsync(It.IsAny<FinancialAccount>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 }

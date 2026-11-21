@@ -1,4 +1,3 @@
-using AutoMapper;
 using Aureus.Domain.Categories;
 using Aureus.Domain.FinancialAccounts;
 using Aureus.Domain.Transactions;
@@ -6,6 +5,7 @@ using Aureus.Domain.Transfers;
 using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
 using Aureus.Persistence.Entities;
+using AutoMapper;
 
 namespace Aureus.Persistence.Mappers;
 

@@ -25,14 +25,15 @@ public sealed class ImportRepositoryMock
                 It.IsAny<IReadOnlyList<Transfer>>(),
                 It.IsAny<IReadOnlyDictionary<Guid, long>>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<IReadOnlyList<Transaction>, IReadOnlyDictionary<Guid, long>, IReadOnlyList<Transfer>, IReadOnlyDictionary<Guid, long>, CancellationToken>(
-                (transactions, transactionDeltas, transfers, transferDeltas, _) =>
-                {
-                    AddedTransactions = transactions;
-                    AddedTransactionDeltas = transactionDeltas;
-                    AddedTransfers = transfers;
-                    AddedTransferDeltas = transferDeltas;
-                })
+            .Callback<IReadOnlyList<Transaction>, IReadOnlyDictionary<Guid, long>, IReadOnlyList<Transfer>,
+                IReadOnlyDictionary<Guid, long>, CancellationToken>((transactions, transactionDeltas, transfers,
+                transferDeltas, _) =>
+            {
+                AddedTransactions = transactions;
+                AddedTransactionDeltas = transactionDeltas;
+                AddedTransfers = transfers;
+                AddedTransferDeltas = transferDeltas;
+            })
             .Returns(Task.CompletedTask);
 
         return this;

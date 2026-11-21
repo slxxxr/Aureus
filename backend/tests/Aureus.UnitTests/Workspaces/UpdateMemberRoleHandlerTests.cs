@@ -37,8 +37,10 @@ public sealed class UpdateMemberRoleHandlerTests
     }
 
 
-    private static UpdateMemberRoleHandler BuildHandler(WorkspaceRepositoryMock workspaceRepo) =>
-        new(workspaceRepo.Object);
+    private static UpdateMemberRoleHandler BuildHandler(WorkspaceRepositoryMock workspaceRepo)
+    {
+        return new UpdateMemberRoleHandler(workspaceRepo.Object);
+    }
 
     [Fact]
     public async Task Handle_OwnerPromotesMember_UpdatesRole()

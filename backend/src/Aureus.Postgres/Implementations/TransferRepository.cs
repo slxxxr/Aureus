@@ -32,20 +32,13 @@ public sealed class TransferRepository(AureusDbContext dbContext, IMapper mapper
             .AsNoTracking()
             .Where(t => t.WorkspaceId == filter.WorkspaceId);
 
-        if (filter.From.HasValue)
-        {
-            query = query.Where(t => t.OccurredAt >= filter.From.Value);
-        }
+        if (filter.From.HasValue) query = query.Where(t => t.OccurredAt >= filter.From.Value);
 
-        if (filter.To.HasValue)
-        {
-            query = query.Where(t => t.OccurredAt < filter.To.Value);
-        }
+        if (filter.To.HasValue) query = query.Where(t => t.OccurredAt < filter.To.Value);
 
         if (filter.AccountIds is { Count: > 0 })
-        {
-            query = query.Where(t => filter.AccountIds.Contains(t.FromAccountId) || filter.AccountIds.Contains(t.ToAccountId));
-        }
+            query = query.Where(t =>
+                filter.AccountIds.Contains(t.FromAccountId) || filter.AccountIds.Contains(t.ToAccountId));
 
         var entities = await query
             .OrderByDescending(t => t.OccurredAt)
@@ -111,10 +104,7 @@ public sealed class TransferRepository(AureusDbContext dbContext, IMapper mapper
 
         foreach (var (accountId, delta) in accountBalanceDeltas)
         {
-            if (delta == 0)
-            {
-                continue;
-            }
+            if (delta == 0) continue;
 
             await dbContext.FinancialAccounts
                 .Where(a => a.Id == accountId)

@@ -34,12 +34,14 @@ public sealed class WorkspaceDailyUsageRepositoryMock
     public void VerifyIncrementCalledOnce()
     {
         _mock.Verify(r => r.IncrementAndGetAsync(
-            It.IsAny<Guid>(), It.IsAny<DailyUsageFeature>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()), Times.Once);
+                It.IsAny<Guid>(), It.IsAny<DailyUsageFeature>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     public void VerifyIncrementNotCalled()
     {
         _mock.Verify(r => r.IncrementAndGetAsync(
-            It.IsAny<Guid>(), It.IsAny<DailyUsageFeature>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()), Times.Never);
+                It.IsAny<Guid>(), It.IsAny<DailyUsageFeature>(), It.IsAny<DateOnly>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

@@ -17,7 +17,8 @@ public sealed class CompleteRegistrationHandler(
     IWorkspaceRepository workspaceRepository,
     IFinancialAccountRepository accountRepository,
     ICategoryRepository categoryRepository,
-    ILogger<CompleteRegistrationHandler> logger) : IRequestHandler<CompleteRegistrationCommand, CompleteRegistrationResult>
+    ILogger<CompleteRegistrationHandler> logger)
+    : IRequestHandler<CompleteRegistrationCommand, CompleteRegistrationResult>
 {
     private const int MinimumPasswordLength = 8;
     private const string ExpectedPurpose = nameof(EmailVerificationPurpose.Registration);
@@ -28,20 +29,16 @@ public sealed class CompleteRegistrationHandler(
         var payload = tokenService.TryValidate(command.RegistrationToken ?? string.Empty);
 
         if (payload is null || payload.Purpose != ExpectedPurpose)
-        {
             throw new EmailVerificationException(EmailVerificationErrorCode.RegistrationTokenInvalid,
                 "Registration token is invalid or expired. Please start registration again.");
-        }
 
         var email = payload.Email;
         var name = (command.Name ?? string.Empty).Trim();
         var password = command.Password ?? string.Empty;
 
         if (password.Length < MinimumPasswordLength)
-        {
             throw new EmailVerificationException(EmailVerificationErrorCode.InvalidPassword,
                 $"Password must be at least {MinimumPasswordLength} characters long.");
-        }
 
         var now = DateTimeOffset.UtcNow;
         var userId = Guid.NewGuid();
@@ -54,10 +51,11 @@ public sealed class CompleteRegistrationHandler(
             Email = email,
             Name = name,
             PasswordHash = passwordHasher.Hash(password),
-            CreatedAt = now,
+            CreatedAt = now
         };
 
-        await registrationRepository.CreateUserWithWorkspaceAsync(user, bundle.Workspace, bundle.Member, cancellationToken);
+        await registrationRepository.CreateUserWithWorkspaceAsync(user, bundle.Workspace, bundle.Member,
+            cancellationToken);
 
         await AcceptPendingInvitationsAsync(userId, email, now, cancellationToken);
 
@@ -74,12 +72,10 @@ public sealed class CompleteRegistrationHandler(
 
         foreach (var invitation in pendingInvitations)
         {
-            var activeMembers = await workspaceRepository.CountActiveMembersAsync(invitation.WorkspaceId, cancellationToken);
+            var activeMembers =
+                await workspaceRepository.CountActiveMembersAsync(invitation.WorkspaceId, cancellationToken);
 
-            if (activeMembers >= WorkspaceLimits.MaxMembers)
-            {
-                continue;
-            }
+            if (activeMembers >= WorkspaceLimits.MaxMembers) continue;
 
             var member = new WorkspaceMember
             {
@@ -87,7 +83,7 @@ public sealed class CompleteRegistrationHandler(
                 WorkspaceId = invitation.WorkspaceId,
                 UserId = userId,
                 Role = WorkspaceRole.Member,
-                JoinedAt = now,
+                JoinedAt = now
             };
 
             await invitationRepository.AcceptAsync(invitation.Id, member, cancellationToken);
@@ -98,15 +94,9 @@ public sealed class CompleteRegistrationHandler(
     {
         try
         {
-            foreach (var account in bundle.Accounts)
-            {
-                await accountRepository.AddAsync(account, cancellationToken);
-            }
+            foreach (var account in bundle.Accounts) await accountRepository.AddAsync(account, cancellationToken);
 
-            foreach (var category in bundle.Categories)
-            {
-                await categoryRepository.AddAsync(category, cancellationToken);
-            }
+            foreach (var category in bundle.Categories) await categoryRepository.AddAsync(category, cancellationToken);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {

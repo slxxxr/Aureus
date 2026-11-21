@@ -1,27 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>28b6286a-fe29-40fd-bda2-0f988850b5a5</UserSecretsId>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>28b6286a-fe29-40fd-bda2-0f988850b5a5</UserSecretsId>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.1" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.14"/>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.1"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Aureus.Infrastructure\Aureus.Infrastructure.csproj" />
-    <ProjectReference Include="..\Aureus.Persistence\Aureus.Persistence.csproj" />
-    <ProjectReference Include="..\Aureus.Postgres\Aureus.Postgres.csproj" />
-    <ProjectReference Include="..\Aureus.UseCases\Aureus.UseCases.csproj" />
-    <ProjectReference Include="..\Aureus.LLM\Aureus.LLM.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\Aureus.Infrastructure\Aureus.Infrastructure.csproj"/>
+        <ProjectReference Include="..\Aureus.Persistence\Aureus.Persistence.csproj"/>
+        <ProjectReference Include="..\Aureus.Postgres\Aureus.Postgres.csproj"/>
+        <ProjectReference Include="..\Aureus.UseCases\Aureus.UseCases.csproj"/>
+        <ProjectReference Include="..\Aureus.LLM\Aureus.LLM.csproj"/>
+    </ItemGroup>
 
 </Project>

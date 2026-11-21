@@ -12,6 +12,6 @@ public sealed class WorkspaceException(WorkspaceErrorCode code, string message) 
     {
         WorkspaceErrorCode.NotFound => ErrorType.NotFound,
         WorkspaceErrorCode.Forbidden => ErrorType.Unauthorized,
-        _ => ErrorType.Validation,
+        _ => ErrorType.Validation
     };
 }

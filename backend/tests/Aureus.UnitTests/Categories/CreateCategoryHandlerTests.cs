@@ -9,8 +9,10 @@ public sealed class CreateCategoryHandlerTests
     private static CreateCategoryCommand DefaultCommand(
         string name = "Groceries",
         TransactionType type = TransactionType.Expense,
-        Guid? workspaceId = null) =>
-        new(WorkspaceId: workspaceId ?? Guid.NewGuid(), Name: name, Type: type);
+        Guid? workspaceId = null)
+    {
+        return new CreateCategoryCommand(workspaceId ?? Guid.NewGuid(), name, type);
+    }
 
     [Fact]
     public async Task Handle_ValidCommand_SetsWorkspaceAndType()
@@ -34,7 +36,7 @@ public sealed class CreateCategoryHandlerTests
         // Arrange
         var repository = new CategoryRepositoryMock().CapturingAdd();
         var handler = new CreateCategoryHandler(repository.Object);
-        var command = DefaultCommand(name: "  Groceries  ");
+        var command = DefaultCommand("  Groceries  ");
 
         // Act
         var result = await handler.Handle(command, CancellationToken.None);

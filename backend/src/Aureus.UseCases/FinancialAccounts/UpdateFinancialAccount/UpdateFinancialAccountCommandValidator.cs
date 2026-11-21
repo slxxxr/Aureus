@@ -1,5 +1,5 @@
-using FluentValidation;
 using Aureus.UseCases.Validation;
+using FluentValidation;
 
 namespace Aureus.UseCases.FinancialAccounts.UpdateFinancialAccount;
 

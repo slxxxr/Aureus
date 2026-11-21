@@ -30,10 +30,10 @@ public sealed class RegistrationTokenService(
             Subject = new ClaimsIdentity([
                 new Claim(JwtRegisteredClaimNames.Email, email),
                 new Claim(PurposeClaim, purpose),
-                new Claim(TokenTypeClaim, TokenType),
+                new Claim(TokenTypeClaim, TokenType)
             ]),
             Expires = DateTime.UtcNow.Add(TokenLifetime),
-            SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256),
+            SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256)
         };
 
         return handler.WriteToken(handler.CreateToken(descriptor));
@@ -50,7 +50,7 @@ public sealed class RegistrationTokenService(
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = _signingKey,
-            ClockSkew = TimeSpan.Zero,
+            ClockSkew = TimeSpan.Zero
         };
 
         try
@@ -58,18 +58,12 @@ public sealed class RegistrationTokenService(
             var principal = handler.ValidateToken(token, parameters, out _);
 
             var tokenType = principal.FindFirstValue(TokenTypeClaim);
-            if (tokenType != TokenType)
-            {
-                return null;
-            }
+            if (tokenType != TokenType) return null;
 
             var email = principal.FindFirstValue(JwtRegisteredClaimNames.Email);
             var purpose = principal.FindFirstValue(PurposeClaim);
 
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(purpose))
-            {
-                return null;
-            }
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(purpose)) return null;
 
             return new RegistrationTokenPayload(email, purpose);
         }

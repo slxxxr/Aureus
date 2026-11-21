@@ -1,6 +1,6 @@
 using Aureus.Domain.Workspaces;
-using Aureus.Persistence.Entities;
 using Aureus.Persistence;
+using Aureus.Persistence.Entities;
 using Aureus.Persistence.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -20,10 +20,7 @@ public sealed class WorkspaceRepository(AureusDbContext dbContext, IMapper mappe
             .Select(m => new { m.WorkspaceId, m.UserId, m.Role })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (member is null)
-        {
-            return null;
-        }
+        if (member is null) return null;
 
         return Enum.TryParse<WorkspaceRole>(member.Role, out var role)
             ? new WorkspaceMembership(member.WorkspaceId, member.UserId, role)

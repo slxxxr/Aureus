@@ -16,54 +16,65 @@ public sealed class UpdateTransactionHandlerTests
         Guid? createdByUserId = null,
         TransactionType type = TransactionType.Expense,
         long amountMinor = 100_00,
-        string currency = "RUB") => new()
+        string currency = "RUB")
     {
-        Id = id ?? Guid.NewGuid(),
-        WorkspaceId = workspaceId ?? Guid.NewGuid(),
-        FinancialAccountId = accountId ?? Guid.NewGuid(),
-        CategoryId = Guid.NewGuid(),
-        CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
-        Name = "Bought bread",
-        Type = type,
-        AmountMinor = amountMinor,
-        Currency = currency,
-        OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new Transaction
+        {
+            Id = id ?? Guid.NewGuid(),
+            WorkspaceId = workspaceId ?? Guid.NewGuid(),
+            FinancialAccountId = accountId ?? Guid.NewGuid(),
+            CategoryId = Guid.NewGuid(),
+            CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
+            Name = "Bought bread",
+            Type = type,
+            AmountMinor = amountMinor,
+            Currency = currency,
+            OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     private static Category DefaultCategory(
         Guid? id = null,
         Guid? workspaceId = null,
-        TransactionType type = TransactionType.Expense) => new()
+        TransactionType type = TransactionType.Expense)
     {
-        Id = id ?? Guid.NewGuid(),
-        WorkspaceId = workspaceId ?? Guid.NewGuid(),
-        Name = "Food",
-        Type = type,
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new Category
+        {
+            Id = id ?? Guid.NewGuid(),
+            WorkspaceId = workspaceId ?? Guid.NewGuid(),
+            Name = "Food",
+            Type = type,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     private static FinancialAccount DefaultAccount(
         Guid? id = null,
         Guid? workspaceId = null,
-        string currency = "RUB") => new()
+        string currency = "RUB")
     {
-        Id = id ?? Guid.NewGuid(),
-        WorkspaceId = workspaceId ?? Guid.NewGuid(),
-        Name = "Cash",
-        Currency = currency,
-        InitialBalanceMinor = 0,
-        CurrentBalanceMinor = 0,
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new FinancialAccount
+        {
+            Id = id ?? Guid.NewGuid(),
+            WorkspaceId = workspaceId ?? Guid.NewGuid(),
+            Name = "Cash",
+            Currency = currency,
+            InitialBalanceMinor = 0,
+            CurrentBalanceMinor = 0,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     private static UpdateTransactionHandler BuildHandler(
         TransactionRepositoryMock transactionRepo,
         CategoryRepositoryMock? categoryRepo = null,
-        FinancialAccountRepositoryMock? accountRepo = null) =>
-        new(transactionRepo.Object,
+        FinancialAccountRepositoryMock? accountRepo = null)
+    {
+        return new UpdateTransactionHandler(transactionRepo.Object,
             (categoryRepo ?? new CategoryRepositoryMock()).Object,
             (accountRepo ?? new FinancialAccountRepositoryMock()).Object);
+    }
 
     private static UpdateTransactionCommand OwnerCommand(
         Guid transactionId,
@@ -74,9 +85,11 @@ public sealed class UpdateTransactionHandlerTests
         Guid? financialAccountId = null,
         TransactionType? type = null,
         DateOnly? occurredAt = null,
-        string? note = null) =>
-        new(transactionId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner,
+        string? note = null)
+    {
+        return new UpdateTransactionCommand(transactionId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner,
             name, amountMinor, categoryId, financialAccountId, type, occurredAt, note);
+    }
 
     [Fact]
     public async Task Handle_TransactionNotFound_ThrowsNotFound()
@@ -172,7 +185,7 @@ public sealed class UpdateTransactionHandlerTests
 
         // Act
         var result = await handler.Handle(
-            OwnerCommand(transaction.Id, workspaceId, name: "  Dinner  ", note: "  at cafe  "),
+            OwnerCommand(transaction.Id, workspaceId, "  Dinner  ", note: "  at cafe  "),
             CancellationToken.None);
 
         // Assert
@@ -326,7 +339,8 @@ public sealed class UpdateTransactionHandlerTests
         // Arrange
         var workspaceId = Guid.NewGuid();
         var oldAccountId = Guid.NewGuid();
-        var transaction = DefaultTransaction(workspaceId: workspaceId, accountId: oldAccountId, type: TransactionType.Expense, amountMinor: 100_00);
+        var transaction = DefaultTransaction(workspaceId: workspaceId, accountId: oldAccountId,
+            type: TransactionType.Expense, amountMinor: 100_00);
         var newAccount = DefaultAccount(workspaceId: workspaceId);
         var transactionRepo = new TransactionRepositoryMock()
             .WithTransaction(transaction.Id, workspaceId, transaction)

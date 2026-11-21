@@ -8,25 +8,31 @@ namespace Aureus.UnitTests.Transactions;
 
 public sealed class CreateTransactionHandlerTests
 {
-    private static FinancialAccount DefaultAccount(Guid? id = null, Guid? workspaceId = null) => new()
+    private static FinancialAccount DefaultAccount(Guid? id = null, Guid? workspaceId = null)
     {
-        Id = id ?? Guid.NewGuid(),
-        WorkspaceId = workspaceId ?? Guid.NewGuid(),
-        Name = "Cash",
-        Currency = "RUB",
-        InitialBalanceMinor = 0,
-        CurrentBalanceMinor = 10_000_00,
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new FinancialAccount
+        {
+            Id = id ?? Guid.NewGuid(),
+            WorkspaceId = workspaceId ?? Guid.NewGuid(),
+            Name = "Cash",
+            Currency = "RUB",
+            InitialBalanceMinor = 0,
+            CurrentBalanceMinor = 10_000_00,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
-    private static Category DefaultCategory(Guid? id = null, Guid? workspaceId = null) => new()
+    private static Category DefaultCategory(Guid? id = null, Guid? workspaceId = null)
     {
-        Id = id ?? Guid.NewGuid(),
-        WorkspaceId = workspaceId ?? Guid.NewGuid(),
-        Name = "Groceries",
-        Type = TransactionType.Expense,
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new Category
+        {
+            Id = id ?? Guid.NewGuid(),
+            WorkspaceId = workspaceId ?? Guid.NewGuid(),
+            Name = "Groceries",
+            Type = TransactionType.Expense,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     private static CreateTransactionCommand DefaultCommand(
         Guid? workspaceId = null,
@@ -35,16 +41,19 @@ public sealed class CreateTransactionHandlerTests
         string name = "Bought bread",
         TransactionType type = TransactionType.Expense,
         long amountMinor = 50_00,
-        string? note = null) => new(
-        WorkspaceId: workspaceId ?? Guid.NewGuid(),
-        FinancialAccountId: accountId ?? Guid.NewGuid(),
-        CategoryId: categoryId ?? Guid.NewGuid(),
-        CreatedByUserId: Guid.NewGuid(),
-        Name: name,
-        Type: type,
-        AmountMinor: amountMinor,
-        OccurredAt: DateOnly.FromDateTime(DateTime.UtcNow),
-        Note: note);
+        string? note = null)
+    {
+        return new CreateTransactionCommand(
+            workspaceId ?? Guid.NewGuid(),
+            accountId ?? Guid.NewGuid(),
+            categoryId ?? Guid.NewGuid(),
+            Guid.NewGuid(),
+            name,
+            type,
+            amountMinor,
+            DateOnly.FromDateTime(DateTime.UtcNow),
+            note);
+    }
 
     [Fact]
     public async Task Handle_AccountNotFound_ThrowsNotFound()
@@ -52,7 +61,7 @@ public sealed class CreateTransactionHandlerTests
         // Arrange
         var workspaceId = Guid.NewGuid();
         var accountId = Guid.NewGuid();
-        var command = DefaultCommand(workspaceId: workspaceId, accountId: accountId);
+        var command = DefaultCommand(workspaceId, accountId);
 
         var accountRepo = new FinancialAccountRepositoryMock().WithNoAccount(accountId, workspaceId);
         var handler = new CreateTransactionHandler(
@@ -75,7 +84,7 @@ public sealed class CreateTransactionHandlerTests
         var workspaceId = Guid.NewGuid();
         var account = DefaultAccount(workspaceId: workspaceId);
         var categoryId = Guid.NewGuid();
-        var command = DefaultCommand(workspaceId: workspaceId, accountId: account.Id, categoryId: categoryId);
+        var command = DefaultCommand(workspaceId, account.Id, categoryId);
 
         var accountRepo = new FinancialAccountRepositoryMock().WithAccount(account.Id, workspaceId, account);
         var categoryRepo = new CategoryRepositoryMock().WithNoCategory(categoryId, workspaceId);
@@ -100,9 +109,9 @@ public sealed class CreateTransactionHandlerTests
         var account = DefaultAccount(workspaceId: workspaceId);
         var category = DefaultCategory(workspaceId: workspaceId);
         var command = DefaultCommand(
-            workspaceId: workspaceId,
-            accountId: account.Id,
-            categoryId: category.Id,
+            workspaceId,
+            account.Id,
+            category.Id,
             type: TransactionType.Income,
             amountMinor: 500_00);
 
@@ -133,10 +142,10 @@ public sealed class CreateTransactionHandlerTests
         var account = DefaultAccount(workspaceId: workspaceId);
         var category = DefaultCategory(workspaceId: workspaceId);
         var command = DefaultCommand(
-            workspaceId: workspaceId,
-            accountId: account.Id,
-            categoryId: category.Id,
-            name: "  Bought bread  ",
+            workspaceId,
+            account.Id,
+            category.Id,
+            "  Bought bread  ",
             note: "  from the store  ");
 
         var transactionRepo = new TransactionRepositoryMock().CapturingAdd();
@@ -163,9 +172,9 @@ public sealed class CreateTransactionHandlerTests
         var account = DefaultAccount(workspaceId: workspaceId);
         var category = DefaultCategory(workspaceId: workspaceId);
         var command = DefaultCommand(
-            workspaceId: workspaceId,
-            accountId: account.Id,
-            categoryId: category.Id,
+            workspaceId,
+            account.Id,
+            category.Id,
             type: type,
             amountMinor: amountMinor);
 

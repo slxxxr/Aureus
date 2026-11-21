@@ -8,8 +8,10 @@ public sealed class CreateWorkspaceHandlerTests
 {
     private static CreateWorkspaceCommand DefaultCommand(
         string name = "My Workspace",
-        Guid? userId = null) =>
-        new(UserId: userId ?? Guid.NewGuid(), Name: name);
+        Guid? userId = null)
+    {
+        return new CreateWorkspaceCommand(userId ?? Guid.NewGuid(), name);
+    }
 
     [Fact]
     public async Task Handle_ValidCommand_CreatesWorkspace()
@@ -19,7 +21,7 @@ public sealed class CreateWorkspaceHandlerTests
         var repository = new WorkspaceRepositoryMock().CapturingAdd();
         var handler = new CreateWorkspaceHandler(repository.Object);
 
-        var command = DefaultCommand(name: "My Workspace", userId: userId);
+        var command = DefaultCommand("My Workspace", userId);
 
         // Act
         var result = await handler.Handle(command, CancellationToken.None);
@@ -53,7 +55,7 @@ public sealed class CreateWorkspaceHandlerTests
         var handler = new CreateWorkspaceHandler(repository.Object);
 
         // Act
-        var result = await handler.Handle(DefaultCommand(name: "  My Workspace  "), CancellationToken.None);
+        var result = await handler.Handle(DefaultCommand("  My Workspace  "), CancellationToken.None);
 
         // Assert
         Assert.Equal("My Workspace", result.Name);

@@ -6,8 +6,10 @@ namespace Aureus.UnitTests.Workspaces;
 
 public sealed class RemoveMemberHandlerTests
 {
-    private static RemoveMemberHandler BuildHandler(WorkspaceRepositoryMock workspaceRepo) =>
-        new(workspaceRepo.Object);
+    private static RemoveMemberHandler BuildHandler(WorkspaceRepositoryMock workspaceRepo)
+    {
+        return new RemoveMemberHandler(workspaceRepo.Object);
+    }
 
     [Fact]
     public async Task Handle_ManagerRemovesMember_SoftDeletesMember()

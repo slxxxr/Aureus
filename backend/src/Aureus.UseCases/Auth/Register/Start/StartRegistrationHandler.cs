@@ -25,19 +25,15 @@ public sealed class StartRegistrationHandler(
         var language = NormalizeLanguage(command.Language);
 
         if (await userRepository.EmailExistsAsync(email, cancellationToken))
-        {
             throw new EmailVerificationException(
                 EmailVerificationErrorCode.EmailAlreadyConfirmed, "Email is already registered.");
-        }
 
         var existing = await codeRepository.FindAsync(email, Purpose, cancellationToken);
         var now = DateTimeOffset.UtcNow;
 
         if (existing is not null && now - existing.SentAt < ResendCooldown)
-        {
             throw new EmailVerificationException(EmailVerificationErrorCode.RateLimited,
                 "Please wait before requesting another code.");
-        }
 
         var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
         var codeHash = ComputeSha256(code);
@@ -51,18 +47,20 @@ public sealed class StartRegistrationHandler(
             ExpiresAt = now.Add(CodeLifetime),
             AttemptsLeft = AttemptsAllowed,
             SentAt = now,
-            CreatedAt = existing?.CreatedAt ?? now,
+            CreatedAt = existing?.CreatedAt ?? now
         }, cancellationToken);
 
         var (subject, htmlBody) = RegistrationEmailTemplates.Build(language, code);
         await emailSender.SendAsync(new EmailMessage(
-            To: email,
-            Subject: subject,
-            HtmlBody: htmlBody), cancellationToken);
+            email,
+            subject,
+            htmlBody), cancellationToken);
     }
 
-    private static string NormalizeLanguage(string? language) =>
-        (language ?? string.Empty).Trim().ToLowerInvariant() == "en" ? "en" : "ru";
+    private static string NormalizeLanguage(string? language)
+    {
+        return (language ?? string.Empty).Trim().ToLowerInvariant() == "en" ? "en" : "ru";
+    }
 
     private static string ComputeSha256(string input)
     {

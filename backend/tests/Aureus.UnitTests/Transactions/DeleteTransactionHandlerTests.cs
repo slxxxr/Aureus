@@ -12,22 +12,27 @@ public sealed class DeleteTransactionHandlerTests
         Guid? workspaceId = null,
         Guid? createdByUserId = null,
         TransactionType type = TransactionType.Expense,
-        long amountMinor = 100_00) => new()
+        long amountMinor = 100_00)
     {
-        Id = id ?? Guid.NewGuid(),
-        WorkspaceId = workspaceId ?? Guid.NewGuid(),
-        FinancialAccountId = Guid.NewGuid(),
-        CategoryId = Guid.NewGuid(),
-        CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
-        Type = type,
-        AmountMinor = amountMinor,
-        Currency = "RUB",
-        OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new Transaction
+        {
+            Id = id ?? Guid.NewGuid(),
+            WorkspaceId = workspaceId ?? Guid.NewGuid(),
+            FinancialAccountId = Guid.NewGuid(),
+            CategoryId = Guid.NewGuid(),
+            CreatedByUserId = createdByUserId ?? Guid.NewGuid(),
+            Type = type,
+            AmountMinor = amountMinor,
+            Currency = "RUB",
+            OccurredAt = DateOnly.FromDateTime(DateTime.UtcNow),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
-    private static DeleteTransactionCommand OwnerCommand(Guid transactionId, Guid workspaceId) =>
-        new(transactionId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner);
+    private static DeleteTransactionCommand OwnerCommand(Guid transactionId, Guid workspaceId)
+    {
+        return new DeleteTransactionCommand(transactionId, workspaceId, Guid.NewGuid(), WorkspaceRole.Owner);
+    }
 
     [Fact]
     public async Task Handle_TransactionNotFound_ThrowsNotFound()

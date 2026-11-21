@@ -21,8 +21,10 @@ public sealed class TransferConfiguration : IEntityTypeConfiguration<TransferDb>
         builder.Property(transfer => transfer.ToAccountId).HasColumnName("to_account_id").IsRequired();
         builder.Property(transfer => transfer.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
         builder.Property(transfer => transfer.AmountMinor).HasColumnName("amount_minor").IsRequired();
-        builder.Property(transfer => transfer.Currency).HasColumnName("currency").HasMaxLength(CurrencyCodeMaxLength).IsRequired();
-        builder.Property(transfer => transfer.OccurredAt).HasColumnName("occurred_at").HasColumnType("date").IsRequired();
+        builder.Property(transfer => transfer.Currency).HasColumnName("currency").HasMaxLength(CurrencyCodeMaxLength)
+            .IsRequired();
+        builder.Property(transfer => transfer.OccurredAt).HasColumnName("occurred_at").HasColumnType("date")
+            .IsRequired();
         builder.Property(transfer => transfer.Note).HasColumnName("note").HasMaxLength(NoteMaxLength);
         builder.Property(transfer => transfer.IsDeleted).HasColumnName("is_deleted").IsRequired();
         builder.Property(transfer => transfer.DeletedAt).HasColumnName("deleted_at");

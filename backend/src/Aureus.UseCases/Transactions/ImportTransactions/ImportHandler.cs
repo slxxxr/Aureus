@@ -13,9 +13,7 @@ public sealed class ImportHandler(
     public async Task<int> Handle(ImportCommand command, CancellationToken cancellationToken)
     {
         if (command.FileContent.Length > TransactionCsvParser.MaxFileSizeBytes)
-        {
             throw new TransactionException(TransactionErrorCode.ImportFileTooLarge, "File exceeds 5 MB.");
-        }
 
         var accounts = await accountRepository.GetByWorkspaceIdAsync(command.WorkspaceId, cancellationToken);
         var categories = await categoryRepository.GetByWorkspaceIdAsync(command.WorkspaceId, cancellationToken);
@@ -31,19 +29,18 @@ public sealed class ImportHandler(
         }
 
         if (parsed.Count > TransactionCsvParser.MaxRows)
-        {
-            throw new TransactionException(TransactionErrorCode.ImportTooManyRows, $"File contains more than {TransactionCsvParser.MaxRows} rows.");
-        }
+            throw new TransactionException(TransactionErrorCode.ImportTooManyRows,
+                $"File contains more than {TransactionCsvParser.MaxRows} rows.");
 
         var errors = parsed.Where(r => !r.IsValid).ToList();
         if (errors.Count > 0)
-        {
-            throw new TransactionException(TransactionErrorCode.ImportHasErrors, $"{errors.Count} row(s) have validation errors.");
-        }
+            throw new TransactionException(TransactionErrorCode.ImportHasErrors,
+                $"{errors.Count} row(s) have validation errors.");
 
         var baseTime = DateTimeOffset.UtcNow;
 
-        var transactionRows = parsed.Where(r => r.ValidTransaction is not null).Select(r => r.ValidTransaction!).ToList();
+        var transactionRows =
+            parsed.Where(r => r.ValidTransaction is not null).Select(r => r.ValidTransaction!).ToList();
         var transactions = transactionRows.Select((row, i) => new Transaction
         {
             Id = Guid.NewGuid(),
@@ -57,14 +54,15 @@ public sealed class ImportHandler(
             Currency = row.Account.Currency,
             OccurredAt = row.OccurredAt,
             Note = row.Note,
-            CreatedAt = baseTime.AddTicks(i),
+            CreatedAt = baseTime.AddTicks(i)
         }).ToList();
 
         var transactionDeltas = new Dictionary<Guid, long>();
         foreach (var tx in transactions)
         {
             var delta = tx.Type == TransactionType.Income ? tx.AmountMinor : -tx.AmountMinor;
-            transactionDeltas[tx.FinancialAccountId] = transactionDeltas.GetValueOrDefault(tx.FinancialAccountId) + delta;
+            transactionDeltas[tx.FinancialAccountId] =
+                transactionDeltas.GetValueOrDefault(tx.FinancialAccountId) + delta;
         }
 
         var transferRows = parsed.Where(r => r.ValidTransfer is not null).Select(r => r.ValidTransfer!).ToList();
@@ -79,17 +77,20 @@ public sealed class ImportHandler(
             Currency = row.FromAccount.Currency,
             OccurredAt = row.OccurredAt,
             Note = row.Note,
-            CreatedAt = baseTime.AddTicks(transactions.Count + i),
+            CreatedAt = baseTime.AddTicks(transactions.Count + i)
         }).ToList();
 
         var transferDeltas = new Dictionary<Guid, long>();
         foreach (var transfer in transfers)
         {
-            transferDeltas[transfer.FromAccountId] = transferDeltas.GetValueOrDefault(transfer.FromAccountId) - transfer.AmountMinor;
-            transferDeltas[transfer.ToAccountId] = transferDeltas.GetValueOrDefault(transfer.ToAccountId) + transfer.AmountMinor;
+            transferDeltas[transfer.FromAccountId] =
+                transferDeltas.GetValueOrDefault(transfer.FromAccountId) - transfer.AmountMinor;
+            transferDeltas[transfer.ToAccountId] =
+                transferDeltas.GetValueOrDefault(transfer.ToAccountId) + transfer.AmountMinor;
         }
 
-        await importRepository.AddBulkAsync(transactions, transactionDeltas, transfers, transferDeltas, cancellationToken);
+        await importRepository.AddBulkAsync(transactions, transactionDeltas, transfers, transferDeltas,
+            cancellationToken);
 
         return transactions.Count + transfers.Count;
     }

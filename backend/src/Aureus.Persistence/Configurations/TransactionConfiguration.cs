@@ -19,14 +19,19 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
 
         builder.Property(transaction => transaction.Id).HasColumnName("id");
         builder.Property(transaction => transaction.WorkspaceId).HasColumnName("workspace_id").IsRequired();
-        builder.Property(transaction => transaction.FinancialAccountId).HasColumnName("financial_account_id").IsRequired();
+        builder.Property(transaction => transaction.FinancialAccountId).HasColumnName("financial_account_id")
+            .IsRequired();
         builder.Property(transaction => transaction.CategoryId).HasColumnName("category_id").IsRequired();
         builder.Property(transaction => transaction.CreatedByUserId).HasColumnName("created_by_user_id").IsRequired();
-        builder.Property(transaction => transaction.Name).HasColumnName("name").HasMaxLength(NameMaxLength).IsRequired();
-        builder.Property(transaction => transaction.Type).HasColumnName("type").HasMaxLength(TypeMaxLength).IsRequired();
+        builder.Property(transaction => transaction.Name).HasColumnName("name").HasMaxLength(NameMaxLength)
+            .IsRequired();
+        builder.Property(transaction => transaction.Type).HasColumnName("type").HasMaxLength(TypeMaxLength)
+            .IsRequired();
         builder.Property(transaction => transaction.AmountMinor).HasColumnName("amount_minor").IsRequired();
-        builder.Property(transaction => transaction.Currency).HasColumnName("currency").HasMaxLength(CurrencyCodeMaxLength).IsRequired();
-        builder.Property(transaction => transaction.OccurredAt).HasColumnName("occurred_at").HasColumnType("date").IsRequired();
+        builder.Property(transaction => transaction.Currency).HasColumnName("currency")
+            .HasMaxLength(CurrencyCodeMaxLength).IsRequired();
+        builder.Property(transaction => transaction.OccurredAt).HasColumnName("occurred_at").HasColumnType("date")
+            .IsRequired();
         builder.Property(transaction => transaction.Note).HasColumnName("note").HasMaxLength(NoteMaxLength);
         builder.Property(transaction => transaction.IsDeleted).HasColumnName("is_deleted").IsRequired();
         builder.Property(transaction => transaction.DeletedAt).HasColumnName("deleted_at");

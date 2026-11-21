@@ -5,6 +5,7 @@ namespace Aureus.Persistence.Interfaces;
 public interface IFinancialAccountRepository
 {
     Task<IReadOnlyList<FinancialAccount>> GetByWorkspaceIdAsync(Guid workspaceId, CancellationToken cancellationToken);
+
     Task ReorderAsync(
         Guid workspaceId,
         IReadOnlyList<Guid> accountIds,

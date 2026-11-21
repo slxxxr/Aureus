@@ -18,7 +18,7 @@ public sealed class GetWorkspaceInvitationsHandlerTests
             Email = "invitee@test.local",
             InvitedByUserId = Guid.NewGuid(),
             ExpiresAt = DateTimeOffset.UtcNow.AddDays(7),
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow
         };
         var repo = new WorkspaceInvitationRepositoryMock().WithPendingForWorkspace(workspaceId, [invitation]);
         var handler = new GetWorkspaceInvitationsHandler(repo.Object);

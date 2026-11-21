@@ -1,6 +1,6 @@
 using Aureus.Domain.Categories;
-using Aureus.Persistence.Entities;
 using Aureus.Persistence;
+using Aureus.Persistence.Entities;
 using Aureus.Persistence.Interfaces;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +40,8 @@ public sealed class CategoryRepository(AureusDbContext dbContext, IMapper mapper
     {
         var entity = await dbContext.Categories
             .AsNoTracking()
-            .FirstOrDefaultAsync(category => category.Id == id && category.WorkspaceId == workspaceId, cancellationToken);
+            .FirstOrDefaultAsync(category => category.Id == id && category.WorkspaceId == workspaceId,
+                cancellationToken);
 
         return entity is null ? null : mapper.Map<Category>(entity);
     }
@@ -91,7 +92,12 @@ public sealed class CategoryRepository(AureusDbContext dbContext, IMapper mapper
                 cancellationToken);
     }
 
-    private static bool IsUniqueViolation(Exception ex) =>
-        ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } ||
-        ex is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } };
+    private static bool IsUniqueViolation(Exception ex)
+    {
+        return ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } ||
+               ex is DbUpdateException
+               {
+                   InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation }
+               };
+    }
 }

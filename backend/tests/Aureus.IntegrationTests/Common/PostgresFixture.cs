@@ -23,7 +23,10 @@ public sealed class PostgresFixture : IAsyncLifetime
         await dbContext.Database.MigrateAsync();
     }
 
-    public Task DisposeAsync() => _container.DisposeAsync().AsTask();
+    public Task DisposeAsync()
+    {
+        return _container.DisposeAsync().AsTask();
+    }
 
     public AureusDbContext CreateDbContext()
     {

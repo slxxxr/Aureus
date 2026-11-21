@@ -6,12 +6,15 @@ namespace Aureus.UnitTests.Workspaces;
 
 public sealed class DeleteWorkspaceHandlerTests
 {
-    private static Workspace DefaultWorkspace(Guid? id = null) => new()
+    private static Workspace DefaultWorkspace(Guid? id = null)
     {
-        Id = id ?? Guid.NewGuid(),
-        Name = "Personal",
-        CreatedAt = DateTimeOffset.UtcNow,
-    };
+        return new Workspace
+        {
+            Id = id ?? Guid.NewGuid(),
+            Name = "Personal",
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+    }
 
     [Fact]
     public async Task Handle_WorkspaceNotFound_ThrowsNotFound()

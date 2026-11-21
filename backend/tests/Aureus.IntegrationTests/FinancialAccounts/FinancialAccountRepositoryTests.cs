@@ -1,7 +1,6 @@
-using Aureus.Postgres.Implementations;
 using Aureus.Domain.FinancialAccounts;
 using Aureus.IntegrationTests.Common;
-
+using Aureus.Postgres.Implementations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aureus.IntegrationTests.FinancialAccounts;
@@ -361,8 +360,9 @@ public sealed class FinancialAccountRepositoryTests(PostgresFixture fixture)
         }
     }
 
-    private static FinancialAccount NewAccount(Guid workspaceId, string name, DateTimeOffset? createdAt = null) =>
-        new()
+    private static FinancialAccount NewAccount(Guid workspaceId, string name, DateTimeOffset? createdAt = null)
+    {
+        return new FinancialAccount
         {
             Id = Guid.NewGuid(),
             WorkspaceId = workspaceId,
@@ -370,8 +370,9 @@ public sealed class FinancialAccountRepositoryTests(PostgresFixture fixture)
             Currency = "RUB",
             InitialBalanceMinor = 1000_00,
             CurrentBalanceMinor = 1000_00,
-            CreatedAt = createdAt ?? DateTimeOffset.UtcNow,
+            CreatedAt = createdAt ?? DateTimeOffset.UtcNow
         };
+    }
 
     private async Task<Guid> AddAccountAsync(Guid workspaceId, string name, DateTimeOffset? createdAt = null)
     {

@@ -30,9 +30,11 @@ public sealed class WorkspaceInvitationRepositoryMock
         return this;
     }
 
-    public WorkspaceInvitationRepositoryMock WithPendingInvitation(Guid workspaceId, string email, WorkspaceInvitation? invitation)
+    public WorkspaceInvitationRepositoryMock WithPendingInvitation(Guid workspaceId, string email,
+        WorkspaceInvitation? invitation)
     {
-        _mock.Setup(r => r.FindPendingAsync(workspaceId, email, It.IsAny<CancellationToken>())).ReturnsAsync(invitation);
+        _mock.Setup(r => r.FindPendingAsync(workspaceId, email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(invitation);
         return this;
     }
 
@@ -45,7 +47,8 @@ public sealed class WorkspaceInvitationRepositoryMock
         return this;
     }
 
-    public WorkspaceInvitationRepositoryMock WithPendingForEmail(string email, IReadOnlyList<PendingInvitationSummary> summaries)
+    public WorkspaceInvitationRepositoryMock WithPendingForEmail(string email,
+        IReadOnlyList<PendingInvitationSummary> summaries)
     {
         _mock
             .Setup(r => r.GetPendingForEmailAsync(email, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
@@ -54,10 +57,12 @@ public sealed class WorkspaceInvitationRepositoryMock
         return this;
     }
 
-    public WorkspaceInvitationRepositoryMock WithPendingForWorkspace(Guid workspaceId, IReadOnlyList<WorkspaceInvitation> invitations)
+    public WorkspaceInvitationRepositoryMock WithPendingForWorkspace(Guid workspaceId,
+        IReadOnlyList<WorkspaceInvitation> invitations)
     {
         _mock
-            .Setup(r => r.GetPendingForWorkspaceAsync(workspaceId, It.IsAny<DateTimeOffset>(), It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetPendingForWorkspaceAsync(workspaceId, It.IsAny<DateTimeOffset>(),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(invitations);
 
         return this;
@@ -97,9 +102,14 @@ public sealed class WorkspaceInvitationRepositoryMock
         return this;
     }
 
-    public void VerifyDeleteNotCalled() =>
+    public void VerifyDeleteNotCalled()
+    {
         _mock.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
 
-    public void VerifyAcceptNotCalled() =>
-        _mock.Verify(r => r.AcceptAsync(It.IsAny<Guid>(), It.IsAny<WorkspaceMember>(), It.IsAny<CancellationToken>()), Times.Never);
+    public void VerifyAcceptNotCalled()
+    {
+        _mock.Verify(r => r.AcceptAsync(It.IsAny<Guid>(), It.IsAny<WorkspaceMember>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
 }

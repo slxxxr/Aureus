@@ -2,5 +2,9 @@ using MediatR;
 
 namespace Aureus.UseCases.Auth.Register.Complete;
 
-public sealed record CompleteRegistrationCommand(string? RegistrationToken, string? Name, string? Password, string? Language)
+public sealed record CompleteRegistrationCommand(
+    string? RegistrationToken,
+    string? Name,
+    string? Password,
+    string? Language)
     : IRequest<CompleteRegistrationResult>;

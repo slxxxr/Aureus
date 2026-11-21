@@ -39,16 +39,12 @@ public sealed class FinancialAccountRepository(AureusDbContext dbContext, IMappe
                 .ToListAsync(cancellationToken);
 
             if (!accounts.Select(account => account.Id).SequenceEqual(expectedAccountIds))
-            {
                 throw new FinancialAccountException(
                     FinancialAccountErrorCode.OrderConflict, "The list or order of financial accounts changed.");
-            }
 
             var accountsById = accounts.ToDictionary(account => account.Id);
             for (var position = 0; position < accountIds.Count; position++)
-            {
                 accountsById[accountIds[position]].SortOrder = (short)position;
-            }
 
             await dbContext.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
@@ -133,21 +129,30 @@ public sealed class FinancialAccountRepository(AureusDbContext dbContext, IMappe
         await transaction.CommitAsync(cancellationToken);
     }
 
-    private static bool IsUniqueViolation(Exception ex) =>
-        ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } ||
-        ex is DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } };
+    private static bool IsUniqueViolation(Exception ex)
+    {
+        return ex is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } ||
+               ex is DbUpdateException
+               {
+                   InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation }
+               };
+    }
 
-    private IOrderedQueryable<FinancialAccountDb> GetOrderedAccounts(Guid workspaceId) =>
-        dbContext.FinancialAccounts
+    private IOrderedQueryable<FinancialAccountDb> GetOrderedAccounts(Guid workspaceId)
+    {
+        return dbContext.FinancialAccounts
             .Where(account => account.WorkspaceId == workspaceId)
             .OrderBy(account => account.SortOrder == null)
             .ThenBy(account => account.SortOrder)
             .ThenBy(account => account.CreatedAt)
             .ThenBy(account => account.Id);
+    }
 
-    private static bool IsConcurrentUpdate(Exception exception) =>
-        exception.GetBaseException() is PostgresException
+    private static bool IsConcurrentUpdate(Exception exception)
+    {
+        return exception.GetBaseException() is PostgresException
         {
             SqlState: PostgresErrorCodes.SerializationFailure or PostgresErrorCodes.DeadlockDetected
         };
+    }
 }

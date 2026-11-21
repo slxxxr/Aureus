@@ -1,9 +1,9 @@
-using AutoMapper;
 using Aureus.Domain.Users;
 using Aureus.Domain.Workspaces;
 using Aureus.Persistence;
 using Aureus.Persistence.Entities;
 using Aureus.Persistence.Interfaces;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -22,9 +22,13 @@ public sealed class RegistrationRepository(AureusDbContext dbContext, IMapper ma
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException
+                                           {
+                                               SqlState: PostgresErrorCodes.UniqueViolation
+                                           })
         {
-            throw new EmailVerificationException(EmailVerificationErrorCode.EmailAlreadyConfirmed, "Email is already registered.");
+            throw new EmailVerificationException(EmailVerificationErrorCode.EmailAlreadyConfirmed,
+                "Email is already registered.");
         }
     }
 }

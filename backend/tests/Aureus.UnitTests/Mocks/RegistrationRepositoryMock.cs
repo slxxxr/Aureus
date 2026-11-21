@@ -33,13 +33,17 @@ public sealed class RegistrationRepositoryMock
         return this;
     }
 
-    public void VerifyCreateCalledOnce() =>
+    public void VerifyCreateCalledOnce()
+    {
         _mock.Verify(r => r.CreateUserWithWorkspaceAsync(
-            It.IsAny<User>(), It.IsAny<Workspace>(), It.IsAny<WorkspaceMember>(), It.IsAny<CancellationToken>()),
+                It.IsAny<User>(), It.IsAny<Workspace>(), It.IsAny<WorkspaceMember>(), It.IsAny<CancellationToken>()),
             Times.Once);
+    }
 
-    public void VerifyCreateNotCalled() =>
+    public void VerifyCreateNotCalled()
+    {
         _mock.Verify(r => r.CreateUserWithWorkspaceAsync(
-            It.IsAny<User>(), It.IsAny<Workspace>(), It.IsAny<WorkspaceMember>(), It.IsAny<CancellationToken>()),
+                It.IsAny<User>(), It.IsAny<Workspace>(), It.IsAny<WorkspaceMember>(), It.IsAny<CancellationToken>()),
             Times.Never);
+    }
 }
